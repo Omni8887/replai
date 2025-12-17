@@ -6,7 +6,7 @@ export default function Integration() {
   const { client } = useAuth()
   const [copied, setCopied] = useState('')
 
-  const backendUrl = 'https://your-backend.onrender.com'
+  const backendUrl = 'https://replai-backend.onrender.com'
 
   const embedCode = `<script 
   src="${backendUrl}/static/widget.js" 
