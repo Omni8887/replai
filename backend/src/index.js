@@ -123,12 +123,19 @@ app.post('/chat', async (req, res) => {
     let inputTokens = 0;
     let outputTokens = 0;
     
-    const stream = anthropic.messages.stream({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.',
-      messages: messages
-    });
+   // Aktuálny čas pre AI
+const now = new Date();
+const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
+
+const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.') + currentDateTime;
+
+const stream = anthropic.messages.stream({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 1024,
+  system: systemPrompt,
+  messages: messages
+});
     
     stream.on('text', (text) => {
       fullResponse += text;
