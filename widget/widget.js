@@ -646,10 +646,10 @@
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('replai-message', isUser ? 'user' : 'assistant');
       
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
       let formattedContent = message
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(urlRegex, '<a href="$1" target="_blank" class="replai-link">$1</a>');
+  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="replai-link">$1</a>')
+  .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" class="replai-link">$2</a>');
       
       messageDiv.innerHTML = `<div class="replai-message-bubble">${formattedContent}</div>`;
       
