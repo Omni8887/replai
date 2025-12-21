@@ -5,10 +5,14 @@ import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import xml2js from 'xml2js';
 import { v4 as uuidv4 } from 'uuid';
+import xml2js from 'xml2js';
+import { Resend } from 'resend';
 
 dotenv.config();
+
+// Až tu, po dotenv.config()
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -201,18 +205,29 @@ const stream = anthropic.messages.stream({
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
       
-      // Skontroluj či správa obsahuje kontakt a ulož ho
-      const contactInfo = checkForContact(fullResponse + ' ' + message);
-      if (contactInfo.hasContact) {
-        const updates = { has_contact: true };
-        if (contactInfo.email) updates.visitor_email = contactInfo.email;
-        if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
-        
-        await supabase
-          .from('conversations')
-          .update(updates)
-          .eq('id', conversationId);
-      }
+     // Skontroluj či správa obsahuje kontakt a ulož ho
+const contactInfo = checkForContact(fullResponse + ' ' + message);
+if (contactInfo.hasContact) {
+  const updates = { has_contact: true };
+  if (contactInfo.email) updates.visitor_email = contactInfo.email;
+  if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
+  
+  await supabase
+    .from('conversations')
+    .update(updates)
+    .eq('id', conversationId);
+  
+  // Pošli email notifikáciu
+  const { data: clientData } = await supabase
+    .from('clients')
+    .select('email')
+    .eq('id', client.id)
+    .single();
+  
+  if (clientData?.email) {
+    sendLeadNotification(clientData.email, contactInfo, conversationId);
+  }
+}
       
       res.write('data: [DONE]\n\n');
       res.end();
@@ -759,6 +774,36 @@ app.post('/admin/products/upload-xml', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to parse XML: ' + error.message });
   }
 });
+
+// ============================================
+// EMAIL NOTIFICATIONS
+// ============================================
+
+async function sendLeadNotification(clientEmail, leadInfo, conversationId) {
+  try {
+    await resend.emails.send({
+      from: 'Replai <onboarding@resend.dev>',
+      to: clientEmail,
+      subject: '🎯 Nový lead z chatu!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">🎯 Nový lead!</h2>
+          <p>Zákazník zanechal kontakt v chate:</p>
+          <div style="background: #f8fafc; padding: 16px; border-radius: 12px; margin: 16px 0;">
+            ${leadInfo.email ? `<p><strong>📧 Email:</strong> ${leadInfo.email}</p>` : ''}
+            ${leadInfo.phone ? `<p><strong>📱 Telefón:</strong> ${leadInfo.phone}</p>` : ''}
+          </div>
+          <p style="color: #64748b; font-size: 14px;">
+            Odpovedzte čo najskôr pre najlepšiu šancu na konverziu!
+          </p>
+        </div>
+      `
+    });
+    console.log('Lead notification sent to:', clientEmail);
+  } catch (error) {
+    console.error('Failed to send lead notification:', error);
+  }
+}
 
 // ============================================
 // HELPER FUNCTIONS
