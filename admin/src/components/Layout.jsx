@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package } from 'lucide-react'
 
 export default function Layout() {
   const { client, logout } = useAuth()
@@ -14,6 +14,7 @@ export default function Layout() {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/conversations', label: 'Konverzácie', icon: MessageSquare },
+    { to: '/products', label: 'Produkty', icon: Package },
     { to: '/usage', label: 'Spotreba', icon: Coins },
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },

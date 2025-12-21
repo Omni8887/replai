@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import xml2js from 'xml2js';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
@@ -128,7 +129,27 @@ const now = new Date();
 const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.') + currentDateTime;
+// Vyhľadaj relevantné produkty
+let productsContext = '';
+const { data: products } = await supabase
+  .from('products')
+  .select('name, description, price, category, url')
+  .eq('client_id', client.id)
+  .or(`name.ilike.%${message}%,description.ilike.%${message}%,category.ilike.%${message}%`)
+  .limit(5);
+
+if (products && products.length > 0) {
+  productsContext = '\n\nRELEVANTNÉ PRODUKTY (použi ich v odpovedi ak sa hodia, pridaj link pomocou [pozrieť](url)):\n';
+  products.forEach(p => {
+    productsContext += `- ${p.name}`;
+    if (p.price) productsContext += ` | ${p.price}€`;
+    if (p.description) productsContext += ` | ${p.description}`;
+    if (p.url) productsContext += ` | Link: ${p.url}`;
+    productsContext += '\n';
+  });
+}
+
+const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.') + currentDateTime + productsContext;
 
 const stream = anthropic.messages.stream({
   model: 'claude-sonnet-4-20250514',
@@ -570,6 +591,172 @@ app.get('/admin/usage', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Usage error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// PRODUCTS ENDPOINTS
+// ============================================
+
+// GET /admin/products - Zoznam produktov
+app.get('/admin/products', authMiddleware, async (req, res) => {
+  try {
+    const { data: products } = await supabase
+      .from('products')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .order('created_at', { ascending: false });
+    
+    res.json(products || []);
+  } catch (error) {
+    console.error('Products error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /admin/products/upload - Upload produktov z CSV
+app.post('/admin/products/upload', authMiddleware, async (req, res) => {
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({ error: 'Products array required' });
+    }
+    
+    // Pridaj client_id ku každému produktu
+    const productsWithClient = products.map(p => ({
+      client_id: req.clientId,
+      name: p.name,
+      description: p.description || '',
+      price: p.price || null,
+      category: p.category || '',
+      url: p.url || ''
+    }));
+    
+    // Vlož produkty
+    const { data, error } = await supabase
+      .from('products')
+      .insert(productsWithClient)
+      .select();
+    
+    if (error) throw error;
+    
+    res.json({ success: true, count: data.length });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /admin/products/:id - Vymaž produkt
+app.delete('/admin/products/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await supabase
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .eq('client_id', req.clientId);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete product error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /admin/products - Vymaž všetky produkty
+app.delete('/admin/products', authMiddleware, async (req, res) => {
+  try {
+    await supabase
+      .from('products')
+      .delete()
+      .eq('client_id', req.clientId);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete all products error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /admin/products/search - Vyhľadaj produkty (interné)
+app.get('/admin/products/search', authMiddleware, async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    const { data: products } = await supabase
+      .from('products')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .or(`name.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`)
+      .limit(5);
+    
+    res.json(products || []);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /admin/products/upload-xml - Upload produktov z XML
+app.post('/admin/products/upload-xml', authMiddleware, async (req, res) => {
+  try {
+    const { xmlContent, xmlUrl } = req.body;
+    
+    let xmlData = xmlContent;
+    
+    // Ak je URL, stiahni XML
+    if (xmlUrl) {
+      const response = await fetch(xmlUrl);
+      xmlData = await response.text();
+    }
+    
+    if (!xmlData) {
+      return res.status(400).json({ error: 'XML content or URL required' });
+    }
+    
+    // Parsuj XML
+    const parser = new xml2js.Parser({ explicitArray: false });
+    const result = await parser.parseStringPromise(xmlData);
+    
+    // Nájdi produkty (podporuje rôzne formáty)
+    let items = [];
+    if (result.SHOP?.SHOPITEM) {
+      items = Array.isArray(result.SHOP.SHOPITEM) ? result.SHOP.SHOPITEM : [result.SHOP.SHOPITEM];
+    } else if (result.products?.product) {
+      items = Array.isArray(result.products.product) ? result.products.product : [result.products.product];
+    } else if (result.rss?.channel?.item) {
+      items = Array.isArray(result.rss.channel.item) ? result.rss.channel.item : [result.rss.channel.item];
+    }
+    
+    // Mapuj na naše produkty
+    const products = items.map(item => ({
+      client_id: req.clientId,
+      name: item.PRODUCT_NAME || item.PRODUCTNAME || item.name || item.title || item.TITLE || '',
+      description: item.DESCRIPTION || item.description || item.DETAIL || item.detail || '',
+      price: parseFloat(item.PRICE || item.price || item.PRICE_VAT || 0) || null,
+      category: item.CATEGORY || item.CATEGORYTEXT || item.category || '',
+      url: item.URL || item.url || item.URL_PRODUCT || item.link || ''
+    })).filter(p => p.name);
+    
+    if (products.length === 0) {
+      return res.status(400).json({ error: 'No products found in XML' });
+    }
+    
+    // Vlož produkty
+    const { data, error } = await supabase
+      .from('products')
+      .insert(products)
+      .select();
+    
+    if (error) throw error;
+    
+    res.json({ success: true, count: data.length });
+  } catch (error) {
+    console.error('XML Upload error:', error);
+    res.status(500).json({ error: 'Failed to parse XML: ' + error.message });
   }
 });
 
