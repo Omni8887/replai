@@ -355,6 +355,121 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
+// POST /auth/forgot-password - Žiadosť o reset hesla
+app.post('/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+    
+    // Nájdi klienta
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id, email, name')
+      .eq('email', email)
+      .single();
+    
+    // Vždy vráť success (bezpečnosť - neprezradiť či email existuje)
+    if (!client) {
+      return res.json({ success: true });
+    }
+    
+    // Vygeneruj token
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hodina
+    
+    // Ulož token
+    await supabase.from('password_resets').insert({
+      client_id: client.id,
+      token: token,
+      expires_at: expiresAt.toISOString()
+    });
+    
+    // Pošli email
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    
+    await resend.emails.send({
+      from: 'Replai <onboarding@resend.dev>',
+      to: client.email,
+      subject: '🔐 Reset hesla - Replai',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">🔐 Reset hesla</h2>
+          <p>Ahoj ${client.name || ''},</p>
+          <p>Dostali sme žiadosť o reset hesla pre tvoj účet.</p>
+          <p>Klikni na tlačidlo nižšie pre nastavenie nového hesla:</p>
+          <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+            Resetovať heslo
+          </a>
+          <p style="color: #64748b; font-size: 14px;">Link je platný 1 hodinu.</p>
+          <p style="color: #64748b; font-size: 14px;">Ak si nežiadal o reset hesla, tento email ignoruj.</p>
+        </div>
+      `
+    });
+    
+    console.log('Password reset email sent to:', client.email);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /auth/reset-password - Nastavenie nového hesla
+app.post('/auth/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password required' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    // Nájdi platný token
+    const { data: resetRecord } = await supabase
+      .from('password_resets')
+      .select('id, client_id, expires_at, used')
+      .eq('token', token)
+      .single();
+    
+    if (!resetRecord) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+    
+    if (resetRecord.used) {
+      return res.status(400).json({ error: 'Token already used' });
+    }
+    
+    if (new Date(resetRecord.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Token expired' });
+    }
+    
+    // Aktualizuj heslo
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    await supabase
+      .from('clients')
+      .update({ password_hash: passwordHash })
+      .eq('id', resetRecord.client_id);
+    
+    // Označ token ako použitý
+    await supabase
+      .from('password_resets')
+      .update({ used: true })
+      .eq('id', resetRecord.id);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ============================================
 // ADMIN API ENDPOINTS (protected)
 // ============================================

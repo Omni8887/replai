@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -87,6 +88,11 @@ export default function Login() {
             )}
           </button>
         </form>
+        <div className="mt-4 text-center">
+  <Link to="/forgot-password" className="text-sm text-violet-600 hover:text-violet-700">
+    Zabudli ste heslo?
+  </Link>
+</div>
 
         <p className="text-center mt-8 text-slate-500">
           Nemáte účet?{' '}
