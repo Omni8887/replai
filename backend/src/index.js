@@ -921,6 +921,120 @@ async function sendLeadNotification(clientEmail, leadInfo, conversationId) {
 }
 
 // ============================================
+// ANALYTICS ENDPOINTS
+// ============================================
+
+// GET /admin/analytics - Štatistiky konverzácií
+app.get('/admin/analytics', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(todayStart);
+    monthStart.setDate(monthStart.getDate() - 30);
+
+    // Celkové štatistiky
+    const { data: allConversations } = await supabase
+      .from('conversations')
+      .select('id, has_contact, created_at')
+      .eq('client_id', req.clientId);
+
+    const total = allConversations?.length || 0;
+    const totalLeads = allConversations?.filter(c => c.has_contact).length || 0;
+    
+    const weekConversations = allConversations?.filter(c => new Date(c.created_at) >= weekStart) || [];
+    const monthConversations = allConversations?.filter(c => new Date(c.created_at) >= monthStart) || [];
+    
+    const weekTotal = weekConversations.length;
+    const weekLeads = weekConversations.filter(c => c.has_contact).length;
+    
+    const monthTotal = monthConversations.length;
+    const monthLeads = monthConversations.filter(c => c.has_contact).length;
+
+    // Konverzný pomer
+    const conversionRate = total > 0 ? Math.round((totalLeads / total) * 100) : 0;
+    const weekConversionRate = weekTotal > 0 ? Math.round((weekLeads / weekTotal) * 100) : 0;
+    const monthConversionRate = monthTotal > 0 ? Math.round((monthLeads / monthTotal) * 100) : 0;
+
+    // Graf - posledných 30 dní
+    const dailyData = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(todayStart);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayConversations = allConversations?.filter(c => {
+        const convDate = new Date(c.created_at).toISOString().split('T')[0];
+        return convDate === dateStr;
+      }) || [];
+      
+      dailyData.push({
+        date: dateStr,
+        label: `${date.getDate()}.${date.getMonth() + 1}`,
+        conversations: dayConversations.length,
+        leads: dayConversations.filter(c => c.has_contact).length
+      });
+    }
+
+    // Najaktívnejšie hodiny
+    const hourlyStats = Array(24).fill(0);
+    allConversations?.forEach(c => {
+      const hour = new Date(c.created_at).getHours();
+      hourlyStats[hour]++;
+    });
+    
+    const hourlyData = hourlyStats.map((count, hour) => ({
+      hour: `${hour}:00`,
+      count
+    }));
+
+    // Najčastejšie otázky (prvé správy z konverzácií)
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('content, conversation_id')
+      .eq('role', 'user')
+      .order('created_at', { ascending: true });
+
+    // Získaj len prvé správy z každej konverzácie
+    const firstMessages = {};
+    messages?.forEach(m => {
+      if (!firstMessages[m.conversation_id]) {
+        firstMessages[m.conversation_id] = m.content;
+      }
+    });
+
+    // Spočítaj podobné otázky (jednoduchá verzia)
+    const questionCounts = {};
+    Object.values(firstMessages).forEach(content => {
+      const normalized = content.toLowerCase().substring(0, 50);
+      questionCounts[normalized] = (questionCounts[normalized] || 0) + 1;
+    });
+
+    const topQuestions = Object.entries(questionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([question, count]) => ({ question, count }));
+
+    res.json({
+      overview: {
+        total,
+        totalLeads,
+        conversionRate,
+        week: { total: weekTotal, leads: weekLeads, conversionRate: weekConversionRate },
+        month: { total: monthTotal, leads: monthLeads, conversionRate: monthConversionRate }
+      },
+      dailyData,
+      hourlyData,
+      topQuestions
+    });
+  } catch (error) {
+    console.error('Analytics error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 

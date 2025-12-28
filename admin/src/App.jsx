@@ -12,6 +12,7 @@ import Usage from './pages/Usage.jsx'
 import Products from './pages/Products.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
+import Analytics from './pages/Analytics.jsx'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -41,6 +42,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="analytics" element={<Analytics />} />
         </Route>
       </Routes>
     </AuthProvider>
