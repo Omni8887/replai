@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Replai - AI Chatbot pre váš e-shop</title>
+  <meta name="description" content="Automatizujte zákaznícku podporu s AI chatbotom. Odporúčanie produktov, zber leadov, 24/7 dostupnosť.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #7c3aed;
+      text-decoration: none;
+    }
+
+    .logo svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #7c3aed;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: white;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 160px 0 100px;
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      overflow: hidden;
+    }
+
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-content h1 {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-content h1 span {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-content p {
+      font-size: 20px;
+      color: #64748b;
+      margin-bottom: 32px;
+      max-width: 500px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+    }
+
+    .hero-image {
+      position: relative;
+    }
+
+    .hero-image img {
+      width: 100%;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-badge {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Stats */
+    .stats {
+      padding: 60px 0;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .stats .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      text-align: center;
+    }
+
+    .stat-item h3 {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-item p {
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    /* Features */
+    .features {
+      padding: 100px 0;
+      background: #f8fafc;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 60px;
+    }
+
+    .section-header h2 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      font-size: 18px;
+      color: #64748b;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: #64748b;
+    }
+
+    /* Pricing */
+    .pricing {
+      padding: 100px 0;
+      background: white;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: #f8fafc;
+      border-radius: 24px;
+      padding: 40px;
+      border: 2px solid #e2e8f0;
+      transition: all 0.3s;
+    }
+
+    .pricing-card.popular {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: white;
+      transform: scale(1.05);
+      border: none;
+    }
+
+    .pricing-card.popular .pricing-price span,
+    .pricing-card.popular p,
+    .pricing-card.popular li {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .pricing-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+
+    .pricing-card h3 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .pricing-price {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 24px 0;
+    }
+
+    .pricing-price span {
+      font-size: 18px;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 32px 0;
+    }
+
+    .pricing-features li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pricing-card.popular .pricing-features li {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .pricing-card .btn {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .pricing-card.popular .btn-primary {
+      background: white;
+      color: #7c3aed;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    /* How it works */
+    .how-it-works {
+      padding: 100px 0;
+      background: #f8fafc;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .step-number {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: white;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0 auto 24px;
+    }
+
+    .step h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .step p {
+      color: #64748b;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 100px 0;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      text-align: center;
+      color: white;
+    }
+
+    .cta h2 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .cta p {
+      font-size: 20px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta .btn-primary {
+      background: white;
+      color: #7c3aed;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Footer */
+    footer {
+      padding: 60px 0;
+      background: #1e293b;
+      color: white;
+    }
+
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer .logo {
+      color: white;
+    }
+
+    footer p {
+      color: #94a3b8;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .hero .container,
+      .features-grid,
+      .pricing-grid,
+      .steps,
+      .stats .container {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-content h1 {
+        font-size: 40px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .pricing-card.popular {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="#" class="logo">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7c3aed"/>
+              <stop offset="100%" style="stop-color:#4f46e5"/>
+            </linearGradient>
+          </defs>
+          <path d="M6 10C6 7.79086 7.79086 6 10 6H28C30.2091 6 32 7.79086 32 10V22C32 24.2091 30.2091 26 28 26H14L8 32V26H10C7.79086 26 6 24.2091 6 22V10Z" fill="url(#logoGrad)"/>
+          <path d="M16 18C16 15.7909 17.7909 14 20 14H38C40.2091 14 42 15.7909 42 18V30C42 32.2091 40.2091 34 38 34H36V40L30 34H20C17.7909 34 16 32.2091 16 30V18Z" fill="url(#logoGrad)" fill-opacity="0.7"/>
+        </svg>
+        Replai
+      </a>
+      <div class="nav-links">
+        <a href="#features">Funkcie</a>
+        <a href="#pricing">Cenník</a>
+        <a href="#how-it-works">Ako to funguje</a>
+        <a href="https://replai-chi.vercel.app/login" class="btn btn-primary">Prihlásiť sa</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>AI Chatbot pre váš <span>e-shop</span></h1>
+        <p>Automatizujte zákaznícku podporu, odporúčajte produkty a zbierajte leady. 24/7 bez prestávky.</p>
+        <div class="hero-buttons">
+          <a href="https://replai-chi.vercel.app/register" class="btn btn-primary">Vyskúšať zadarmo →</a>
+          <a href="#how-it-works" class="btn btn-secondary">Ako to funguje?</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="hero-badge">✨ Powered by AI</div>
+        <img src="https://placehold.co/600x500/f8fafc/7c3aed?text=Chat+Widget+Preview" alt="Replai Chat Widget">
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="container">
+      <div class="stat-item">
+        <h3>24/7</h3>
+        <p>Dostupnosť</p>
+      </div>
+      <div class="stat-item">
+        <h3>90%</h3>
+        <p>Automatických odpovedí</p>
+      </div>
+      <div class="stat-item">
+        <h3>3x</h3>
+        <p>Viac leadov</p>
+      </div>
+      <div class="stat-item">
+        <h3>&lt;2s</h3>
+        <p>Čas odpovede</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Všetko čo potrebujete</h2>
+        <p>Kompletné riešenie pre automatizáciu zákazníckej podpory</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #7c3aed22 0%, #4f46e522 100%);">🤖</div>
+          <h3>AI Odpovede</h3>
+          <p>Inteligentný chatbot odpovedá na otázky zákazníkov v prirodzenom jazyku.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #10b98122 0%, #05966922 100%);">📦</div>
+          <h3>Produktová databáza</h3>
+          <p>Nahrajte produkty a AI ich bude odporúčať zákazníkom s linkami.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #f59e0b22 0%, #d9770622 100%);">📧</div>
+          <h3>Zber leadov</h3>
+          <p>Automaticky extrahuje kontakty a posiela vám notifikácie.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #ef444422 0%, #dc262622 100%);">📊</div>
+          <h3>Analytika</h3>
+          <p>Sledujte konverzácie, konverzný pomer a najčastejšie otázky.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #3b82f622 0%, #2563eb22 100%);">🎨</div>
+          <h3>Vlastný dizajn</h3>
+          <p>Prispôsobte farby a texty widgetu vašej značke.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background: linear-gradient(135deg, #8b5cf622 0%, #7c3aed22 100%);">⚡</div>
+          <h3>Jednoduchá integrácia</h3>
+          <p>Stačí vložiť jeden riadok kódu na váš web.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2>Ako to funguje?</h2>
+        <p>Spustite AI chatbot na vašom webe za 5 minút</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Zaregistrujte sa</h3>
+          <p>Vytvorte si účet zadarmo a nastavte základné informácie o vašej firme.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Nahrajte produkty</h3>
+          <p>Importujte produkty z CSV alebo XML feedu. AI sa naučí váš sortiment.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Vložte kód</h3>
+          <p>Skopírujte embed kód a vložte ho na váš web. Hotovo!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <h2>Jednoduchý cenník</h2>
+        <p>Vyberte si plán podľa vašich potrieb</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Starter</h3>
+          <p>Pre malé e-shopy</p>
+          <div class="pricing-price">29€ <span>/mesiac</span></div>
+          <ul class="pricing-features">
+            <li>✓ 500 správ mesačne</li>
+            <li>✓ 100 produktov</li>
+            <li>✓ Email notifikácie</li>
+            <li>✓ Základná analytika</li>
+            <li>✓ Email podpora</li>
+          </ul>
+          <a href="https://replai-chi.vercel.app/register" class="btn btn-secondary">Začať</a>
+        </div>
+        <div class="pricing-card popular">
+          <div class="pricing-badge">Najobľúbenejší</div>
+          <h3>Pro</h3>
+          <p>Pre rastúce firmy</p>
+          <div class="pricing-price">79€ <span>/mesiac</span></div>
+          <ul class="pricing-features">
+            <li>✓ 2 000 správ mesačne</li>
+            <li>✓ Neobmedzené produkty</li>
+            <li>✓ CSV + XML import</li>
+            <li>✓ Pokročilá analytika</li>
+            <li>✓ Prioritná podpora</li>
+          </ul>
+          <a href="https://replai-chi.vercel.app/register" class="btn btn-primary">Začať</a>
+        </div>
+        <div class="pricing-card">
+          <h3>Business</h3>
+          <p>Pre veľké e-shopy</p>
+          <div class="pricing-price">149€ <span>/mesiac</span></div>
+          <ul class="pricing-features">
+            <li>✓ Neobmedzené správy</li>
+            <li>✓ Neobmedzené produkty</li>
+            <li>✓ Auto XML sync</li>
+            <li>✓ Vlastná doména</li>
+            <li>✓ Dedikovaná podpora</li>
+          </ul>
+          <a href="https://replai-chi.vercel.app/register" class="btn btn-secondary">Kontaktovať</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <h2>Pripravený automatizovať podporu?</h2>
+      <p>Začnite zadarmo a presvedčte sa sami. Žiadna kreditná karta.</p>
+      <a href="https://replai-chi.vercel.app/register" class="btn btn-primary">Vyskúšať zadarmo →</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <a href="#" class="logo">
+        <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#7c3aed"/>
+              <stop offset="100%" style="stop-color:#4f46e5"/>
+            </linearGradient>
+          </defs>
+          <path d="M6 10C6 7.79086 7.79086 6 10 6H28C30.2091 6 32 7.79086 32 10V22C32 24.2091 30.2091 26 28 26H14L8 32V26H10C7.79086 26 6 24.2091 6 22V10Z" fill="url(#logoGrad2)"/>
+          <path d="M16 18C16 15.7909 17.7909 14 20 14H38C40.2091 14 42 15.7909 42 18V30C42 32.2091 40.2091 34 38 34H36V40L30 34H20C17.7909 34 16 32.2091 16 30V18Z" fill="url(#logoGrad2)" fill-opacity="0.7"/>
+        </svg>
+        Replai
+      </a>
+      <p>© 2025 Replai. Všetky práva vyhradené.</p>
+    </div>
+  </footer>
+</body>
+</html>
