@@ -1242,12 +1242,45 @@
       passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    // Login form submit - API call
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      window.location.href = 'https://replai-chi.vercel.app/login';
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const submitBtn = this.querySelector('.login-submit');
+      
+      // Disable button
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Prihlasujem...';
+      
+      try {
+        const response = await fetch('https://replai-backend.onrender.com/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.token) {
+          // Redirect to dashboard with token
+          window.location.href = `https://replai-chi.vercel.app/login?token=${data.token}`;
+        } else {
+          alert(data.error || 'Nesprávne prihlasovacie údaje');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Prihlásiť';
+        }
+      } catch (error) {
+        alert('Chyba pripojenia k serveru');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Prihlásiť';
+      }
     });
 
-    // Form submission
+    // Contact Form submission
     const form = document.getElementById('contact-form');
     const formContent = document.getElementById('contact-form-content');
     const successMessage = document.getElementById('success-message');
@@ -1264,6 +1297,6 @@
       // Scroll to success message
       successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
-  </script>
+</script>
 </body>
 </html>
