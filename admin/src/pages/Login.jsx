@@ -1,9 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
-
-
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -12,10 +10,24 @@ export default function Login() {
   const { login, loading } = useAuth()
   const navigate = useNavigate()
 
+  // Check for token in URL (from landing page login)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tokenFromUrl = urlParams.get('token')
+    
+    if (tokenFromUrl) {
+      localStorage.setItem('token', tokenFromUrl)
+      // Clean URL
+      window.history.replaceState({}, '', '/login')
+      // Redirect to dashboard
+      window.location.href = '/'
+    }
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     const result = await login(email, password)
     if (result.success) {
       navigate('/')
@@ -89,11 +101,12 @@ export default function Login() {
             )}
           </button>
         </form>
+
         <div className="mt-4 text-center">
-  <Link to="/forgot-password" className="text-sm text-violet-600 hover:text-violet-700">
-    Zabudli ste heslo?
-  </Link>
-</div>
+          <Link to="/forgot-password" className="text-sm text-violet-600 hover:text-violet-700">
+            Zabudli ste heslo?
+          </Link>
+        </div>
 
         <p className="text-center mt-8 text-slate-500">
           Nemáte účet?{' '}
