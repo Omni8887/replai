@@ -299,15 +299,15 @@ app.post('/auth/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     
     const { data: client, error } = await supabase
-      .from('clients')
-      .insert({
-        name,
-        email,
-        password_hash: passwordHash,
-        website_url: websiteUrl
-      })
-      .select('id, name, email, api_key')
-      .single();
+  .from('clients')
+  .insert({
+    name,
+    email,
+    password_hash: passwordHash,
+    website_url: websiteUrl
+  })
+  .select('id, name, email, api_key, system_prompt, widget_settings, website_url')
+  .single();
     
     if (error) {
       if (error.code === '23505') {
@@ -331,10 +331,10 @@ app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     
     const { data: client, error } = await supabase
-      .from('clients')
-      .select('id, name, email, api_key, password_hash')
-      .eq('email', email)
-      .single();
+  .from('clients')
+  .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url')
+  .eq('email', email)
+  .single();
     
     if (error || !client) {
       return res.status(401).json({ error: 'Invalid credentials' });
