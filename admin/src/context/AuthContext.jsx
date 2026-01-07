@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
 const AuthContext = createContext()
-
 const API_URL = 'https://replai-backend.onrender.com'
 
 export function AuthProvider({ children }) {
@@ -21,6 +20,13 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true)
     try {
+      // Vyčistiť staré dáta pred prihlásením
+      localStorage.removeItem('token')
+      localStorage.removeItem('client')
+      setToken(null)
+      setClient(null)
+      delete axios.defaults.headers.common['Authorization']
+      
       const response = await axios.post(`${API_URL}/auth/login`, { email, password })
       const { token: newToken, client: newClient } = response.data
       
@@ -28,6 +34,7 @@ export function AuthProvider({ children }) {
       setClient(newClient)
       localStorage.setItem('token', newToken)
       localStorage.setItem('client', JSON.stringify(newClient))
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
       
       return { success: true }
     } catch (error) {
@@ -40,6 +47,13 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, websiteUrl) => {
     setLoading(true)
     try {
+      // Vyčistiť staré dáta pred registráciou
+      localStorage.removeItem('token')
+      localStorage.removeItem('client')
+      setToken(null)
+      setClient(null)
+      delete axios.defaults.headers.common['Authorization']
+      
       const response = await axios.post(`${API_URL}/auth/register`, { 
         name, 
         email, 
@@ -52,6 +66,7 @@ export function AuthProvider({ children }) {
       setClient(newClient)
       localStorage.setItem('token', newToken)
       localStorage.setItem('client', JSON.stringify(newClient))
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
       
       return { success: true }
     } catch (error) {
@@ -66,6 +81,7 @@ export function AuthProvider({ children }) {
     setClient(null)
     localStorage.removeItem('token')
     localStorage.removeItem('client')
+    delete axios.defaults.headers.common['Authorization']
   }
 
   const refreshProfile = async () => {
