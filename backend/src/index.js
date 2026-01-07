@@ -989,16 +989,23 @@ app.get('/admin/analytics', authMiddleware, async (req, res) => {
       count
     }));
 
-    // Najčastejšie otázky (prvé správy z konverzácií)
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('content, conversation_id')
-      .eq('role', 'user')
-      .order('created_at', { ascending: true });
+    // Najčastejšie otázky (prvé správy z konverzácií TOHTO klienta)
+const conversationIds = allConversations?.map(c => c.id) || [];
 
-    // Získaj len prvé správy z každej konverzácie
-    const firstMessages = {};
-    messages?.forEach(m => {
+let messages = [];
+if (conversationIds.length > 0) {
+  const { data: msgs } = await supabase
+    .from('messages')
+    .select('content, conversation_id')
+    .eq('role', 'user')
+    .in('conversation_id', conversationIds)
+    .order('created_at', { ascending: true });
+  messages = msgs || [];
+}
+
+   // Získaj len prvé správy z každej konverzácie
+const firstMessages = {};
+messages.forEach(m => {
       if (!firstMessages[m.conversation_id]) {
         firstMessages[m.conversation_id] = m.content;
       }
