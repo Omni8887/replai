@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import xml2js from 'xml2js';
 import { Resend } from 'resend';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -318,7 +319,7 @@ app.post('/auth/register', async (req, res) => {
     }
     
     // Vygeneruj verifikačný token
-    const token = require('crypto').randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hodín
     
     await supabase.from('email_verifications').insert({
@@ -457,7 +458,7 @@ app.post('/auth/forgot-password', async (req, res) => {
     }
     
     // Vygeneruj token
-    const token = require('crypto').randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hodina
     
     // Ulož token
