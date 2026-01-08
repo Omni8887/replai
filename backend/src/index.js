@@ -978,7 +978,7 @@ app.post('/admin/products/upload-xml', authMiddleware, async (req, res) => {
 async function sendLeadNotification(clientEmail, leadInfo, conversationId) {
   try {
     await resend.emails.send({
-      from: 'Replai <onboarding@resend.dev>',
+      from: 'Replai <noreply@replai.sk>',
       to: clientEmail,
       subject: '🎯 Nový lead z chatu!',
       html: `
