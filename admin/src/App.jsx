@@ -29,6 +29,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/" element={
           <ProtectedRoute>
             <Layout />
@@ -41,10 +44,7 @@ function App() {
           <Route path="integration" element={<Integration />} />
           <Route path="usage" element={<Usage />} />
           <Route path="products" element={<Products />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="verify-email" element={<VerifyEmail />} />
         </Route>
       </Routes>
     </AuthProvider>
