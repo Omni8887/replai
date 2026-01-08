@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, websiteUrl) => {
     setLoading(true)
     try {
-      // Vyčistiť staré dáta pred registráciou
+      // Vyčistiť staré dáta
       localStorage.removeItem('token')
       localStorage.removeItem('client')
       setToken(null)
@@ -60,6 +60,13 @@ export function AuthProvider({ children }) {
         password,
         websiteUrl 
       })
+      
+      // Ak vyžaduje verifikáciu, nevraciame token
+      if (response.data.requiresVerification) {
+        return { success: true, requiresVerification: true }
+      }
+      
+      // Starý flow (ak by verifikácia nebola zapnutá)
       const { token: newToken, client: newClient } = response.data
       
       setToken(newToken)

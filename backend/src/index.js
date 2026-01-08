@@ -299,15 +299,16 @@ app.post('/auth/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     
     const { data: client, error } = await supabase
-  .from('clients')
-  .insert({
-    name,
-    email,
-    password_hash: passwordHash,
-    website_url: websiteUrl
-  })
-  .select('id, name, email, api_key, system_prompt, widget_settings, website_url')
-  .single();
+      .from('clients')
+      .insert({
+        name,
+        email,
+        password_hash: passwordHash,
+        website_url: websiteUrl,
+        email_verified: false
+      })
+      .select('id, name, email')
+      .single();
     
     if (error) {
       if (error.code === '23505') {
@@ -316,11 +317,86 @@ app.post('/auth/register', async (req, res) => {
       throw error;
     }
     
-    const token = jwt.sign({ clientId: client.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    // Vygeneruj verifikačný token
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hodín
     
-    res.json({ client, token });
+    await supabase.from('email_verifications').insert({
+      client_id: client.id,
+      token: token,
+      expires_at: expiresAt.toISOString()
+    });
+    
+    // Pošli verifikačný email
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+    
+    await resend.emails.send({
+      from: 'Replai <onboarding@resend.dev>',
+      to: email,
+      subject: '✉️ Potvrďte váš email - Replai',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">✉️ Potvrďte váš email</h2>
+          <p>Ahoj ${name},</p>
+          <p>Ďakujeme za registráciu v Replai! Pre aktiváciu účtu potvrďte váš email:</p>
+          <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+            Potvrdiť email
+          </a>
+          <p style="color: #64748b; font-size: 14px;">Link je platný 24 hodín.</p>
+        </div>
+      `
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Registration successful. Please check your email to verify your account.',
+      requiresVerification: true
+    });
   } catch (error) {
     console.error('Register error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /auth/verify-email - Overenie emailu
+app.post('/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Token required' });
+    }
+    
+    // Nájdi platný token
+    const { data: verification } = await supabase
+      .from('email_verifications')
+      .select('id, client_id, expires_at')
+      .eq('token', token)
+      .single();
+    
+    if (!verification) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+    
+    if (new Date(verification.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Token expired' });
+    }
+    
+    // Aktivuj účet
+    await supabase
+      .from('clients')
+      .update({ email_verified: true, is_active: true })
+      .eq('id', verification.client_id);
+    
+    // Vymaž použitý token
+    await supabase
+      .from('email_verifications')
+      .delete()
+      .eq('id', verification.id);
+    
+    res.json({ success: true, message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Verify email error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -344,7 +420,11 @@ app.post('/auth/login', async (req, res) => {
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    
+    // Skontroluj či je email overený
+if (!client.email_verified) {
+  return res.status(401).json({ error: 'Please verify your email first' });
+}
+
     const token = jwt.sign({ clientId: client.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     delete client.password_hash;

@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Mail, Lock, Building, Globe, ArrowRight } from 'lucide-react'
-
+import { Mail, Lock, Building, Globe, ArrowRight, CheckCircle } from 'lucide-react'
 
 export default function Register() {
   const [name, setName] = useState('')
@@ -10,6 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [error, setError] = useState('')
+  const [registered, setRegistered] = useState(false)
   const { register, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -19,10 +19,41 @@ export default function Register() {
     
     const result = await register(name, email, password, websiteUrl)
     if (result.success) {
-      navigate('/')
+      if (result.requiresVerification) {
+        setRegistered(true)
+      } else {
+        navigate('/')
+      }
     } else {
       setError(result.error)
     }
+  }
+
+  // Zobraz success správu po registrácii
+  if (registered) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white p-10 rounded-2xl shadow-xl shadow-slate-200 w-full max-w-md border border-slate-200 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <CheckCircle size={32} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Skontrolujte email</h1>
+          <p className="text-slate-500 mb-6">
+            Poslali sme vám verifikačný link na <strong>{email}</strong>. 
+            Kliknite naň pre aktiváciu účtu.
+          </p>
+          <p className="text-sm text-slate-400 mb-6">
+            Link je platný 24 hodín.
+          </p>
+          <Link 
+            to="/login"
+            className="inline-block bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
+          >
+            Prejsť na prihlásenie
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
