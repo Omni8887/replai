@@ -332,7 +332,7 @@ app.post('/auth/register', async (req, res) => {
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
     
     await resend.emails.send({
-      from: 'Replai <onboarding@resend.dev>',
+      from: 'Replai <noreply@replai.sk>',
       to: email,
       subject: '✉️ Potvrďte váš email - Replai',
       html: `
@@ -472,7 +472,7 @@ app.post('/auth/forgot-password', async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
     
     await resend.emails.send({
-      from: 'Replai <onboarding@resend.dev>',
+      from: 'Replai <noreply@replai.sk>',
       to: client.email,
       subject: '🔐 Reset hesla - Replai',
       html: `
