@@ -1146,6 +1146,63 @@ function checkForContact(text) {
 
 app.use('/static', express.static('public'));
 
+
+// ============================================
+// CONTACT FORM ENDPOINT
+// ============================================
+
+app.post('/contact', async (req, res) => {
+  try {
+    const { name, email, company, phone, message } = req.body;
+    
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Meno, email a správa sú povinné' });
+    }
+    
+    // Pošli email na tvoju adresu
+    await resend.emails.send({
+      from: 'Replai <noreply@replai.sk>',
+      to: 'info@replai.sk', // Sem daj svoj reálny email
+      subject: `📬 Nová správa z kontaktného formulára - ${name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">📬 Nová správa z webu</h2>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 16px 0;">
+            <p><strong>👤 Meno:</strong> ${name}</p>
+            <p><strong>📧 Email:</strong> ${email}</p>
+            ${company ? `<p><strong>🏢 Firma:</strong> ${company}</p>` : ''}
+            ${phone ? `<p><strong>📱 Telefón:</strong> ${phone}</p>` : ''}
+          </div>
+          <div style="background: white; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <p><strong>💬 Správa:</strong></p>
+            <p style="white-space: pre-wrap;">${message}</p>
+          </div>
+        </div>
+      `
+    });
+    
+    // Pošli potvrdenie zákazníkovi
+    await resend.emails.send({
+      from: 'Replai <noreply@replai.sk>',
+      to: email,
+      subject: '✅ Prijali sme vašu správu - Replai',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">✅ Ďakujeme za správu!</h2>
+          <p>Ahoj ${name},</p>
+          <p>Prijali sme tvoju správu a ozveme sa ti čo najskôr, zvyčajne do 24 hodín.</p>
+          <p style="color: #64748b; font-size: 14px; margin-top: 24px;">S pozdravom,<br>Tím Replai</p>
+        </div>
+      `
+    });
+    
+    console.log('Contact form submitted by:', email);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Contact form error:', error);
+    res.status(500).json({ error: 'Nepodarilo sa odoslať správu' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
