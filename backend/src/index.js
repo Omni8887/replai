@@ -407,10 +407,10 @@ app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     
     const { data: client, error } = await supabase
-  .from('clients')
-  .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url')
-  .eq('email', email)
-  .single();
+    .from('clients')
+    .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified')
+    .eq('email', email)
+    .single();
     
     if (error || !client) {
       return res.status(401).json({ error: 'Invalid credentials' });
