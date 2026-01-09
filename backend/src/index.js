@@ -1316,6 +1316,34 @@ app.get('/admin/subscription', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// GET /auth/me - Get current user from token
+app.get('/auth/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const { data: client, error } = await supabase
+      .from('clients')
+      .select('id, name, email, api_key, system_prompt, widget_settings, website_url, email_verified')
+      .eq('id', decoded.clientId)
+      .single();
+    
+    if (error || !client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    
+    res.json(client);
+  } catch (error) {
+    console.error('Auth me error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
