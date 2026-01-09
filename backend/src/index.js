@@ -1287,6 +1287,35 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'Nepodarilo sa odoslať správu' });
   }
 });
+
+// GET /admin/subscription - Stav predplatného
+app.get('/admin/subscription', authMiddleware, async (req, res) => {
+  try {
+    const client = await checkAndResetMonthlyMessages(req.clientId);
+    
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    
+    const tier = client.subscription_tier || 'free';
+    const limit = PLAN_LIMITS[tier]?.messages || 10;
+    const used = client.messages_this_month || 0;
+    const remaining = Math.max(0, limit - used);
+    const percentage = limit === Infinity ? 0 : Math.round((used / limit) * 100);
+    
+    res.json({
+      tier,
+      messagesUsed: used,
+      messagesLimit: limit === Infinity ? 'Neobmedzené' : limit,
+      messagesRemaining: limit === Infinity ? 'Neobmedzené' : remaining,
+      percentage,
+      isLimitReached: limit !== Infinity && used >= limit
+    });
+  } catch (error) {
+    console.error('Subscription error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================

@@ -704,7 +704,16 @@
           }),
         });
 
-        if (!response.ok) throw new Error('Network error');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.limit_reached) {
+            this.hideTypingIndicator();
+            this.appendMessage('Asistent je momentálne nedostupný. Zanechajte nám prosím váš email alebo telefón a budeme vás kontaktovať.', false);
+            this.setOnlineStatus(false);
+            return;
+          }
+          throw new Error('Network error');
+        }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
