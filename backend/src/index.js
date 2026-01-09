@@ -29,6 +29,39 @@ const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
 
+// Limity pre jednotlivé plány
+const PLAN_LIMITS = {
+  free: { messages: 10, products: 0 },
+  starter: { messages: 500, products: 100 },
+  pro: { messages: 2000, products: Infinity },
+  business: { messages: Infinity, products: Infinity }
+};
+
+// Funkcia na kontrolu a reset mesačných správ
+async function checkAndResetMonthlyMessages(clientId) {
+  const { data: client } = await supabase
+    .from('clients')
+    .select('messages_this_month, messages_reset_at, subscription_tier')
+    .eq('id', clientId)
+    .single();
+  
+  if (!client) return null;
+  
+  const resetAt = new Date(client.messages_reset_at);
+  const now = new Date();
+  
+  // Ak prešiel mesiac, resetuj počítadlo
+  if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+    await supabase
+      .from('clients')
+      .update({ messages_this_month: 0, messages_reset_at: now.toISOString() })
+      .eq('id', clientId);
+    return { ...client, messages_this_month: 0 };
+  }
+  
+  return client;
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -85,7 +118,17 @@ app.post('/chat', async (req, res) => {
     if (clientError || !client) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
-    
+    // Skontroluj limit správ
+const clientData = await checkAndResetMonthlyMessages(client.id);
+const tier = clientData?.subscription_tier || 'free';
+const limit = PLAN_LIMITS[tier]?.messages || 10;
+
+if (clientData.messages_this_month >= limit) {
+  return res.status(429).json({ 
+    error: 'Dosiahli ste limit správ pre váš plán. Upgradujte na vyšší plán.',
+    limit_reached: true 
+  });
+}
     // Nájdi alebo vytvor konverzáciu
     let conversationId;
     const { data: existingConv } = await supabase
@@ -229,7 +272,12 @@ if (contactInfo.hasContact) {
     sendLeadNotification(clientData.email, contactInfo, conversationId);
   }
 }
-      
+      // Pripočítaj správu k mesačnému limitu
+await supabase
+.from('clients')
+.update({ messages_this_month: clientData.messages_this_month + 1 })
+.eq('id', client.id);
+
       res.write('data: [DONE]\n\n');
       res.end();
     });
@@ -829,6 +877,29 @@ app.get('/admin/products', authMiddleware, async (req, res) => {
 app.post('/admin/products/upload', authMiddleware, async (req, res) => {
   try {
     const { products } = req.body;
+    // Skontroluj limit produktov
+const { data: clientData } = await supabase
+.from('clients')
+.select('subscription_tier')
+.eq('id', req.clientId)
+.single();
+
+const tier = clientData?.subscription_tier || 'free';
+const productLimit = PLAN_LIMITS[tier]?.products || 0;
+
+if (productLimit === 0) {
+return res.status(403).json({ error: 'FREE plán neumožňuje nahrávať produkty. Upgradujte na STARTER.' });
+}
+
+// Skontroluj aktuálny počet produktov
+const { count } = await supabase
+.from('products')
+.select('*', { count: 'exact', head: true })
+.eq('client_id', req.clientId);
+
+if (count + products.length > productLimit && productLimit !== Infinity) {
+return res.status(403).json({ error: `Limit produktov pre váš plán je ${productLimit}. Máte ${count} produktov.` });
+}
     
     if (!products || !Array.isArray(products)) {
       return res.status(400).json({ error: 'Products array required' });
@@ -915,6 +986,19 @@ app.get('/admin/products/search', authMiddleware, async (req, res) => {
 app.post('/admin/products/upload-xml', authMiddleware, async (req, res) => {
   try {
     const { xmlContent, xmlUrl } = req.body;
+    // Skontroluj limit produktov
+const { data: clientData } = await supabase
+.from('clients')
+.select('subscription_tier')
+.eq('id', req.clientId)
+.single();
+
+const tier = clientData?.subscription_tier || 'free';
+const productLimit = PLAN_LIMITS[tier]?.products || 0;
+
+if (productLimit === 0) {
+return res.status(403).json({ error: 'FREE plán neumožňuje nahrávať produkty. Upgradujte na STARTER.' });
+}
     
     let xmlData = xmlContent;
     
