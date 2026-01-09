@@ -31,7 +31,7 @@ const anthropic = new Anthropic({
 
 // Limity pre jednotlivé plány
 const PLAN_LIMITS = {
-  free: { messages: 10, products: 0 },
+  free: { messages: 50, products: 0 },
   starter: { messages: 500, products: 100 },
   pro: { messages: 2000, products: Infinity },
   business: { messages: Infinity, products: Infinity }
