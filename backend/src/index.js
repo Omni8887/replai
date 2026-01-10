@@ -9,11 +9,13 @@ import { v4 as uuidv4 } from 'uuid';
 import xml2js from 'xml2js';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import Stripe from 'stripe';
 
 dotenv.config();
 
 // Až tu, po dotenv.config()
 const resend = new Resend(process.env.RESEND_API_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +67,8 @@ async function checkAndResetMonthlyMessages(clientId) {
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Stripe webhook needs raw body - must be before express.json()
+app.use('/webhook/stripe', express.raw({ type: 'application/json' }));
 
 // ============================================
 // WIDGET ENDPOINTS
@@ -1342,6 +1346,135 @@ app.get('/auth/me', async (req, res) => {
   } catch (error) {
     console.error('Auth me error:', error);
     res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// ============================================
+// STRIPE PAYMENTS
+// ============================================
+
+const STRIPE_PRICES = {
+  starter: 'price_1So4AeC6Xvli9PAWGfRkaBHP',
+  pro: 'price_1So4AvC6Xvli9PAW339ZbCp5'
+};
+
+// POST /create-checkout-session - Vytvorí Stripe checkout
+app.post('/create-checkout-session', authMiddleware, async (req, res) => {
+  try {
+    const { plan } = req.body;
+    
+    if (!STRIPE_PRICES[plan]) {
+      return res.status(400).json({ error: 'Neplatný plán' });
+    }
+    
+    // Získaj klienta
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id, email, name')
+      .eq('id', req.clientId)
+      .single();
+    
+    if (!client) {
+      return res.status(404).json({ error: 'Klient nenájdený' });
+    }
+    
+    // Vytvor Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      customer_email: client.email,
+      line_items: [{
+        price: STRIPE_PRICES[plan],
+        quantity: 1
+      }],
+      metadata: {
+        clientId: client.id,
+        plan: plan
+      },
+      success_url: `${process.env.FRONTEND_URL}/settings?payment=success`,
+      cancel_url: `${process.env.FRONTEND_URL}/settings?payment=cancelled`
+    });
+    
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    res.status(500).json({ error: 'Nepodarilo sa vytvoriť platbu' });
+  }
+});
+
+// POST /webhook/stripe - Stripe webhook
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  
+  // Spracuj udalosti
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const clientId = session.metadata.clientId;
+    const plan = session.metadata.plan;
+    
+    // Aktivuj predplatné
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+    
+    await supabase
+      .from('clients')
+      .update({
+        subscription_tier: plan,
+        subscription_expires_at: expiresAt.toISOString(),
+        messages_this_month: 0 // Reset správ
+      })
+      .eq('id', clientId);
+    
+    console.log(`✅ Aktivované ${plan} pre klienta ${clientId}`);
+  }
+  
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const clientId = subscription.metadata?.clientId;
+    
+    if (clientId) {
+      await supabase
+        .from('clients')
+        .update({
+          subscription_tier: 'free',
+          subscription_expires_at: null
+        })
+        .eq('id', clientId);
+      
+      console.log(`⚠️ Zrušené predplatné pre klienta ${clientId}`);
+    }
+  }
+  
+  res.json({ received: true });
+});
+
+// GET /admin/billing - Získaj billing info
+app.get('/admin/billing', authMiddleware, async (req, res) => {
+  try {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('subscription_tier, subscription_expires_at')
+      .eq('id', req.clientId)
+      .single();
+    
+    res.json({
+      tier: client?.subscription_tier || 'free',
+      expiresAt: client?.subscription_expires_at
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 // ============================================
