@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [usage, setUsage] = useState(null)
   const [subscription, setSubscription] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -29,6 +30,21 @@ export default function Dashboard() {
       console.error('Failed to load data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUpgrade = async (plan) => {
+    setCheckoutLoading(true)
+    try {
+      const response = await axios.post(`${API_URL}/create-checkout-session`, { plan })
+      if (response.data.url) {
+        window.location.href = response.data.url
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Nepodarilo sa vytvoriť platbu. Skúste znova.')
+    } finally {
+      setCheckoutLoading(false)
     }
   }
 
@@ -106,14 +122,22 @@ export default function Dashboard() {
               <p className="text-red-600 text-sm">Váš chatbot je offline. Upgradujte plán pre obnovenie služby.</p>
             </div>
           </div>
-          <a 
-            href="https://replai.sk/#pricing" 
-            target="_blank"
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-semibold transition flex items-center gap-2"
-          >
-            <Crown size={18} />
-            Upgradovať
-          </a>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleUpgrade('starter')}
+              disabled={checkoutLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+            >
+              STARTER 29€
+            </button>
+            <button 
+              onClick={() => handleUpgrade('pro')}
+              disabled={checkoutLoading}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+            >
+              PRO 59€
+            </button>
+          </div>
         </div>
       )}
 
@@ -129,14 +153,22 @@ export default function Dashboard() {
               <p className="text-amber-600 text-sm">Zostáva vám {subscription.messagesRemaining} správ z {subscription.messagesLimit}.</p>
             </div>
           </div>
-          <a 
-            href="https://replai.sk/#pricing" 
-            target="_blank"
-            className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-semibold transition flex items-center gap-2"
-          >
-            <Crown size={18} />
-            Upgradovať
-          </a>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleUpgrade('starter')}
+              disabled={checkoutLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+            >
+              STARTER 29€
+            </button>
+            <button 
+              onClick={() => handleUpgrade('pro')}
+              disabled={checkoutLoading}
+              className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+            >
+              PRO 59€
+            </button>
+          </div>
         </div>
       )}
 
@@ -154,14 +186,22 @@ export default function Dashboard() {
               </div>
             </div>
             {subscription.tier === 'free' && (
-              <a 
-                href="https://replai.sk/#pricing" 
-                target="_blank"
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg shadow-violet-200"
-              >
-                <Crown size={18} />
-                Upgradovať plán
-              </a>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handleUpgrade('starter')}
+                  disabled={checkoutLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+                >
+                  STARTER 29€
+                </button>
+                <button 
+                  onClick={() => handleUpgrade('pro')}
+                  disabled={checkoutLoading}
+                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 shadow-lg shadow-violet-200"
+                >
+                  PRO 59€
+                </button>
+              </div>
             )}
           </div>
           
