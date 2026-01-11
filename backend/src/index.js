@@ -66,9 +66,65 @@ async function checkAndResetMonthlyMessages(clientId) {
 
 // Middleware
 app.use(cors());
+
+// Stripe webhook - MUST be before express.json()
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const clientId = session.metadata.clientId;
+    const plan = session.metadata.plan;
+    
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+    
+    await supabase
+      .from('clients')
+      .update({
+        subscription_tier: plan,
+        subscription_expires_at: expiresAt.toISOString(),
+        messages_this_month: 0
+      })
+      .eq('id', clientId);
+    
+    console.log(`✅ Aktivované ${plan} pre klienta ${clientId}`);
+  }
+  
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const clientId = subscription.metadata?.clientId;
+    
+    if (clientId) {
+      await supabase
+        .from('clients')
+        .update({
+          subscription_tier: 'free',
+          subscription_expires_at: null
+        })
+        .eq('id', clientId);
+      
+      console.log(`⚠️ Zrušené predplatné pre klienta ${clientId}`);
+    }
+  }
+  
+  res.json({ received: true });
+});
+
+// JSON parsing - AFTER webhook
 app.use(express.json());
-// Stripe webhook needs raw body - must be before express.json()
-app.use('/webhook/stripe', express.raw({ type: 'application/json' }));
 
 // ============================================
 // WIDGET ENDPOINTS
