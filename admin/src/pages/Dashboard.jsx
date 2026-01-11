@@ -173,37 +173,48 @@ export default function Dashboard() {
       )}
 
       {/* Subscription Card */}
-      {subscription && (
-        <div className="mb-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 bg-gradient-to-br ${getPlanColor(subscription.tier)} rounded-xl flex items-center justify-center shadow-lg`}>
-                <Crown size={24} className="text-white" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-sm font-medium">Váš plán</p>
-                <p className="text-2xl font-bold text-slate-900">{getPlanName(subscription.tier)}</p>
-              </div>
-            </div>
-            {subscription.tier === 'free' && (
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => handleUpgrade('starter')}
-                  disabled={checkoutLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-                >
-                  STARTER 29€
-                </button>
-                <button 
-                  onClick={() => handleUpgrade('pro')}
-                  disabled={checkoutLoading}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 shadow-lg shadow-violet-200"
-                >
-                  PRO 59€
-                </button>
-              </div>
-            )}
-          </div>
+{loading ? (
+  <div className="mb-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-pulse">
+    <div className="flex items-center gap-4 mb-4">
+      <div className="w-12 h-12 bg-slate-200 rounded-xl"></div>
+      <div>
+        <div className="h-4 bg-slate-200 rounded w-20 mb-2"></div>
+        <div className="h-6 bg-slate-200 rounded w-28"></div>
+      </div>
+    </div>
+    <div className="h-3 bg-slate-200 rounded w-full"></div>
+  </div>
+) : subscription && (
+  <div className="mb-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 bg-gradient-to-br ${getPlanColor(subscription.tier)} rounded-xl flex items-center justify-center shadow-lg`}>
+          <Crown size={24} className="text-white" />
+        </div>
+        <div>
+          <p className="text-slate-500 text-sm font-medium">Váš plán</p>
+          <p className="text-2xl font-bold text-slate-900">{getPlanName(subscription.tier)}</p>
+        </div>
+      </div>
+      {subscription.tier === 'free' && (
+        <div className="flex gap-2">
+          <button 
+            onClick={() => handleUpgrade('starter')}
+            disabled={checkoutLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
+          >
+            STARTER 29€
+          </button>
+          <button 
+            onClick={() => handleUpgrade('pro')}
+            disabled={checkoutLoading}
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 shadow-lg shadow-violet-200"
+          >
+            PRO 59€
+          </button>
+        </div>
+      )}
+    </div>
           
           {/* Progress bar */}
           {subscription.messagesLimit !== 'Neobmedzené' && (
