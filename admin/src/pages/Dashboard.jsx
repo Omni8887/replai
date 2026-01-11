@@ -196,25 +196,53 @@ export default function Dashboard() {
           <p className="text-2xl font-bold text-slate-900">{getPlanName(subscription.tier)}</p>
         </div>
       </div>
+      {(subscription.tier === 'free' || subscription.tier === 'starter') && (
+  <div className="mt-6 pt-6 border-t border-slate-100">
+    <p className="text-sm text-slate-500 mb-4">Upgradujte pre viac správ a funkcií</p>
+    <div className="flex gap-3">
       {subscription.tier === 'free' && (
-        <div className="flex gap-2">
-          <button 
-            onClick={() => handleUpgrade('starter')}
-            disabled={checkoutLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-          >
-            STARTER 29€
-          </button>
-          <button 
-            onClick={() => handleUpgrade('pro')}
-            disabled={checkoutLoading}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 shadow-lg shadow-violet-200"
-          >
-            PRO 59€
-          </button>
-        </div>
+        <button 
+          onClick={() => handleUpgrade('starter')}
+          disabled={checkoutLoading}
+          className="flex-1 group relative bg-white border-2 border-slate-200 hover:border-blue-500 rounded-xl p-4 transition-all disabled:opacity-50"
+        >
+          <div className="text-left">
+            <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Starter</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className="text-2xl font-bold text-slate-900">29€</span>
+              <span className="text-slate-500 text-sm">/mesiac</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">500 správ/mesiac</p>
+          </div>
+          <div className="absolute top-4 right-4 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition">
+            <ArrowRight size={16} className="text-blue-600" />
+          </div>
+        </button>
       )}
+      <button 
+        onClick={() => handleUpgrade('pro')}
+        disabled={checkoutLoading}
+        className="flex-1 group relative bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl p-4 transition-all hover:shadow-lg hover:shadow-violet-200 disabled:opacity-50"
+      >
+        <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full">
+          OBĽÚBENÝ
+        </div>
+        <div className="text-left">
+          <span className="text-xs font-semibold text-violet-200 uppercase tracking-wide">Pro</span>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-2xl font-bold text-white">59€</span>
+            <span className="text-violet-200 text-sm">/mesiac</span>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">2 000 správ/mesiac</p>
+        </div>
+        <div className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition">
+          <Crown size={16} className="text-white" />
+        </div>
+      </button>
     </div>
+  </div>
+)}
+</div>
           
           {/* Progress bar */}
           {subscription.messagesLimit !== 'Neobmedzené' && (
