@@ -1533,6 +1533,32 @@ app.get('/admin/billing', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// PUT /admin/profile - Update client profile
+app.put('/admin/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, email, website_url } = req.body;
+    
+    const { data, error } = await supabase
+      .from('clients')
+      .update({ 
+        name, 
+        email, 
+        website_url,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', req.clientId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Nepodarilo sa uložiť profil' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
