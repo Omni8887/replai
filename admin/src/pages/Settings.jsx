@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Bot, Palette, Eye, Save, Check } from 'lucide-react'
+import { Bot, Palette, Eye, Save, Check, Sparkles } from 'lucide-react'
 
 export default function Settings() {
   const { client, API_URL, refreshProfile } = useAuth()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   
   const [systemPrompt, setSystemPrompt] = useState('')
   const [widgetSettings, setWidgetSettings] = useState({
@@ -46,6 +47,21 @@ export default function Settings() {
     }
   }
 
+  const handleOrderPrompt = async () => {
+    setCheckoutLoading(true)
+    try {
+      const response = await axios.post(`${API_URL}/create-service-checkout`, { service: 'prompt_custom' })
+      if (response.data.url) {
+        window.location.href = response.data.url
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Nepodarilo sa vytvoriť objednávku. Skúste znova.')
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -70,6 +86,29 @@ export default function Settings() {
             className="w-full h-48 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none transition resize-none text-slate-700"
             placeholder="Si priateľský zákaznícky asistent firmy XY. Odpovedaj stručne a pomocne. Naša firma predáva..."
           />
+        </div>
+
+        {/* Prompt na mieru */}
+        <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-2xl border border-violet-200 p-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Sparkles size={24} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900">Neviete ako nastaviť prompt?</h3>
+                <p className="text-slate-600 text-sm">Vytvoríme vám profesionálny prompt na mieru pre váš biznis</p>
+              </div>
+            </div>
+            <button
+              onClick={handleOrderPrompt}
+              disabled={checkoutLoading}
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-violet-200"
+            >
+              <Sparkles size={18} />
+              {checkoutLoading ? 'Načítavam...' : 'Prompt na mieru za 19,90€'}
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
