@@ -443,6 +443,42 @@ export default function Dashboard() {
         ))}
       </div>
 
+
+{/* Služby */}
+<div className="mb-8 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-2xl border border-violet-200 p-6">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-4">
+      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+        <Zap size={24} className="text-white" />
+      </div>
+      <div>
+        <h3 className="font-bold text-slate-900">Potrebujete pomoc s nastavením?</h3>
+        <p className="text-slate-600 text-sm">Vytvoríme vám profesionálny prompt na mieru pre váš biznis</p>
+      </div>
+    </div>
+    <button
+      onClick={async () => {
+        setCheckoutLoading(true);
+        try {
+          const response = await axios.post(`${API_URL}/create-service-checkout`, { service: 'prompt_custom' });
+          if (response.data.url) {
+            window.location.href = response.data.url;
+          }
+        } catch (error) {
+          alert('Nepodarilo sa vytvoriť objednávku');
+        } finally {
+          setCheckoutLoading(false);
+        }
+      }}
+      disabled={checkoutLoading}
+      className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-violet-200"
+    >
+      <Crown size={18} />
+      Prompt na mieru - 20€
+    </button>
+  </div>
+</div>
+
       {/* Posledné konverzácie */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
         <div className="p-6 border-b border-slate-200 flex justify-between items-center">
