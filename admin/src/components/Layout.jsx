@@ -13,7 +13,10 @@ export default function Layout() {
     // Skontroluj či je používateľ admin
     const checkAdmin = async () => {
       try {
-        const response = await axios.get(`${API_URL}/superadmin/stats`)
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${API_URL}/superadmin/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         if (response.status === 200) {
           setIsAdmin(true)
         }
