@@ -71,7 +71,7 @@ app.use(cors());
 app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
-  
+
   try {
     event = stripe.webhooks.constructEvent(
       req.body,
@@ -82,31 +82,57 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-  
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const clientId = session.metadata.clientId;
     const plan = session.metadata.plan;
-    
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
-    
-    await supabase
-      .from('clients')
-      .update({
-        subscription_tier: plan,
-        subscription_expires_at: expiresAt.toISOString(),
-        messages_this_month: 0
-      })
-      .eq('id', clientId);
-    
-    console.log(`✅ Aktivované ${plan} pre klienta ${clientId}`);
+    const service = session.metadata.service;
+
+    // Jednorázová služba (prompt na mieru)
+    if (service === 'prompt_custom') {
+      await resend.emails.send({
+        from: 'Replai <noreply@replai.sk>',
+        to: 'info@replai.sk',
+        subject: '🎉 Nová objednávka: Prompt na mieru',
+        html: `
+          <h2>Nová objednávka služby!</h2>
+          <p><strong>Služba:</strong> Prompt na mieru (20€)</p>
+          <p><strong>Klient:</strong> ${session.metadata.clientName}</p>
+          <p><strong>Email:</strong> ${session.metadata.clientEmail}</p>
+          <p><strong>Web:</strong> ${session.metadata.clientWebsite || 'Neuvedené'}</p>
+          <p><strong>Client ID:</strong> ${clientId}</p>
+          <hr>
+          <p>Kontaktuj klienta a vytvor mu prompt na mieru.</p>
+        `
+      });
+      
+      console.log(`✅ Objednávka prompt_custom od ${session.metadata.clientEmail}`);
+      return res.json({ received: true });
+    }
+
+    // Predplatné
+    if (plan) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+      await supabase
+        .from('clients')
+        .update({
+          subscription_tier: plan,
+          subscription_expires_at: expiresAt.toISOString(),
+          messages_this_month: 0
+        })
+        .eq('id', clientId);
+
+      console.log(`✅ Aktivované ${plan} pre klienta ${clientId}`);
+    }
   }
-  
+
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
     const clientId = subscription.metadata?.clientId;
-    
+
     if (clientId) {
       await supabase
         .from('clients')
@@ -115,11 +141,11 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
           subscription_expires_at: null
         })
         .eq('id', clientId);
-      
+
       console.log(`⚠️ Zrušené predplatné pre klienta ${clientId}`);
     }
   }
-  
+
   res.json({ received: true });
 });
 
@@ -1411,7 +1437,8 @@ app.get('/auth/me', async (req, res) => {
 
 const STRIPE_PRICES = {
   starter: 'price_1So4AeC6Xvli9PAWGfRkaBHP',
-  pro: 'price_1So4AvC6Xvli9PAW339ZbCp5'
+  pro: 'price_1So4AvC6Xvli9PAW339ZbCp5',
+  prompt_custom: 'price_1Sp4nhC6Xvli9PAWc8WSJGqK'
 };
 
 // POST /create-checkout-session - Vytvorí Stripe checkout
@@ -1557,6 +1584,55 @@ app.put('/admin/profile', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({ error: 'Nepodarilo sa uložiť profil' });
+  }
+});
+
+// POST /create-service-checkout - Jednorázová platba za služby
+app.post('/create-service-checkout', authMiddleware, async (req, res) => {
+  try {
+    const { service } = req.body;
+    
+    const servicePrices = {
+      prompt_custom: 'price_1Sp4nhC6Xvli9PAWc8WSJGqK'
+    };
+    
+    if (!servicePrices[service]) {
+      return res.status(400).json({ error: 'Neplatná služba' });
+    }
+    
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id, email, name, website_url')
+      .eq('id', req.clientId)
+      .single();
+    
+    if (!client) {
+      return res.status(404).json({ error: 'Klient nenájdený' });
+    }
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: client.email,
+      line_items: [{
+        price: servicePrices[service],
+        quantity: 1
+      }],
+      metadata: {
+        clientId: client.id,
+        clientEmail: client.email,
+        clientName: client.name,
+        clientWebsite: client.website_url,
+        service: service
+      },
+      success_url: `${process.env.FRONTEND_URL}/settings?service=success`,
+      cancel_url: `${process.env.FRONTEND_URL}/settings?service=cancelled`
+    });
+    
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Service checkout error:', error);
+    res.status(500).json({ error: 'Nepodarilo sa vytvoriť platbu' });
   }
 });
 // ============================================
