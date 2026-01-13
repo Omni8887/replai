@@ -705,6 +705,25 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// Admin middleware - len pre admina
+const adminMiddleware = async (req, res, next) => {
+  try {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('is_admin')
+      .eq('id', req.clientId)
+      .single();
+    
+    if (!client?.is_admin) {
+      return res.status(403).json({ error: 'Prístup zamietnutý' });
+    }
+    
+    next();
+  } catch (error) {
+    res.status(403).json({ error: 'Prístup zamietnutý' });
+  }
+};
+
 // GET /admin/profile - Profil klienta
 app.get('/admin/profile', authMiddleware, async (req, res) => {
   try {
@@ -1633,6 +1652,100 @@ app.post('/create-service-checkout', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Service checkout error:', error);
     res.status(500).json({ error: 'Nepodarilo sa vytvoriť platbu' });
+  }
+});
+
+// ============================================
+// SUPER ADMIN ENDPOINTS
+// ============================================
+
+// GET /superadmin/stats - Celkové štatistiky
+app.get('/superadmin/stats', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { data: clients } = await supabase
+      .from('clients')
+      .select('id, subscription_tier, created_at');
+    
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id, created_at');
+    
+    const stats = {
+      totalClients: clients?.length || 0,
+      freeClients: clients?.filter(c => c.subscription_tier === 'free').length || 0,
+      starterClients: clients?.filter(c => c.subscription_tier === 'starter').length || 0,
+      proClients: clients?.filter(c => c.subscription_tier === 'pro').length || 0,
+      businessClients: clients?.filter(c => c.subscription_tier === 'business').length || 0,
+      totalConversations: conversations?.length || 0,
+      monthlyRevenue: (clients?.filter(c => c.subscription_tier === 'starter').length || 0) * 29 + 
+                      (clients?.filter(c => c.subscription_tier === 'pro').length || 0) * 59
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /superadmin/clients - Zoznam všetkých klientov
+app.get('/superadmin/clients', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('id, name, email, website_url, subscription_tier, messages_this_month, created_at, email_verified')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    res.json(clients);
+  } catch (error) {
+    console.error('Admin clients error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /superadmin/clients/:id - Upraviť klienta (plán atď.)
+app.put('/superadmin/clients/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { subscription_tier, is_admin } = req.body;
+    
+    const updateData = {};
+    if (subscription_tier) updateData.subscription_tier = subscription_tier;
+    if (typeof is_admin === 'boolean') updateData.is_admin = is_admin;
+    
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Admin update client error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /superadmin/clients/:id - Zmazať klienta
+app.delete('/superadmin/clients/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Zmaž všetky súvisiace dáta
+    await supabase.from('messages').delete().eq('client_id', id);
+    await supabase.from('conversations').delete().eq('client_id', id);
+    await supabase.from('products').delete().eq('client_id', id);
+    await supabase.from('clients').delete().eq('id', id);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin delete client error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 // ============================================

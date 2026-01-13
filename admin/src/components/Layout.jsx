@@ -1,10 +1,28 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function Layout() {
-  const { client, logout } = useAuth()
+  const { client, logout, API_URL } = useAuth()
   const navigate = useNavigate()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Skontroluj či je používateľ admin
+    const checkAdmin = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/superadmin/stats`)
+        if (response.status === 200) {
+          setIsAdmin(true)
+        }
+      } catch (error) {
+        setIsAdmin(false)
+      }
+    }
+    checkAdmin()
+  }, [API_URL])
 
   const handleLogout = () => {
     logout()
@@ -35,7 +53,7 @@ export default function Layout() {
             </div>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-4">
           {navItems.map(item => (
             <NavLink
@@ -54,6 +72,23 @@ export default function Layout() {
               <span>{item.label}</span>
             </NavLink>
           ))}
+
+          {/* Super Admin - len pre adminov */}
+          {isAdmin && (
+            <NavLink
+              to="/superadmin"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium mt-4 ${
+                  isActive 
+                    ? 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-200' 
+                    : 'text-red-600 hover:bg-red-50 border border-red-200'
+                }`
+              }
+            >
+              <Shield size={20} />
+              <span>Super Admin</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-200">
