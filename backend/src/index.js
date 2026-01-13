@@ -1593,7 +1593,7 @@ app.post('/create-service-checkout', authMiddleware, async (req, res) => {
     const { service } = req.body;
     
     const servicePrices = {
-      prompt_custom: 'price_1Sp4nhC6Xvli9PAWc8WSJGqK'
+      prompt_custom: 'price_1Sp6L9C6Xvli9PAWxdbAx2HR'
     };
     
     if (!servicePrices[service]) {
