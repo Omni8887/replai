@@ -263,19 +263,50 @@ const now = new Date();
 const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-// Načítaj produkty pre AI
+// Načítaj produkty pre AI pomocou full-text search
 let productsContext = '';
-const { data: products } = await supabase
-  .from('products')
-  .select('name, description, price, category, url')
-  .eq('client_id', client.id)
-  .limit(50);
+let products = [];
 
-if (products && products.length > 0) {
+// Kľúčové slová na ignorovanie
+const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem'];
+
+const searchWords = message.toLowerCase()
+  .replace(/[?!.,]/g, '')
+  .split(/\s+/)
+  .filter(word => word.length > 2 && !stopWords.includes(word));
+
+// Hľadaj pomocou full-text search
+if (searchWords.length > 0) {
+  const searchQuery = searchWords.join(' ');
+  
+  const { data } = await supabase
+    .rpc('search_products', { 
+      search_query: searchQuery, 
+      p_client_id: client.id 
+    });
+  
+  if (data && data.length > 0) {
+    products = data;
+  }
+}
+
+// Ak sa nič nenašlo a klient má málo produktov, zobraz všetky
+if (products.length === 0) {
+  const { data, count } = await supabase
+    .from('products')
+    .select('name, description, price, category, url', { count: 'exact' })
+    .eq('client_id', client.id)
+    .limit(50);
+  
+  if (count && count <= 50) {
+    products = data || [];
+  }
+}
+
+if (products.length > 0) {
   productsContext = `
 
 ⚠️ DATABÁZA PRODUKTOV - POUŽI LEN TIETO PRODUKTY! ⚠️
-NIKDY si nevymýšľaj produkty ani linky, ktoré tu nie sú!
 
 DOSTUPNÉ PRODUKTY:
 `;
@@ -283,14 +314,12 @@ DOSTUPNÉ PRODUKTY:
     productsContext += `• "${p.name}" - ${p.price}€ - Link: ${p.url}\n`;
   });
   productsContext += `
-PRAVIDLO: Odporúčaj IBA produkty z tohto zoznamu. Použi PRESNÝ názov a PRESNÝ link. Formát: [Názov](link) - cena €
-Ak zákazník hľadá niečo čo tu nie je, povedz že to nemáš v ponuke.
+PRAVIDLO: Odporúčaj IBA produkty z tohto zoznamu s PRESNÝM linkom. Formát: [Názov](link) - cena €
 `;
 } else {
   productsContext = `
 
-⚠️ V DATABÁZE NIE SÚ ŽIADNE PRODUKTY!
-Neodporúčaj žiadne produkty. Odkáž zákazníka na kontakt.
+Nenašli sa produkty pre túto otázku. Opýtaj sa zákazníka na konkrétnejší typ produktu alebo značku.
 `;
 }
 
