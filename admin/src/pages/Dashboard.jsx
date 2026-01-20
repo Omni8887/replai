@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [subscription, setSubscription] = useState(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false)
@@ -23,6 +24,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData()
+    checkAdmin()
   }, [])
 
   useEffect(() => {
@@ -34,6 +36,20 @@ export default function Dashboard() {
       })
     }
   }, [client])
+
+  const checkAdmin = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${API_URL}/superadmin/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.status === 200) {
+        setIsAdmin(true)
+      }
+    } catch (error) {
+      setIsAdmin(false)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -426,22 +442,24 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Spotreba Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {usageStats.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-medium">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
-              </div>
-              <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                <stat.icon size={24} className="text-white" />
+      {/* Spotreba Stats - len pre admina */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {usageStats.map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium">{stat.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                </div>
+                <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                  <stat.icon size={24} className="text-white" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
 
 
