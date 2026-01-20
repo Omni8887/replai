@@ -37,7 +37,7 @@ export default function Layout() {
     { to: '/conversations', label: 'Konverzácie', icon: MessageSquare },
     { to: '/products', label: 'Produkty', icon: Package },
     { to: '/analytics', label: 'Analytika', icon: BarChart3 },
-    { to: '/usage', label: 'Spotreba', icon: Coins },
+    { to: '/usage', label: 'Spotreba', icon: Coins, adminOnly: true },
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
   ]
@@ -56,26 +56,28 @@ export default function Layout() {
             </div>
           </div>
         </div>
-
+        
         <nav className="flex-1 p-4">
-          {navItems.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200' 
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }
-            >
-              <item.icon size={20} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-
+          {navItems
+            .filter(item => !item.adminOnly || isAdmin)
+            .map(item => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200' 
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`
+                }
+              >
+                <item.icon size={20} />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          
           {/* Super Admin - len pre adminov */}
           {isAdmin && (
             <NavLink
@@ -93,7 +95,7 @@ export default function Layout() {
             </NavLink>
           )}
         </nav>
-
+        
         <div className="p-4 border-t border-slate-200">
           <button
             onClick={handleLogout}
@@ -104,7 +106,7 @@ export default function Layout() {
           </button>
         </div>
       </aside>
-
+      
       <main className="flex-1 p-8 ml-72">
         <Outlet />
       </main>
