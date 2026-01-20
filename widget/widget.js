@@ -647,9 +647,9 @@
       messageDiv.classList.add('replai-message', isUser ? 'user' : 'assistant');
       
       let formattedContent = message
-  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="replai-link">$1</a>')
-  .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" class="replai-link">$2</a>');
+     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+     .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="replai-link">$1</a>')
+     .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" class="replai-link">$2</a>');
       
       messageDiv.innerHTML = `<div class="replai-message-bubble">${formattedContent}</div>`;
       
@@ -704,7 +704,16 @@
           }),
         });
 
-        if (!response.ok) throw new Error('Network error');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.limit_reached) {
+            this.hideTypingIndicator();
+            this.appendMessage('Asistent je momentálne nedostupný. Zanechajte nám prosím váš email alebo telefón a budeme vás kontaktovať.', false);
+            this.setOnlineStatus(false);
+            return;
+          }
+          throw new Error('Network error');
+        }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -736,10 +745,10 @@
                     this.messagesContainer.appendChild(responseDiv);
                   }
                   
-                  const urlRegex = /(https?:\/\/[^\s]+)/g;
                   let formattedContent = aiResponse
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(urlRegex, '<a href="$1" target="_blank" class="replai-link">$1</a>');
+  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+  .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
                   
                   responseDiv.querySelector('.replai-message-bubble').innerHTML = formattedContent;
                   this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
