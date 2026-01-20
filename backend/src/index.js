@@ -275,14 +275,22 @@ const searchWords = message.toLowerCase()
   .split(/\s+/)
   .filter(word => word.length > 2 && !stopWords.includes(word));
 
-// Hľadaj pomocou full-text search
+// Hľadaj pomocou full-text search s filtrom ceny
 if (searchWords.length > 0) {
   const searchQuery = searchWords.join(' ');
   
+  // Extrahuj cenu z otázky (napr. "do 5000€" alebo "do 500 eur")
+  const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
+  const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
+  const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
+  const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
+  
   const { data } = await supabase
-    .rpc('search_products', { 
+    .rpc('search_products_with_price', { 
       search_query: searchQuery, 
-      p_client_id: client.id 
+      p_client_id: client.id,
+      max_price: maxPrice,
+      min_price: minPrice
     });
   
   if (data && data.length > 0) {
