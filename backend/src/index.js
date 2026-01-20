@@ -263,36 +263,36 @@ const now = new Date();
 const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-// Vyhľadaj relevantné produkty
+// Načítaj produkty pre AI
 let productsContext = '';
 const { data: products } = await supabase
   .from('products')
   .select('name, description, price, category, url')
   .eq('client_id', client.id)
-  .or(`name.ilike.%${message}%,description.ilike.%${message}%,category.ilike.%${message}%`)
-  .limit(5);
+  .limit(50);
 
-  if (products && products.length > 0) {
-    productsContext = `
-  
-  ⚠️ DATABÁZA PRODUKTOV - POUŽI LEN TIETO PRODUKTY! ⚠️
-  NIKDY si nevymýšľaj produkty ani linky, ktoré tu nie sú!
-  
-  DOSTUPNÉ PRODUKTY:
-  `;
-    products.forEach(p => {
-      productsContext += `• "${p.name}" - ${p.price}€ - Link: ${p.url}\n`;
-    });
-    productsContext += `
-  PRAVIDLO: Odporúčaj IBA produkty z tohto zoznamu. Použi presný názov a presný link. Formát: [Názov](link) - cena €
-  `;
-  } else {
-    productsContext = `
-  
-  ⚠️ V DATABÁZE SA NENAŠLI ŽIADNE RELEVANTNÉ PRODUKTY!
-  Neodporúčaj žiadne produkty. Opýtaj sa zákazníka na viac detailov alebo ho odkáž na kontakt.
-  `;
-  }
+if (products && products.length > 0) {
+  productsContext = `
+
+⚠️ DATABÁZA PRODUKTOV - POUŽI LEN TIETO PRODUKTY! ⚠️
+NIKDY si nevymýšľaj produkty ani linky, ktoré tu nie sú!
+
+DOSTUPNÉ PRODUKTY:
+`;
+  products.forEach(p => {
+    productsContext += `• "${p.name}" - ${p.price}€ - Link: ${p.url}\n`;
+  });
+  productsContext += `
+PRAVIDLO: Odporúčaj IBA produkty z tohto zoznamu. Použi PRESNÝ názov a PRESNÝ link. Formát: [Názov](link) - cena €
+Ak zákazník hľadá niečo čo tu nie je, povedz že to nemáš v ponuke.
+`;
+} else {
+  productsContext = `
+
+⚠️ V DATABÁZE NIE SÚ ŽIADNE PRODUKTY!
+Neodporúčaj žiadne produkty. Odkáž zákazníka na kontakt.
+`;
+}
 
 const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.') + currentDateTime + productsContext;
 
