@@ -1121,15 +1121,17 @@ return res.status(403).json({ error: 'FREE plán neumožňuje nahrávať produkt
     const parser = new xml2js.Parser({ explicitArray: false });
     const result = await parser.parseStringPromise(xmlData);
     
-    // Nájdi produkty (podporuje rôzne formáty)
-    let items = [];
-    if (result.SHOP?.SHOPITEM) {
-      items = Array.isArray(result.SHOP.SHOPITEM) ? result.SHOP.SHOPITEM : [result.SHOP.SHOPITEM];
-    } else if (result.products?.product) {
-      items = Array.isArray(result.products.product) ? result.products.product : [result.products.product];
-    } else if (result.rss?.channel?.item) {
-      items = Array.isArray(result.rss.channel.item) ? result.rss.channel.item : [result.rss.channel.item];
-    }
+    // Nájdi produkty (podporuje rôzne formáty - veľké aj malé písmená)
+let items = [];
+if (result.SHOP?.SHOPITEM) {
+  items = Array.isArray(result.SHOP.SHOPITEM) ? result.SHOP.SHOPITEM : [result.SHOP.SHOPITEM];
+} else if (result.shop?.shopitem) {
+  items = Array.isArray(result.shop.shopitem) ? result.shop.shopitem : [result.shop.shopitem];
+} else if (result.products?.product) {
+  items = Array.isArray(result.products.product) ? result.products.product : [result.products.product];
+} else if (result.rss?.channel?.item) {
+  items = Array.isArray(result.rss.channel.item) ? result.rss.channel.item : [result.rss.channel.item];
+}
     
     // Mapuj na naše produkty
     const products = items.map(item => ({
