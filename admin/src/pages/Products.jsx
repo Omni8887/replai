@@ -16,12 +16,11 @@ export default function Products() {
   
   // Filtre a stránkovanie
   const [search, setSearch] = useState('')
-  const [priceFrom, setPriceFrom] = useState('')
-  const [priceTo, setPriceTo] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [perPage, setPerPage] = useState(100)
   const [showFilters, setShowFilters] = useState(false)
+  const [sortBy, setSortBy] = useState('newest')
 
   useEffect(() => {
     loadProducts()
@@ -30,7 +29,7 @@ export default function Products() {
   // Reset stránky pri zmene filtrov
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, priceFrom, priceTo, selectedCategory, perPage])
+  }, [search, selectedCategory, perPage, sortBy])
 
   const loadProducts = async () => {
     try {
@@ -49,27 +48,42 @@ export default function Products() {
     return cats.sort()
   }, [products])
 
-  // Filtrované produkty
+  // Filtrované a zoradené produkty
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    let result = products.filter(p => {
       // Textové vyhľadávanie
       const matchesSearch = !search || 
         p.name?.toLowerCase().includes(search.toLowerCase()) ||
         p.category?.toLowerCase().includes(search.toLowerCase()) ||
         p.description?.toLowerCase().includes(search.toLowerCase())
       
-      // Filter ceny od
-      const matchesPriceFrom = !priceFrom || (p.price && p.price >= parseFloat(priceFrom))
-      
-      // Filter ceny do
-      const matchesPriceTo = !priceTo || (p.price && p.price <= parseFloat(priceTo))
-      
       // Filter kategórie
       const matchesCategory = !selectedCategory || p.category === selectedCategory
       
-      return matchesSearch && matchesPriceFrom && matchesPriceTo && matchesCategory
+      return matchesSearch && matchesCategory
     })
-  }, [products, search, priceFrom, priceTo, selectedCategory])
+
+    // Zoradenie
+    switch (sortBy) {
+      case 'price_asc':
+        result.sort((a, b) => (a.price || 0) - (b.price || 0))
+        break
+      case 'price_desc':
+        result.sort((a, b) => (b.price || 0) - (a.price || 0))
+        break
+      case 'name_asc':
+        result.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        break
+      case 'name_desc':
+        result.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
+        break
+      case 'newest':
+      default:
+        break
+    }
+
+    return result
+  }, [products, search, selectedCategory, sortBy])
 
   // Stránkovanie
   const totalPages = Math.ceil(filteredProducts.length / perPage)
@@ -77,6 +91,14 @@ export default function Products() {
     (currentPage - 1) * perPage,
     currentPage * perPage
   )
+
+  const hasActiveFilters = search || selectedCategory || sortBy !== 'newest'
+
+  const clearFilters = () => {
+    setSearch('')
+    setSelectedCategory('')
+    setSortBy('newest')
+  }
 
   const handleUploadCSV = async () => {
     if (!csvText.trim()) return
@@ -162,15 +184,6 @@ export default function Products() {
     }
   }
 
-  const clearFilters = () => {
-    setSearch('')
-    setPriceFrom('')
-    setPriceTo('')
-    setSelectedCategory('')
-  }
-
-  const hasActiveFilters = search || priceFrom || priceTo || selectedCategory
-
   return (
     <div>
       <div className="mb-8 flex justify-between items-start">
@@ -208,7 +221,6 @@ export default function Products() {
             </button>
           </div>
           
-          {/* Tabs */}
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setUploadType('csv')}
@@ -358,27 +370,18 @@ export default function Products() {
           {showFilters && products.length > 0 && (
             <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-200">
               <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600">Cena od:</label>
-                <input
-                  type="number"
-                  value={priceFrom}
-                  onChange={(e) => setPriceFrom(e.target.value)}
-                  placeholder="0"
-                  className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none"
-                />
-                <span className="text-slate-400">€</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600">do:</label>
-                <input
-                  type="number"
-                  value={priceTo}
-                  onChange={(e) => setPriceTo(e.target.value)}
-                  placeholder="∞"
-                  className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none"
-                />
-                <span className="text-slate-400">€</span>
+                <label className="text-sm text-slate-600">Zoradiť:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none"
+                >
+                  <option value="newest">Najnovšie</option>
+                  <option value="price_asc">Cena: od najnižšej</option>
+                  <option value="price_desc">Cena: od najvyššej</option>
+                  <option value="name_asc">Názov: A-Z</option>
+                  <option value="name_desc">Názov: Z-A</option>
+                </select>
               </div>
               
               <div className="flex items-center gap-2">
@@ -514,7 +517,6 @@ export default function Products() {
                     <ChevronLeft size={20} />
                   </button>
                   
-                  {/* Čísla stránok */}
                   <div className="flex gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
