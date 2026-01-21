@@ -1,45 +1,19 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
-import axios from 'axios'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { login, loading, setToken, setClient, API_URL } = useAuth()
+  const { login, loading, token } = useAuth()
   const navigate = useNavigate()
 
-  // Check for token in URL (from landing page login)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const tokenFromUrl = urlParams.get('token')
-    
-    if (tokenFromUrl) {
-      // Fetch client data using token
-      const fetchClientData = async () => {
-        try {
-          const response = await axios.get(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${tokenFromUrl}` }
-          })
-          
-          // Save token and client
-          localStorage.setItem('token', tokenFromUrl)
-          localStorage.setItem('client', JSON.stringify(response.data))
-          
-          // Clean URL and redirect
-          window.history.replaceState({}, '', '/login')
-          window.location.href = '/'
-        } catch (err) {
-          console.error('Failed to fetch client data:', err)
-          setError('Neplatný token. Skúste sa prihlásiť znova.')
-        }
-      }
-      
-      fetchClientData()
-    }
-  }, [API_URL])
+  // If already logged in, redirect to dashboard
+  if (token) {
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
