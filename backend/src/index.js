@@ -1013,11 +1013,12 @@ app.get('/admin/usage', authMiddleware, async (req, res) => {
 // GET /admin/products - Zoznam produktov
 app.get('/admin/products', authMiddleware, async (req, res) => {
   try {
-    const { data: products } = await supabase
+    const { data: products, count } = await supabase
       .from('products')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('client_id', req.clientId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(5000);
     
     res.json(products || []);
   } catch (error) {
