@@ -1013,12 +1013,28 @@ app.get('/admin/usage', authMiddleware, async (req, res) => {
 // GET /admin/products - Zoznam produktov
 app.get('/admin/products', authMiddleware, async (req, res) => {
   try {
-    const { data: products, count } = await supabase
-      .from('products')
-      .select('*', { count: 'exact' })
-      .eq('client_id', req.clientId)
-      .order('created_at', { ascending: false })
-      .limit(5000);
+    // Supabase má limit 1000, musíme načítať vo viacerých dávkach
+    let allProducts = [];
+    let from = 0;
+    const batchSize = 1000;
+    
+    while (true) {
+      const { data: batch } = await supabase
+        .from('products')
+        .select('*')
+        .eq('client_id', req.clientId)
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      
+      if (!batch || batch.length === 0) break;
+      
+      allProducts = [...allProducts, ...batch];
+      
+      if (batch.length < batchSize) break;
+      from += batchSize;
+    }
+    
+    res.json(allProducts);
     
     res.json(products || []);
   } catch (error) {
