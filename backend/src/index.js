@@ -384,7 +384,7 @@ const stream = anthropic.messages.stream({
         .eq('id', conversationId);
       
      // Skontroluj či správa obsahuje kontakt a ulož ho
-const contactInfo = checkForContact(fullResponse + ' ' + message);
+     const contactInfo = checkForContact(message);
 if (contactInfo.hasContact) {
   const updates = { has_contact: true };
   if (contactInfo.email) updates.visitor_email = contactInfo.email;
