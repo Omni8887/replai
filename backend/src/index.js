@@ -1169,31 +1169,55 @@ return res.status(403).json({ error: 'FREE plán neumožňuje nahrávať produkt
     const parser = new xml2js.Parser({ explicitArray: false });
     const result = await parser.parseStringPromise(xmlData);
     
-    // Nájdi produkty (podporuje rôzne formáty - veľké aj malé písmená)
+// Nájdi produkty (podporuje rôzne formáty)
 let items = [];
+let isGoogleFeed = false;
+
 if (result.SHOP?.SHOPITEM) {
+  // Heureka formát (veľké)
   items = Array.isArray(result.SHOP.SHOPITEM) ? result.SHOP.SHOPITEM : [result.SHOP.SHOPITEM];
 } else if (result.shop?.shopitem) {
+  // Heureka formát (malé)
   items = Array.isArray(result.shop.shopitem) ? result.shop.shopitem : [result.shop.shopitem];
 } else if (result.products?.product) {
+  // Generic products formát
   items = Array.isArray(result.products.product) ? result.products.product : [result.products.product];
 } else if (result.rss?.channel?.item) {
+  // Google Merchant / RSS formát
   items = Array.isArray(result.rss.channel.item) ? result.rss.channel.item : [result.rss.channel.item];
+  isGoogleFeed = true;
+} else if (result.feed?.entry) {
+  // Atom feed formát
+  items = Array.isArray(result.feed.entry) ? result.feed.entry : [result.feed.entry];
+  isGoogleFeed = true;
 }
     
-    // Mapuj na naše produkty
-    const products = items.map(item => ({
-      client_id: req.clientId,
-      name: item.PRODUCT_NAME || item.PRODUCTNAME || item.name || item.title || item.TITLE || '',
-      description: item.DESCRIPTION || item.description || item.DETAIL || item.detail || '',
-      price: parseFloat(item.PRICE || item.price || item.PRICE_VAT || 0) || null,
-      category: item.CATEGORY || item.CATEGORYTEXT || item.category || '',
-      url: item.URL || item.url || item.URL_PRODUCT || item.link || ''
-    })).filter(p => p.name);
-    
-    if (products.length === 0) {
-      return res.status(400).json({ error: 'No products found in XML' });
-    }
+   // Mapuj na naše produkty
+const products = items.map(item => {
+  // Google Merchant feed používa g: namespace
+  const gTitle = item['g:title'] || item['g:title']?.[0] || item['g:title']?._ || '';
+  const gDesc = item['g:description'] || item['g:description']?.[0] || item['g:description']?._ || '';
+  const gPrice = item['g:price'] || item['g:price']?.[0] || item['g:price']?._ || '';
+  const gLink = item['g:link'] || item['g:link']?.[0] || item['g:link']?._ || '';
+  const gCategory = item['g:product_type'] || item['g:product_type']?.[0] || item['g:google_product_category'] || '';
+
+  // Extrahuj cenu z Google formátu "19.99 EUR" alebo "19.99"
+  let price = null;
+  const priceStr = gPrice || item.PRICE || item.price || item.PRICE_VAT || '';
+  const priceMatch = priceStr.toString().match(/[\d.]+/);
+  if (priceMatch) {
+    price = parseFloat(priceMatch[0]);
+  }
+
+  return {
+    client_id: req.clientId,
+    name: gTitle || item.PRODUCT_NAME || item.PRODUCTNAME || item.name || item.title || item.TITLE || '',
+    description: gDesc || item.DESCRIPTION || item.description || item.DETAIL || item.detail || '',
+    price: price,
+    category: gCategory || item.CATEGORY || item.CATEGORYTEXT || item.category || '',
+    url: gLink || item.URL || item.url || item.URL_PRODUCT || item.link || ''
+  };
+}).filter(p => p.name);
     
     // Vlož produkty
     const { data, error } = await supabase
