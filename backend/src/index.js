@@ -1035,8 +1035,6 @@ app.get('/admin/products', authMiddleware, async (req, res) => {
     }
     
     res.json(allProducts);
-    
-    res.json(products || []);
   } catch (error) {
     console.error('Products error:', error);
     res.status(500).json({ error: 'Server error' });
