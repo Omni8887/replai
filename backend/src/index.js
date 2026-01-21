@@ -1798,6 +1798,239 @@ app.delete('/superadmin/clients/:id', authMiddleware, adminMiddleware, async (re
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ============================================
+// PROMO CODES ENDPOINTS
+// ============================================
+
+// GET /superadmin/promo-codes - Zoznam všetkých kódov
+app.get('/superadmin/promo-codes', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { data: codes } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    // Pridaj počet použití ku každému kódu
+    const codesWithUsage = await Promise.all((codes || []).map(async (code) => {
+      const { count } = await supabase
+        .from('promo_code_uses')
+        .select('*', { count: 'exact', head: true })
+        .eq('promo_code_id', code.id);
+      
+      return { ...code, uses_count: count || 0 };
+    }));
+    
+    res.json(codesWithUsage);
+  } catch (error) {
+    console.error('Promo codes error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /superadmin/promo-codes - Vytvoriť nový kód
+app.post('/superadmin/promo-codes', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { code, description, reward_type, reward_value, reward_plan, max_uses, valid_until } = req.body;
+    
+    if (!code || !reward_type || !reward_value) {
+      return res.status(400).json({ error: 'Kód, typ odmeny a hodnota sú povinné' });
+    }
+    
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .insert({
+        code: code.toUpperCase(),
+        description,
+        reward_type,
+        reward_value,
+        reward_plan: reward_plan || 'business',
+        max_uses: max_uses || null,
+        valid_until: valid_until || null
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'Kód už existuje' });
+      }
+      throw error;
+    }
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Create promo code error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /superadmin/promo-codes/:id - Upraviť kód
+app.put('/superadmin/promo-codes/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active, description, max_uses, valid_until } = req.body;
+    
+    const updateData = {};
+    if (typeof is_active === 'boolean') updateData.is_active = is_active;
+    if (description !== undefined) updateData.description = description;
+    if (max_uses !== undefined) updateData.max_uses = max_uses;
+    if (valid_until !== undefined) updateData.valid_until = valid_until;
+    
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Update promo code error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /superadmin/promo-codes/:id - Zmazať kód
+app.delete('/superadmin/promo-codes/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await supabase
+      .from('promo_code_uses')
+      .delete()
+      .eq('promo_code_id', id);
+    
+    await supabase
+      .from('promo_codes')
+      .delete()
+      .eq('id', id);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete promo code error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /superadmin/promo-codes/:id/uses - Kto použil kód
+app.get('/superadmin/promo-codes/:id/uses', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data: uses } = await supabase
+      .from('promo_code_uses')
+      .select(`
+        id,
+        client_email,
+        used_at,
+        clients (name, email)
+      `)
+      .eq('promo_code_id', id)
+      .order('used_at', { ascending: false });
+    
+    res.json(uses || []);
+  } catch (error) {
+    console.error('Promo code uses error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /promo/apply - Použiť promo kód (pre prihláseného zákazníka)
+app.post('/promo/apply', authMiddleware, async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ error: 'Zadajte promo kód' });
+    }
+    
+    // Nájdi kód
+    const { data: promoCode } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .eq('is_active', true)
+      .single();
+    
+    if (!promoCode) {
+      return res.status(400).json({ error: 'Neplatný promo kód' });
+    }
+    
+    // Skontroluj platnosť
+    if (promoCode.valid_until && new Date(promoCode.valid_until) < new Date()) {
+      return res.status(400).json({ error: 'Promo kód vypršal' });
+    }
+    
+    // Skontroluj max použití
+    if (promoCode.max_uses) {
+      const { count } = await supabase
+        .from('promo_code_uses')
+        .select('*', { count: 'exact', head: true })
+        .eq('promo_code_id', promoCode.id);
+      
+      if (count >= promoCode.max_uses) {
+        return res.status(400).json({ error: 'Promo kód bol už vyčerpaný' });
+      }
+    }
+    
+    // Získaj email klienta
+    const { data: client } = await supabase
+      .from('clients')
+      .select('email')
+      .eq('id', req.clientId)
+      .single();
+    
+    // Skontroluj či tento email už nepoužil kód
+    const { data: existingUse } = await supabase
+      .from('promo_code_uses')
+      .select('id')
+      .eq('promo_code_id', promoCode.id)
+      .eq('client_email', client.email)
+      .single();
+    
+    if (existingUse) {
+      return res.status(400).json({ error: 'Tento kód ste už použili' });
+    }
+    
+    // Aplikuj odmenu
+    if (promoCode.reward_type === 'free_days') {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + promoCode.reward_value);
+      
+      await supabase
+        .from('clients')
+        .update({
+          subscription_tier: promoCode.reward_plan,
+          subscription_expires_at: expiresAt.toISOString(),
+          messages_this_month: 0
+        })
+        .eq('id', req.clientId);
+    }
+    
+    // Zaznamenaj použitie
+    await supabase
+      .from('promo_code_uses')
+      .insert({
+        promo_code_id: promoCode.id,
+        client_id: req.clientId,
+        client_email: client.email
+      });
+    
+    res.json({ 
+      success: true, 
+      message: `Promo kód aktivovaný! Máte ${promoCode.reward_value} dní ${promoCode.reward_plan} plánu zadarmo.`,
+      reward_type: promoCode.reward_type,
+      reward_value: promoCode.reward_value,
+      reward_plan: promoCode.reward_plan
+    });
+  } catch (error) {
+    console.error('Apply promo code error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
