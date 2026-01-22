@@ -309,14 +309,24 @@ const searchWords = message.toLowerCase()
         );
       });
       
-      // Zoraď podľa počtu zhôd (relevancia)
-      products.sort((a, b) => {
-        const aName = a.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-        const bName = b.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-        const aMatches = searchWords.filter(w => aName.includes(w)).length;
-        const bMatches = searchWords.filter(w => bName.includes(w)).length;
-        return bMatches - aMatches;
-      });
+     // Zoraď podľa relevancie - čísla modelu majú vyššiu váhu
+products.sort((a, b) => {
+  const aName = a.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+  const bName = b.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+  
+  let aScore = 0;
+  let bScore = 0;
+  
+  searchWords.forEach(word => {
+    const isNumber = /^\d+$/.test(word);
+    const weight = isNumber ? 10 : 1; // Čísla majú 10x väčšiu váhu
+    
+    if (aName.includes(word)) aScore += weight;
+    if (bName.includes(word)) bScore += weight;
+  });
+  
+  return bScore - aScore;
+});
       
       products = products.slice(0, 10);
       console.log('✅ Found products:', products.length);
