@@ -265,35 +265,51 @@ app.post('/chat', async (req, res) => {
     // Mapovanie veľkostí kolies na Cube názvoslovie
     const wheelSizeMap = {
       '12': '120', '14': '140', '16': '160', '18': '180',
-      '20': '200', '24': '240', '26': '260', '27': '275', '29': '29'
+      '20': '200', '24': '240', '26': '260'
     };
 
-    // Detekcia kategórie z otázky
-    const categoryPatterns = [
-      { keywords: ['detský', 'detské', 'detských', 'deti', 'dieťa', 'dieta', 'syn', 'dcéra', 'dcera', 'junior', 'kids'], category: 'Detské' },
-      { keywords: ['elektro', 'ebike', 'e-bike', 'elektrický', 'elektrick', 'motor'], category: 'Elektrobicykle' },
-      { keywords: ['mtb', 'horský', 'horské', 'horsk', 'mountain'], category: 'Horské' },
-      { keywords: ['cestný', 'cestné', 'road', 'silničn'], category: 'Cestné' },
-      { keywords: ['gravel', 'cyklokros'], category: 'Gravel' },
-      { keywords: ['treking', 'trekking', 'trek', 'crossov'], category: 'Trekingové' }
-    ];
-
     // Extrahuj parametre z otázky
-    const msgLower = message.toLowerCase();
+    const msgLower = message.toLowerCase()
+      .replace(/[áä]/g, 'a')
+      .replace(/[éě]/g, 'e')
+      .replace(/[íý]/g, 'i')
+      .replace(/[óô]/g, 'o')
+      .replace(/[úů]/g, 'u')
+      .replace(/ž/g, 'z')
+      .replace(/š/g, 's')
+      .replace(/č/g, 'c')
+      .replace(/ř/g, 'r')
+      .replace(/ď/g, 'd')
+      .replace(/ť/g, 't')
+      .replace(/ň/g, 'n')
+      .replace(/ľ/g, 'l');
+
+    // Detekcia či user hľadá BICYKEL (nie príslušenstvo)
+    const wantsBike = /bicykel|bike|kolo|bicykle|ebike|e-bike/.test(msgLower);
     
-    // Nájdi kategóriu
-    let detectedCategory = null;
-    for (const pattern of categoryPatterns) {
-      if (pattern.keywords.some(kw => msgLower.includes(kw))) {
-        detectedCategory = pattern.category;
-        console.log(`📁 Detekovaná kategória: ${detectedCategory}`);
-        break;
-      }
+    // Detekcia typu bicykla
+    let bikeType = null;
+    if (/detsk|dieta|deti|syn|dcer|junior|kids/.test(msgLower)) {
+      bikeType = 'Detské';
+    } else if (/elektr|ebike|e-bike|motor/.test(msgLower)) {
+      bikeType = 'Elektrobicykle';
+    } else if (/mtb|horsk|mountain/.test(msgLower)) {
+      bikeType = 'Horské';
+    } else if (/cestn|road|silnic/.test(msgLower)) {
+      bikeType = 'Cestné';
+    } else if (/gravel|cyklokros/.test(msgLower)) {
+      bikeType = 'Gravel';
+    } else if (/trek|cross/.test(msgLower)) {
+      bikeType = 'Trekingové';
+    }
+    
+    if (bikeType) {
+      console.log(`📁 Detekovaný typ bicykla: ${bikeType}`);
     }
 
-    // Nájdi veľkosť kolesa (napr. "24 palcov", "24"", "24 palcový")
+    // Nájdi veľkosť kolesa - presnejší regex
     let detectedWheelSize = null;
-    const wheelMatch = msgLower.match(/(\d{2})[\s]*(?:palc|"|´|´´|inch)?/);
+    const wheelMatch = message.match(/\b(1[2468]|20|24|26|27|29)\s*(?:palc|"|´|inch|"|\s|$)/i);
     if (wheelMatch && wheelSizeMap[wheelMatch[1]]) {
       detectedWheelSize = wheelSizeMap[wheelMatch[1]];
       console.log(`🔄 Detekovaná veľkosť: ${wheelMatch[1]}" → hľadám "${detectedWheelSize}"`);
@@ -306,6 +322,7 @@ app.post('/chat', async (req, res) => {
     const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
     
     console.log(`💰 Cenový filter: ${minPrice || 0}€ - ${maxPrice || '∞'}€`);
+    console.log(`🚲 Hľadá bicykel: ${wantsBike ? 'ÁNO' : 'NIE'}`);
 
     // Načítaj produkty z databázy
     let query = supabase
@@ -317,9 +334,16 @@ app.post('/chat', async (req, res) => {
     if (maxPrice) query = query.lte('price', maxPrice);
     if (minPrice) query = query.gte('price', minPrice);
     
-    // Aplikuj kategóriu ak bola detekovaná
-    if (detectedCategory) {
-      query = query.ilike('category', `%${detectedCategory}%`);
+    // KĽÚČOVÉ: Ak user hľadá bicykel, filtruj len bicykle (nie príslušenstvo)
+    if (wantsBike || bikeType) {
+      query = query.ilike('category', '%Bicykle%');
+      console.log(`🎯 Filter: kategória obsahuje "Bicykle"`);
+    }
+    
+    // Ak máme typ bicykla, pridaj ďalší filter
+    if (bikeType) {
+      query = query.ilike('category', `%${bikeType}%`);
+      console.log(`🎯 Filter: kategória obsahuje "${bikeType}"`);
     }
     
     const { data: allProducts, error: productsError } = await query.limit(500);
@@ -333,11 +357,19 @@ app.post('/chat', async (req, res) => {
     if (allProducts && allProducts.length > 0) {
       // Filtruj podľa veľkosti kolesa ak bola zadaná
       if (detectedWheelSize) {
-        products = allProducts.filter(p => {
-          const name = p.name?.toLowerCase() || '';
-          return name.includes(detectedWheelSize.toLowerCase());
+        const filtered = allProducts.filter(p => {
+          const name = p.name || '';
+          return name.includes(detectedWheelSize);
         });
-        console.log(`🎯 Po filtri veľkosti (${detectedWheelSize}): ${products.length} produktov`);
+        
+        if (filtered.length > 0) {
+          products = filtered;
+          console.log(`🎯 Po filtri veľkosti (${detectedWheelSize}): ${products.length} produktov`);
+        } else {
+          // Ak nenájdeme presnú veľkosť, zobraz všetky z kategórie
+          products = allProducts;
+          console.log(`⚠️ Veľkosť ${detectedWheelSize} nenájdená, zobrazujem všetky z kategórie`);
+        }
       } else {
         products = allProducts;
       }
@@ -345,16 +377,27 @@ app.post('/chat', async (req, res) => {
       // Skóruj a zoraď produkty
       products = products.map(p => {
         let score = 0;
-        const name = p.name?.toLowerCase() || '';
+        const name = p.name || '';
+        const category = p.category?.toLowerCase() || '';
         
-        // Bonus za veľkosť kolesa
-        if (detectedWheelSize && name.includes(detectedWheelSize.toLowerCase())) {
+        // Vysoký bonus za presnú veľkosť kolesa v názve
+        if (detectedWheelSize && name.includes(detectedWheelSize)) {
           score += 100;
         }
         
-        // Bonus za kategóriu
-        if (detectedCategory && p.category?.toLowerCase().includes(detectedCategory.toLowerCase())) {
+        // Bonus za správnu kategóriu
+        if (bikeType && category.includes(bikeType.toLowerCase())) {
           score += 50;
+        }
+        
+        // Bonus za to, že je to bicykel (nie príslušenstvo)
+        if (category.includes('bicykle')) {
+          score += 30;
+        }
+        
+        // Penalizácia za príslušenstvo ak user hľadá bicykel
+        if (wantsBike && (category.includes('doplnky') || category.includes('komponenty'))) {
+          score -= 100;
         }
         
         // Nižšia cena = vyššie skóre (ak je v rozpočte)
@@ -377,36 +420,43 @@ app.post('/chat', async (req, res) => {
       })));
     }
 
-    // Ak sa nič nenašlo a máme kategóriu, skús bez cenového filtra
-    if (products.length === 0 && detectedCategory) {
+    // Ak sa nič nenašlo a máme typ bicykla, skús bez cenového filtra
+    if (products.length === 0 && bikeType) {
       console.log('⚠️ Žiadne produkty v cenovom rozsahu, skúšam bez cenového limitu...');
       
-      const { data: fallbackProducts } = await supabase
+      let fallbackQuery = supabase
         .from('products')
         .select('name, description, price, category, url')
         .eq('client_id', client.id)
-        .ilike('category', `%${detectedCategory}%`)
-        .limit(10);
+        .ilike('category', '%Bicykle%')
+        .ilike('category', `%${bikeType}%`);
+      
+      // Ak máme veľkosť, filtruj v kóde
+      const { data: fallbackProducts } = await fallbackQuery.limit(50);
       
       if (fallbackProducts && fallbackProducts.length > 0) {
-        products = fallbackProducts;
+        if (detectedWheelSize) {
+          products = fallbackProducts.filter(p => p.name?.includes(detectedWheelSize));
+        }
+        if (products.length === 0) {
+          products = fallbackProducts.slice(0, 10);
+        }
         console.log(`✅ Fallback našiel ${products.length} produktov (bez cenového filtra)`);
       }
     }
 
     // Posledná záchrana - načítaj všetky produkty pre malé katalógy
     if (products.length === 0) {
-      console.log('⚠️ Žiadne produkty, načítavam všetky...');
-      const { data, count } = await supabase
+      console.log('⚠️ Žiadne produkty, načítavam všetky bicykle...');
+      const { data } = await supabase
         .from('products')
-        .select('name, description, price, category, url', { count: 'exact' })
+        .select('name, description, price, category, url')
         .eq('client_id', client.id)
-        .limit(50);
+        .ilike('category', '%Bicykle%')
+        .limit(20);
       
-      if (count && count <= 50) {
-        products = data || [];
-        console.log(`📦 Načítaných ${products.length} produktov (všetky)`);
-      }
+      products = data || [];
+      console.log(`📦 Načítaných ${products.length} bicyklov (fallback)`);
     }
 
     // Vytvor kontext pre AI - STRIKTNÉ PRAVIDLÁ
