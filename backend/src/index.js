@@ -263,77 +263,77 @@ const now = new Date();
 const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
 const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-// Načítaj produkty pre AI pomocou full-text search
+// Načítaj produkty pre AI
 let productsContext = '';
 let products = [];
 
 // Kľúčové slová na ignorovanie
-const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem'];
+const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem', 'chcel', 'by', 'som', 'bicykel', 'bike', 'model'];
 
 const searchWords = message.toLowerCase()
-  .replace(/[''´`'\-]/g, ' ')  // Nahraď apostrofy a pomlčky medzerami
+  .replace(/[''´`'\-]/g, ' ')
   .replace(/[?!.,]/g, '')
   .split(/\s+/)
   .filter(word => word.length > 2 && !stopWords.includes(word));
 
-  if (searchWords.length > 0) {
-    console.log('🔍 Search words:', searchWords);
+if (searchWords.length > 0) {
+  console.log('🔍 Search words:', searchWords);
+  
+  // Extrahuj cenu z otázky
+  const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
+  const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
+  const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
+  const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
+  
+  let query = supabase
+    .from('products')
+    .select('name, description, price, category, url')
+    .eq('client_id', client.id);
+  
+  if (maxPrice) query = query.lte('price', maxPrice);
+  if (minPrice) query = query.gte('price', minPrice);
+  
+  const { data: allProducts } = await query.limit(1000);
+  
+  if (allProducts && allProducts.length > 0) {
+    // Filtruj produkty
+    products = allProducts.filter(p => {
+      const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+      const productCategory = p.category?.toLowerCase() || '';
+      
+      return searchWords.some(word => 
+        productName.includes(word) || productCategory.includes(word)
+      );
+    });
     
-    // Extrahuj cenu z otázky
-    const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
-    const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
-    const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
-    const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
-    
-    // Vytvor ILIKE podmienky pre každé slovo
-    let query = supabase
-      .from('products')
-      .select('name, description, price, category, url')
-      .eq('client_id', client.id);
-    
-    // Pridaj cenové filtre
-    if (maxPrice) query = query.lte('price', maxPrice);
-    if (minPrice) query = query.gte('price', minPrice);
-    
-    const { data: allProducts } = await query.limit(500);
-    
-    // Filtruj produkty - musia obsahovať aspoň jedno hľadané slovo v názve
-    if (allProducts && allProducts.length > 0) {
-      products = allProducts.filter(p => {
-        const productName = p.name?.toLowerCase()
-          .replace(/[''´`'\-]/g, ' ') || '';
-        const productCategory = p.category?.toLowerCase() || '';
-        
-        return searchWords.some(word => 
-          productName.includes(word) || productCategory.includes(word)
-        );
+    // Skóruj produkty - čísla majú VEĽMI vysokú váhu
+    products = products.map(p => {
+      const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+      let score = 0;
+      
+      searchWords.forEach(word => {
+        if (productName.includes(word)) {
+          // Čísla (200, 240, 260, 2026) majú 50x väčšiu váhu
+          if (/^\d+$/.test(word)) {
+            score += 50;
+          } else {
+            score += 1;
+          }
+        }
       });
       
-     // Zoraď podľa relevancie - čísla modelu majú vyššiu váhu
-products.sort((a, b) => {
-  const aName = a.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-  const bName = b.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-  
-  let aScore = 0;
-  let bScore = 0;
-  
-  searchWords.forEach(word => {
-    const isNumber = /^\d+$/.test(word);
-    const weight = isNumber ? 10 : 1; // Čísla majú 10x väčšiu váhu
+      return { ...p, score };
+    });
     
-    if (aName.includes(word)) aScore += weight;
-    if (bName.includes(word)) bScore += weight;
-  });
-  
-  return bScore - aScore;
-});
-      
-      products = products.slice(0, 10);
-      console.log('✅ Found products:', products.length);
-    }
+    // Zoraď podľa skóre (najvyššie prvé)
+    products.sort((a, b) => b.score - a.score);
+    products = products.slice(0, 10);
+    
+    console.log('✅ Found products:', products.map(p => ({ name: p.name, score: p.score })));
   }
+}
 
-// Ak sa nič nenašlo a klient má málo produktov, zobraz všetky
+// Ak sa nič nenašlo, skús načítať všetky produkty (pre malé katalógy)
 if (products.length === 0) {
   const { data, count } = await supabase
     .from('products')
@@ -346,27 +346,60 @@ if (products.length === 0) {
   }
 }
 
+// Vytvor kontext pre AI - STRIKTNÉ PRAVIDLÁ
 if (products.length > 0) {
   productsContext = `
 
-⚠️ DATABÁZA PRODUKTOV - POUŽI LEN TIETO PRODUKTY! ⚠️
+███████████████████████████████████████████████████████
+█ STOP! PREČÍTAJ TOTO PRED ODPOVEĎOU! █
+███████████████████████████████████████████████████████
 
-DOSTUPNÉ PRODUKTY:
+🔒 POVINNÉ PRAVIDLÁ PRE PRODUKTY:
+
+TU SÚ JEDINÉ PRODUKTY KTORÉ MÔŽEŠ ODPORÚČAŤ:
 `;
-  products.forEach(p => {
-    productsContext += `• "${p.name}" - ${p.price}€ - Link: ${p.url}\n`;
+  products.forEach((p, i) => {
+    productsContext += `
+${i + 1}. NÁZOV: "${p.name}"
+   CENA: ${p.price}€
+   LINK: ${p.url}
+`;
   });
   productsContext += `
-PRAVIDLO: Odporúčaj IBA produkty z tohto zoznamu s PRESNÝM linkom. Formát: [Názov](link) - cena €
+███████████████████████████████████████████████████████
+⛔ ZAKÁZANÉ:
+- NIKDY nevymýšľaj produkty ktoré nie sú v zozname vyššie
+- NIKDY neodhaduj ceny
+- NIKDY nevymýšľaj linky
+
+✅ POVINNÉ:
+- Používaj PRESNE názvy produktov zo zoznamu
+- Používaj PRESNÉ ceny zo zoznamu  
+- Používaj PRESNÉ linky zo zoznamu
+- Formát: [pozrieť](PRESNÝ_LINK_ZO_ZOZNAMU)
+
+Ak zákazník hľadá produkt ktorý NIE JE v zozname:
+→ Povedz že tento konkrétny model momentálne nemáme v ponuke
+→ Ponúkni alternatívy ZO ZOZNAMU VYŠŠIE (ak sú relevantné)
+→ Odporuč kontaktovať predajňu pre overenie dostupnosti
+███████████████████████████████████████████████████████
 `;
 } else {
   productsContext = `
 
-Nenašli sa produkty pre túto otázku. Opýtaj sa zákazníka na konkrétnejší typ produktu alebo značku.
+███████████████████████████████████████████████████████
+NENAŠLI SA PRODUKTY PRE TÚTO OTÁZKU.
+
+⛔ NIKDY nevymýšľaj produkty, ceny ani linky!
+
+Namiesto toho:
+- Opýtaj sa zákazníka na konkrétnejší typ produktu
+- Alebo odporuč kontaktovať predajňu
+███████████████████████████████████████████████████████
 `;
 }
 
-const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent. Odpovedaj stručne a pomocne.') + currentDateTime + productsContext;
+const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
 
 const stream = anthropic.messages.stream({
   model: 'claude-sonnet-4-20250514',
