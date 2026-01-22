@@ -276,28 +276,52 @@ const searchWords = message.toLowerCase()
   .split(/\s+/)
   .filter(word => word.length > 2 && !stopWords.includes(word));
 
-// Hľadaj pomocou full-text search s filtrom ceny
-if (searchWords.length > 0) {
-  const searchQuery = searchWords.join(' ');
-  
-  // Extrahuj cenu z otázky (napr. "do 5000€" alebo "do 500 eur")
-  const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
-  const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
-  const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
-  const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
-  
-  const { data } = await supabase
-    .rpc('search_products_with_price', { 
-      search_query: searchQuery, 
-      p_client_id: client.id,
-      max_price: maxPrice,
-      min_price: minPrice
-    });
-  
-  if (data && data.length > 0) {
-    products = data;
+  if (searchWords.length > 0) {
+    console.log('🔍 Search words:', searchWords);
+    
+    // Extrahuj cenu z otázky
+    const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
+    const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
+    const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
+    const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
+    
+    // Vytvor ILIKE podmienky pre každé slovo
+    let query = supabase
+      .from('products')
+      .select('name, description, price, category, url')
+      .eq('client_id', client.id);
+    
+    // Pridaj cenové filtre
+    if (maxPrice) query = query.lte('price', maxPrice);
+    if (minPrice) query = query.gte('price', minPrice);
+    
+    const { data: allProducts } = await query.limit(500);
+    
+    // Filtruj produkty - musia obsahovať aspoň jedno hľadané slovo v názve
+    if (allProducts && allProducts.length > 0) {
+      products = allProducts.filter(p => {
+        const productName = p.name?.toLowerCase()
+          .replace(/[''´`'\-]/g, ' ') || '';
+        const productCategory = p.category?.toLowerCase() || '';
+        
+        return searchWords.some(word => 
+          productName.includes(word) || productCategory.includes(word)
+        );
+      });
+      
+      // Zoraď podľa počtu zhôd (relevancia)
+      products.sort((a, b) => {
+        const aName = a.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+        const bName = b.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+        const aMatches = searchWords.filter(w => aName.includes(w)).length;
+        const bMatches = searchWords.filter(w => bName.includes(w)).length;
+        return bMatches - aMatches;
+      });
+      
+      products = products.slice(0, 10);
+      console.log('✅ Found products:', products.length);
+    }
   }
-}
 
 // Ak sa nič nenašlo a klient má málo produktov, zobraz všetky
 if (products.length === 0) {
