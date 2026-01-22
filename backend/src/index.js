@@ -271,6 +271,7 @@ let products = [];
 const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem'];
 
 const searchWords = message.toLowerCase()
+  .replace(/[''´`'\-]/g, ' ')  // Nahraď apostrofy a pomlčky medzerami
   .replace(/[?!.,]/g, '')
   .split(/\s+/)
   .filter(word => word.length > 2 && !stopWords.includes(word));
