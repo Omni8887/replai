@@ -256,10 +256,6 @@ app.post('/chat', async (req, res) => {
     const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
     const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-    // Načítaj produkty pre AI
-    let productsContext = '';
-    let products = [];
-
     // === VYLEPŠENÉ VYHĽADÁVANIE PRODUKTOV ===
     
     // Mapovanie veľkostí kolies na Cube názvoslovie
@@ -268,8 +264,34 @@ app.post('/chat', async (req, res) => {
       '20': '200', '24': '240', '26': '260'
     };
 
+    // === DETEKCIA FOLLOW-UP SPRÁVY ===
+    // Ak user odpovedá len výškou/rozpočtom, extrahuj kontext z predchádzajúcej konverzácie
+    const isShortAnswer = message.length < 30;
+    const isHeightAnswer = /^\s*\d{2,3}\s*(cm)?\s*$/i.test(message.trim()) || 
+                           /ma[mť]?\s*\d{2,3}/i.test(message) ||
+                           /vysk[au]?\s*\d{2,3}/i.test(message);
+    
+    let contextMessage = message;
+    
+    if (isShortAnswer && context.length > 0) {
+      // Spoj predchádzajúce správy pre lepší kontext
+      const previousMessages = context
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .join(' ');
+      
+      if (previousMessages) {
+        contextMessage = previousMessages + ' ' + message;
+        console.log('📝 Follow-up detekovaný, rozšírený kontext:', contextMessage.substring(0, 100) + '...');
+      }
+    }
+
+    // Načítaj produkty pre AI
+    let productsContext = '';
+    let products = [];
+
     // Extrahuj parametre z otázky
-    const msgLower = message.toLowerCase()
+    const msgLower = contextMessage.toLowerCase()
       .replace(/[áä]/g, 'a')
       .replace(/[éě]/g, 'e')
       .replace(/[íý]/g, 'i')
@@ -309,15 +331,15 @@ app.post('/chat', async (req, res) => {
 
     // Nájdi veľkosť kolesa - presnejší regex
     let detectedWheelSize = null;
-    const wheelMatch = message.match(/\b(1[2468]|20|24|26|27|29)\s*(?:palc|"|´|inch|"|\s|$)/i);
+    const wheelMatch = contextMessage.match(/\b(1[2468]|20|24|26|27|29)\s*(?:palc|"|´|inch|"|\s|$)/i);
     if (wheelMatch && wheelSizeMap[wheelMatch[1]]) {
       detectedWheelSize = wheelSizeMap[wheelMatch[1]];
       console.log(`🔄 Detekovaná veľkosť: ${wheelMatch[1]}" → hľadám "${detectedWheelSize}"`);
     }
 
     // Extrahuj cenu
-    const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
-    const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
+    const maxPriceMatch = contextMessage.match(/do\s*(\d+)\s*€?/i);
+    const minPriceMatch = contextMessage.match(/od\s*(\d+)\s*€?/i);
     const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
     const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
     
