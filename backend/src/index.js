@@ -260,14 +260,57 @@ app.post('/chat', async (req, res) => {
     let productsContext = '';
     let products = [];
 
-    // Kľúčové slová na ignorovanie
-    const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem', 'chcel', 'by', 'som', 'bicykel', 'bike', 'model'];
+   // Kľúčové slová na ignorovanie
+const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem', 'chcel', 'by', 'som', 'bicykel', 'bike', 'model'];
 
-    const searchWords = message.toLowerCase()
-      .replace(/[''´`'\-]/g, ' ')
-      .replace(/[?!.,]/g, '')
-      .split(/\s+/)
-      .filter(word => word.length > 2 && !stopWords.includes(word));
+// Mapovanie veľkostí kolies na Cube názvoslovie
+const wheelSizeMap = {
+  '12': '120',
+  '14': '140',
+  '16': '160',
+  '18': '180',
+  '20': '200',
+  '24': '240',
+  '26': '260'
+};
+
+// Mapovanie kategórií
+const categoryKeywords = {
+  'detský': 'Detské',
+  'detske': 'Detské',
+  'detských': 'Detské',
+  'deti': 'Detské',
+  'dieta': 'Detské',
+  'dieťa': 'Detské',
+  'syn': 'Detské',
+  'dcéra': 'Detské',
+  'dcera': 'Detské'
+};
+
+let searchWords = message.toLowerCase()
+  .replace(/[''´`'\-]/g, ' ')
+  .replace(/[?!.,]/g, '')
+  .split(/\s+/)
+  .filter(word => word.length > 1 && !stopWords.includes(word));
+
+// Konvertuj veľkosti kolies (24 → 240)
+searchWords = searchWords.map(word => {
+  if (wheelSizeMap[word]) {
+    console.log(`🔄 Konvertujem veľkosť: ${word}" → ${wheelSizeMap[word]}`);
+    return wheelSizeMap[word];
+  }
+  return word;
+});
+
+// Zisti kategóriu z otázky
+let categoryFilter = null;
+for (const [keyword, category] of Object.entries(categoryKeywords)) {
+  if (message.toLowerCase().includes(keyword)) {
+    categoryFilter = category;
+    console.log(`📁 Detekovaná kategória: ${categoryFilter}`);
+    break;
+  }
+}
 
     if (searchWords.length > 0) {
       console.log('🔍 Search words:', searchWords);
@@ -279,12 +322,17 @@ app.post('/chat', async (req, res) => {
       const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
       
       let query = supabase
-        .from('products')
-        .select('name, description, price, category, url')
-        .eq('client_id', client.id);
-      
-      if (maxPrice) query = query.lte('price', maxPrice);
-      if (minPrice) query = query.gte('price', minPrice);
+      .from('products')
+      .select('name, description, price, category, url')
+      .eq('client_id', client.id);
+    
+    if (maxPrice) query = query.lte('price', maxPrice);
+    if (minPrice) query = query.gte('price', minPrice);
+    
+    // Filtruj podľa kategórie ak bola detekovaná
+    if (categoryFilter) {
+      query = query.ilike('category', `%${categoryFilter}%`);
+    }
       
       const { data: allProducts } = await query.limit(1000);
       
