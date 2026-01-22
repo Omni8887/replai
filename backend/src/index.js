@@ -183,7 +183,7 @@ app.get('/widget/:apiKey', async (req, res) => {
   }
 });
 
-// POST /chat - Chat endpoint so streamingom
+// POST /chat - Chat endpoint s VALIDÁCIOU (bez streamingu)
 app.post('/chat', async (req, res) => {
   try {
     const apiKey = req.headers['x-api-key'];
@@ -204,17 +204,19 @@ app.post('/chat', async (req, res) => {
     if (clientError || !client) {
       return res.status(401).json({ error: 'Invalid API key' });
     }
-    // Skontroluj limit správ
-const clientData = await checkAndResetMonthlyMessages(client.id);
-const tier = clientData?.subscription_tier || 'free';
-const limit = PLAN_LIMITS[tier]?.messages || 10;
 
-if (clientData.messages_this_month >= limit) {
-  return res.status(429).json({ 
-    error: 'Dosiahli ste limit správ pre váš plán. Upgradujte na vyšší plán.',
-    limit_reached: true 
-  });
-}
+    // Skontroluj limit správ
+    const clientData = await checkAndResetMonthlyMessages(client.id);
+    const tier = clientData?.subscription_tier || 'free';
+    const limit = PLAN_LIMITS[tier]?.messages || 10;
+
+    if (clientData.messages_this_month >= limit) {
+      return res.status(429).json({ 
+        error: 'Dosiahli ste limit správ pre váš plán. Upgradujte na vyšší plán.',
+        limit_reached: true 
+      });
+    }
+
     // Nájdi alebo vytvor konverzáciu
     let conversationId;
     const { data: existingConv } = await supabase
@@ -249,106 +251,97 @@ if (clientData.messages_this_month >= limit) {
     }));
     messages.push({ role: 'user', content: message });
     
-    // Streaming response
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    
-    let fullResponse = '';
-    let inputTokens = 0;
-    let outputTokens = 0;
-    
-   // Aktuálny čas pre AI
-const now = new Date();
-const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
-const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
+    // Aktuálny čas pre AI
+    const now = new Date();
+    const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+    const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-// Načítaj produkty pre AI
-let productsContext = '';
-let products = [];
+    // Načítaj produkty pre AI
+    let productsContext = '';
+    let products = [];
 
-// Kľúčové slová na ignorovanie
-const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem', 'chcel', 'by', 'som', 'bicykel', 'bike', 'model'];
+    // Kľúčové slová na ignorovanie
+    const stopWords = ['máte', 'mate', 'chcem', 'hľadám', 'hladam', 'aké', 'ake', 'ako', 'pre', 'pri', 'a', 'je', 'to', 'na', 'do', 'sa', 'si', 'mi', 'ma', 'prosím', 'prosim', 'ďakujem', 'dakujem', 'chcel', 'by', 'som', 'bicykel', 'bike', 'model'];
 
-const searchWords = message.toLowerCase()
-  .replace(/[''´`'\-]/g, ' ')
-  .replace(/[?!.,]/g, '')
-  .split(/\s+/)
-  .filter(word => word.length > 2 && !stopWords.includes(word));
+    const searchWords = message.toLowerCase()
+      .replace(/[''´`'\-]/g, ' ')
+      .replace(/[?!.,]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.includes(word));
 
-if (searchWords.length > 0) {
-  console.log('🔍 Search words:', searchWords);
-  
-  // Extrahuj cenu z otázky
-  const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
-  const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
-  const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
-  const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
-  
-  let query = supabase
-    .from('products')
-    .select('name, description, price, category, url')
-    .eq('client_id', client.id);
-  
-  if (maxPrice) query = query.lte('price', maxPrice);
-  if (minPrice) query = query.gte('price', minPrice);
-  
-  const { data: allProducts } = await query.limit(1000);
-  
-  if (allProducts && allProducts.length > 0) {
-    // Filtruj produkty
-    products = allProducts.filter(p => {
-      const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-      const productCategory = p.category?.toLowerCase() || '';
+    if (searchWords.length > 0) {
+      console.log('🔍 Search words:', searchWords);
       
-      return searchWords.some(word => 
-        productName.includes(word) || productCategory.includes(word)
-      );
-    });
-    
-    // Skóruj produkty - čísla majú VEĽMI vysokú váhu
-    products = products.map(p => {
-      const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
-      let score = 0;
+      // Extrahuj cenu z otázky
+      const maxPriceMatch = message.match(/do\s*(\d+)\s*€?/i);
+      const minPriceMatch = message.match(/od\s*(\d+)\s*€?/i);
+      const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
+      const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
       
-      searchWords.forEach(word => {
-        if (productName.includes(word)) {
-          // Čísla (200, 240, 260, 2026) majú 50x väčšiu váhu
-          if (/^\d+$/.test(word)) {
-            score += 50;
-          } else {
-            score += 1;
-          }
-        }
-      });
+      let query = supabase
+        .from('products')
+        .select('name, description, price, category, url')
+        .eq('client_id', client.id);
       
-      return { ...p, score };
-    });
-    
-    // Zoraď podľa skóre (najvyššie prvé)
-    products.sort((a, b) => b.score - a.score);
-    products = products.slice(0, 10);
-    
-    console.log('✅ Found products:', products.map(p => ({ name: p.name, score: p.score })));
-  }
-}
+      if (maxPrice) query = query.lte('price', maxPrice);
+      if (minPrice) query = query.gte('price', minPrice);
+      
+      const { data: allProducts } = await query.limit(1000);
+      
+      if (allProducts && allProducts.length > 0) {
+        // Filtruj produkty
+        products = allProducts.filter(p => {
+          const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+          const productCategory = p.category?.toLowerCase() || '';
+          
+          return searchWords.some(word => 
+            productName.includes(word) || productCategory.includes(word)
+          );
+        });
+        
+        // Skóruj produkty - čísla majú VEĽMI vysokú váhu
+        products = products.map(p => {
+          const productName = p.name?.toLowerCase().replace(/[''´`'\-]/g, ' ') || '';
+          let score = 0;
+          
+          searchWords.forEach(word => {
+            if (productName.includes(word)) {
+              // Čísla (200, 240, 260, 2026) majú 50x väčšiu váhu
+              if (/^\d+$/.test(word)) {
+                score += 50;
+              } else {
+                score += 1;
+              }
+            }
+          });
+          
+          return { ...p, score };
+        });
+        
+        // Zoraď podľa skóre (najvyššie prvé)
+        products.sort((a, b) => b.score - a.score);
+        products = products.slice(0, 10);
+        
+        console.log('✅ Found products:', products.map(p => ({ name: p.name, score: p.score })));
+      }
+    }
 
-// Ak sa nič nenašlo, skús načítať všetky produkty (pre malé katalógy)
-if (products.length === 0) {
-  const { data, count } = await supabase
-    .from('products')
-    .select('name, description, price, category, url', { count: 'exact' })
-    .eq('client_id', client.id)
-    .limit(50);
-  
-  if (count && count <= 50) {
-    products = data || [];
-  }
-}
+    // Ak sa nič nenašlo, skús načítať všetky produkty (pre malé katalógy)
+    if (products.length === 0) {
+      const { data, count } = await supabase
+        .from('products')
+        .select('name, description, price, category, url', { count: 'exact' })
+        .eq('client_id', client.id)
+        .limit(50);
+      
+      if (count && count <= 50) {
+        products = data || [];
+      }
+    }
 
-// Vytvor kontext pre AI - STRIKTNÉ PRAVIDLÁ
-if (products.length > 0) {
-  productsContext = `
+    // Vytvor kontext pre AI - STRIKTNÉ PRAVIDLÁ
+    if (products.length > 0) {
+      productsContext = `
 
 ███████████████████████████████████████████████████████
 █ STOP! PREČÍTAJ TOTO PRED ODPOVEĎOU! █
@@ -358,14 +351,14 @@ if (products.length > 0) {
 
 TU SÚ JEDINÉ PRODUKTY KTORÉ MÔŽEŠ ODPORÚČAŤ:
 `;
-  products.forEach((p, i) => {
-    productsContext += `
+      products.forEach((p, i) => {
+        productsContext += `
 ${i + 1}. NÁZOV: "${p.name}"
    CENA: ${p.price}€
    LINK: ${p.url}
 `;
-  });
-  productsContext += `
+      });
+      productsContext += `
 ███████████████████████████████████████████████████████
 ⛔ ZAKÁZANÉ:
 - NIKDY nevymýšľaj produkty ktoré nie sú v zozname vyššie
@@ -384,8 +377,8 @@ Ak zákazník hľadá produkt ktorý NIE JE v zozname:
 → Odporuč kontaktovať predajňu pre overenie dostupnosti
 ███████████████████████████████████████████████████████
 `;
-} else {
-  productsContext = `
+    } else {
+      productsContext = `
 
 ███████████████████████████████████████████████████████
 NENAŠLI SA PRODUKTY PRE TÚTO OTÁZKU.
@@ -397,44 +390,50 @@ Namiesto toho:
 - Alebo odporuč kontaktovať predajňu
 ███████████████████████████████████████████████████████
 `;
-}
+    }
 
-const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
+    const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
 
-const stream = anthropic.messages.stream({
-  model: 'claude-sonnet-4-20250514',
-  max_tokens: 1024,
-  system: systemPrompt,
-  messages: messages
-});
-    
-    stream.on('text', (text) => {
-      fullResponse += text;
-      res.write(`data: ${JSON.stringify({ text })}\n\n`);
-    });
-    
-    stream.on('message', (msg) => {
-      inputTokens = msg.usage?.input_tokens || 0;
-      outputTokens = msg.usage?.output_tokens || 0;
-    });
-    
-    stream.on('error', (error) => {
-      console.error('Stream error:', error);
-      res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`);
-      res.end();
-    });
-    
-    stream.on('end', async () => {
+    // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: messages
+      });
+
+      let fullResponse = response.content[0].text;
+      const inputTokens = response.usage?.input_tokens || 0;
+      const outputTokens = response.usage?.output_tokens || 0;
+
+      // === VALIDÁCIA LINKOV - ODSTRÁŇ FALOŠNÉ ===
+      const validUrls = products.map(p => p.url).filter(Boolean);
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+      let match;
+      const originalResponse = fullResponse;
+
+      while ((match = linkRegex.exec(originalResponse)) !== null) {
+        const linkText = match[1];
+        const linkUrl = match[2];
+        
+        // Ak URL nie je v databáze produktov, odstráň link (nechaj len text)
+        if (validUrls.length > 0 && !validUrls.includes(linkUrl)) {
+          console.log('⚠️ Odstránený falošný link:', linkUrl);
+          fullResponse = fullResponse.replace(match[0], linkText);
+        }
+      }
+
       // Ulož assistant odpoveď
       await supabase.from('messages').insert({
         conversation_id: conversationId,
         role: 'assistant',
         content: fullResponse
       });
-      
+
       // Vypočítaj cenu (Claude Sonnet: $3/1M input, $15/1M output)
       const costEur = ((inputTokens * 3 / 1000000) + (outputTokens * 15 / 1000000)) * 0.92;
-      
+
       // Ulož spotrebu tokenov
       await supabase.from('token_usage').insert({
         client_id: client.id,
@@ -444,45 +443,53 @@ const stream = anthropic.messages.stream({
         cost_eur: costEur,
         model: 'claude-sonnet-4-20250514'
       });
-      
+
       // Aktualizuj conversation updated_at
       await supabase
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
-      
-     // Skontroluj či správa obsahuje kontakt a ulož ho
-     const contactInfo = checkForContact(message);
-if (contactInfo.hasContact) {
-  const updates = { has_contact: true };
-  if (contactInfo.email) updates.visitor_email = contactInfo.email;
-  if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
-  
-  await supabase
-    .from('conversations')
-    .update(updates)
-    .eq('id', conversationId);
-  
-  // Pošli email notifikáciu
-  const { data: clientData } = await supabase
-    .from('clients')
-    .select('email')
-    .eq('id', client.id)
-    .single();
-  
-  if (clientData?.email) {
-    sendLeadNotification(clientData.email, contactInfo, conversationId);
-  }
-}
-      // Pripočítaj správu k mesačnému limitu
-await supabase
-.from('clients')
-.update({ messages_this_month: clientData.messages_this_month + 1 })
-.eq('id', client.id);
 
-      res.write('data: [DONE]\n\n');
-      res.end();
-    });
+      // Skontroluj či správa obsahuje kontakt
+      const contactInfo = checkForContact(message);
+      if (contactInfo.hasContact) {
+        const updates = { has_contact: true };
+        if (contactInfo.email) updates.visitor_email = contactInfo.email;
+        if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
+        
+        await supabase
+          .from('conversations')
+          .update(updates)
+          .eq('id', conversationId);
+        
+        // Pošli email notifikáciu
+        const { data: clientEmailData } = await supabase
+          .from('clients')
+          .select('email')
+          .eq('id', client.id)
+          .single();
+        
+        if (clientEmailData?.email) {
+          sendLeadNotification(clientEmailData.email, contactInfo, conversationId);
+        }
+      }
+
+      // Pripočítaj správu k mesačnému limitu
+      await supabase
+        .from('clients')
+        .update({ messages_this_month: clientData.messages_this_month + 1 })
+        .eq('id', client.id);
+
+      // Pošli validovanú odpoveď
+      res.json({ 
+        text: fullResponse,
+        done: true 
+      });
+
+    } catch (aiError) {
+      console.error('AI Error:', aiError);
+      res.status(500).json({ error: 'Chyba pri generovaní odpovede' });
+    }
     
   } catch (error) {
     console.error('Chat error:', error);
@@ -1661,64 +1668,6 @@ app.post('/create-checkout-session', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /webhook/stripe - Stripe webhook
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-  
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-  
-  // Spracuj udalosti
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const clientId = session.metadata.clientId;
-    const plan = session.metadata.plan;
-    
-    // Aktivuj predplatné
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
-    
-    await supabase
-      .from('clients')
-      .update({
-        subscription_tier: plan,
-        subscription_expires_at: expiresAt.toISOString(),
-        messages_this_month: 0 // Reset správ
-      })
-      .eq('id', clientId);
-    
-    console.log(`✅ Aktivované ${plan} pre klienta ${clientId}`);
-  }
-  
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object;
-    const clientId = subscription.metadata?.clientId;
-    
-    if (clientId) {
-      await supabase
-        .from('clients')
-        .update({
-          subscription_tier: 'free',
-          subscription_expires_at: null
-        })
-        .eq('id', clientId);
-      
-      console.log(`⚠️ Zrušené predplatné pre klienta ${clientId}`);
-    }
-  }
-  
-  res.json({ received: true });
-});
-
 // GET /admin/billing - Získaj billing info
 app.get('/admin/billing', authMiddleware, async (req, res) => {
   try {
@@ -2138,6 +2087,7 @@ app.post('/promo/apply', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 // ============================================
 // START SERVER
 // ============================================
