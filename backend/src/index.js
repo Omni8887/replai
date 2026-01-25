@@ -361,8 +361,8 @@ app.post('/chat', async (req, res) => {
     // Detekcia či user hľadá BICYKEL (nie príslušenstvo)
     const wantsBike = /bicykel|bike|kolo|bicykle|ebike|e-bike/.test(msgLower);
     
-    // Detekcia či chce elektrický
-    const wantsElectric = /elektr|ebike|e-bike|e bike|motor|hybrid/.test(msgLower);
+    // Detekcia či chce elektrický - BEZ "hybrid" (to je len názov modelu)
+    const wantsElectric = /elektr|ebike|e-bike|e bike|motor/.test(msgLower);
     
     // Detekcia typu bicykla z otázky zákazníka
     let bikeType = null;
@@ -439,6 +439,7 @@ app.post('/chat', async (req, res) => {
     }
     
     // Ak hľadá e-bike, filtruj na "Hybrid" v názve
+    // ALE ak nechce elektrický, VYLÚČ "Hybrid" z výsledkov
     if (wantsElectric) {
       query = query.ilike('name', '%Hybrid%');
       console.log(`⚡ Filter: názov obsahuje "Hybrid" (e-bike)`);
@@ -497,6 +498,32 @@ app.post('/chat', async (req, res) => {
         // Bonus za e-bike ak hľadá e-bike
         if (wantsElectric && nameLower.includes('hybrid')) {
           score += 50;
+        }
+        
+        // Ak NECHCE elektrický, penalizuj Hybrid modely
+        if (!wantsElectric && nameLower.includes('hybrid')) {
+          score -= 300;
+        }
+        
+        // Penalizuj DETSKÉ/JUNIORSKÉ modely ak zákazník nehľadá detský bicykel
+        if (bikeType !== 'detske' && bikeType !== 'juniorske') {
+          // Detské modely:
+          // - NUMOVE (vždy detský)
+          // - ACID s veľkosťou 160-260 (nie ACID bez čísla)
+          // - STEREO 240, ELITE 240 (24" koleso) - ale NIE ak má "29" v názve
+          // - ROOKIE modely
+          
+          const isDetsky = 
+            nameLower.includes('numove') ||
+            nameLower.includes('rookie') ||
+            (nameLower.includes('240') && !nameLower.includes('29') && !nameLower.includes('one44')) ||
+            (nameLower.includes('elite 240')) ||
+            /acid.*(160|180|200|260)/.test(nameLower);
+          
+          if (isDetsky) {
+            score -= 500;
+            console.log(`   ✗ ${p.name} - detský/juniorský model, zákazník hľadá dospelý (-500)`);
+          }
         }
         
         // PENALIZÁCIA za nesprávny typ
