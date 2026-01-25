@@ -306,27 +306,103 @@ app.post('/chat', async (req, res) => {
       .replace(/ň/g, 'n')
       .replace(/ľ/g, 'l');
 
+    // === MAPOVANIE CUBE MODELOV NA KATEGÓRIE ===
+    const modelCategoryMap = {
+      // Detské a juniorské
+      'numove': 'detske',
+      'acid 1': 'detske',  // ACID 160, 180, 200
+      'acid 2': 'detske',  // ACID 240, 260
+      'rookie': 'juniorske',
+      'elite 240': 'juniorske',
+      'stereo 240': 'juniorske',
+      
+      // Mestské
+      'nulane': 'mestske',
+      'ella': 'mestske',
+      'editor': 'mestske',
+      'compact': 'mestske',
+      'supreme': 'mestske',
+      
+      // Treking
+      'nature': 'treking',
+      'touring': 'treking',
+      'kathmandu': 'treking',
+      'nuride': 'treking',
+      
+      // Gravel
+      'nuroad': 'gravel',
+      
+      // Cestné
+      'attain': 'cestne',
+      'litening': 'cestne',
+      'agree': 'cestne',
+      'aerium': 'cestne',
+      
+      // Horské pevné (hardtail)
+      'aim': 'horske',
+      'reaction': 'horske',
+      'attention': 'horske',
+      'phenix': 'horske',
+      
+      // Celoodpružené (fullsuspension)
+      'stereo': 'celoodpruzene',
+      'ams': 'celoodpruzene',
+      
+      // Transportné
+      'longtail': 'transportne',
+      'fold': 'transportne',
+      'trike': 'transportne',
+      'cargo': 'transportne',
+      
+      // Dirt
+      'flying circus': 'dirt'
+    };
+
     // Detekcia či user hľadá BICYKEL (nie príslušenstvo)
     const wantsBike = /bicykel|bike|kolo|bicykle|ebike|e-bike/.test(msgLower);
     
-    // Detekcia typu bicykla
+    // Detekcia či chce elektrický
+    const wantsElectric = /elektr|ebike|e-bike|e bike|motor|hybrid/.test(msgLower);
+    
+    // Detekcia typu bicykla z otázky zákazníka
     let bikeType = null;
+    let bikeTypeKeywords = [];
+    
     if (/detsk|dieta|deti|syn|dcer|junior|kids/.test(msgLower)) {
-      bikeType = 'Detské';
-    } else if (/elektr|ebike|e-bike|motor/.test(msgLower)) {
-      bikeType = 'Elektrobicykle';
-    } else if (/mtb|horsk|mountain/.test(msgLower)) {
-      bikeType = 'Horské';
-    } else if (/cestn|road|silnic/.test(msgLower)) {
-      bikeType = 'Cestné';
-    } else if (/gravel|cyklokros/.test(msgLower)) {
-      bikeType = 'Gravel';
-    } else if (/trek|cross/.test(msgLower)) {
-      bikeType = 'Trekingové';
+      bikeType = 'detske';
+      bikeTypeKeywords = ['numove', 'acid 1', 'acid 2'];
+    } else if (/les|lesa|teren|off.?road|trail|horsk|mtb|mountain/.test(msgLower)) {
+      bikeType = 'horske';
+      bikeTypeKeywords = ['reaction', 'aim', 'attention', 'stereo', 'ams'];
+    } else if (/celoodpruz|full.?sus|enduro|downhill/.test(msgLower)) {
+      bikeType = 'celoodpruzene';
+      bikeTypeKeywords = ['stereo', 'ams'];
+    } else if (/cestn|road|silnic|asfalt|zavod/.test(msgLower)) {
+      bikeType = 'cestne';
+      bikeTypeKeywords = ['attain', 'litening', 'agree', 'aerium'];
+    } else if (/gravel|cyklokros|sotorik|polnacka/.test(msgLower)) {
+      bikeType = 'gravel';
+      bikeTypeKeywords = ['nuroad'];
+    } else if (/trek|turistik|vylet|cest|allroad/.test(msgLower)) {
+      bikeType = 'treking';
+      bikeTypeKeywords = ['nature', 'touring', 'kathmandu', 'nuride'];
+    } else if (/mest|city|urban|dochadz|prac/.test(msgLower)) {
+      bikeType = 'mestske';
+      bikeTypeKeywords = ['nulane', 'ella', 'editor', 'compact', 'supreme'];
+    } else if (/cargo|naklad|preprav|rodinn|family|longtail|skladac/.test(msgLower)) {
+      bikeType = 'transportne';
+      bikeTypeKeywords = ['longtail', 'fold', 'trike', 'cargo'];
+    } else if (/dirt|skakan|jump|pump/.test(msgLower)) {
+      bikeType = 'dirt';
+      bikeTypeKeywords = ['flying circus'];
     }
     
     if (bikeType) {
-      console.log(`📁 Detekovaný typ bicykla: ${bikeType}`);
+      console.log(`📁 Detekovaný typ bicykla: ${bikeType.toUpperCase()}`);
+      console.log(`🔑 Hľadám modely: ${bikeTypeKeywords.join(', ')}`);
+    }
+    if (wantsElectric) {
+      console.log(`⚡ Zákazník hľadá ELEKTRICKÝ bicykel (hybrid)`);
     }
 
     // Nájdi veľkosť kolesa - presnejší regex
@@ -357,15 +433,15 @@ app.post('/chat', async (req, res) => {
     if (minPrice) query = query.gte('price', minPrice);
     
     // KĽÚČOVÉ: Ak user hľadá bicykel, filtruj len bicykle (nie príslušenstvo)
-    if (wantsBike || bikeType) {
+    if (wantsBike || bikeType || wantsElectric) {
       query = query.ilike('category', '%Bicykle%');
       console.log(`🎯 Filter: kategória obsahuje "Bicykle"`);
     }
     
-    // Ak máme typ bicykla, pridaj ďalší filter
-    if (bikeType) {
-      query = query.ilike('category', `%${bikeType}%`);
-      console.log(`🎯 Filter: kategória obsahuje "${bikeType}"`);
+    // Ak hľadá e-bike, filtruj na "Hybrid" v názve
+    if (wantsElectric) {
+      query = query.ilike('name', '%Hybrid%');
+      console.log(`⚡ Filter: názov obsahuje "Hybrid" (e-bike)`);
     }
     
     const { data: allProducts, error: productsError } = await query.limit(500);
@@ -396,35 +472,64 @@ app.post('/chat', async (req, res) => {
         products = allProducts;
       }
 
-      // Skóruj a zoraď produkty
+      // Skóruj produkty podľa zhody s modelovými kľúčovými slovami
       products = products.map(p => {
         let score = 0;
-        const name = p.name || '';
-        const category = p.category?.toLowerCase() || '';
+        const nameLower = (p.name || '').toLowerCase();
+        const category = (p.category || '').toLowerCase();
         
         // Vysoký bonus za presnú veľkosť kolesa v názve
-        if (detectedWheelSize && name.includes(detectedWheelSize)) {
+        if (detectedWheelSize && nameLower.includes(detectedWheelSize.toLowerCase())) {
           score += 100;
         }
         
-        // Bonus za správnu kategóriu
-        if (bikeType && category.includes(bikeType.toLowerCase())) {
+        // HLAVNÉ SKÓROVANIE: Zhoda s modelovými kľúčovými slovami
+        if (bikeTypeKeywords && bikeTypeKeywords.length > 0) {
+          for (const keyword of bikeTypeKeywords) {
+            if (nameLower.includes(keyword.toLowerCase())) {
+              score += 150;  // Veľký bonus za správny model
+              console.log(`   ✓ ${p.name} - zhoda s "${keyword}" (+150)`);
+              break;
+            }
+          }
+        }
+        
+        // Bonus za e-bike ak hľadá e-bike
+        if (wantsElectric && nameLower.includes('hybrid')) {
           score += 50;
         }
         
-        // Bonus za to, že je to bicykel (nie príslušenstvo)
+        // PENALIZÁCIA za nesprávny typ
+        if (bikeType === 'horske' || bikeType === 'celoodpruzene') {
+          // Ak hľadá horský/celoodpružený, penalizuj gravel a treking
+          if (nameLower.includes('nuroad') || nameLower.includes('nuride') || 
+              nameLower.includes('touring') || nameLower.includes('nature')) {
+            score -= 200;
+          }
+        }
+        
+        if (bikeType === 'treking' || bikeType === 'mestske') {
+          // Ak hľadá treking/mestský, penalizuj horské
+          if (nameLower.includes('reaction') || nameLower.includes('stereo') || 
+              nameLower.includes('ams') || nameLower.includes('aim')) {
+            score -= 200;
+          }
+        }
+        
+        // Bonus za bicykel (nie príslušenstvo)
         if (category.includes('bicykle')) {
           score += 30;
         }
         
-        // Penalizácia za príslušenstvo ak user hľadá bicykel
-        if (wantsBike && (category.includes('doplnky') || category.includes('komponenty'))) {
-          score -= 100;
+        // Penalizácia za príslušenstvo
+        if ((wantsBike || bikeType || wantsElectric) && 
+            (category.includes('doplnky') || category.includes('komponenty'))) {
+          score -= 300;
         }
         
-        // Nižšia cena = vyššie skóre (ak je v rozpočte)
+        // Nižšia cena = mierne vyššie skóre
         if (maxPrice && p.price) {
-          score += Math.round((maxPrice - p.price) / 10);
+          score += Math.round((maxPrice - p.price) / 100);
         }
         
         return { ...p, score };
@@ -450,18 +555,35 @@ app.post('/chat', async (req, res) => {
         .from('products')
         .select('name, description, price, category, url')
         .eq('client_id', client.id)
-        .ilike('category', '%Bicykle%')
-        .ilike('category', `%${bikeType}%`);
+        .ilike('category', '%Bicykle%');
       
-      // Ak máme veľkosť, filtruj v kóde
-      const { data: fallbackProducts } = await fallbackQuery.limit(50);
+      // Ak hľadá e-bike, pridaj filter
+      if (wantsElectric) {
+        fallbackQuery = fallbackQuery.ilike('name', '%Hybrid%');
+      }
+      
+      const { data: fallbackProducts } = await fallbackQuery.limit(100);
       
       if (fallbackProducts && fallbackProducts.length > 0) {
-        if (detectedWheelSize) {
-          products = fallbackProducts.filter(p => p.name?.includes(detectedWheelSize));
+        // Filtruj podľa modelových kľúčových slov
+        if (bikeTypeKeywords && bikeTypeKeywords.length > 0) {
+          products = fallbackProducts.filter(p => {
+            const nameLower = (p.name || '').toLowerCase();
+            return bikeTypeKeywords.some(kw => nameLower.includes(kw.toLowerCase()));
+          });
         }
+        
+        if (detectedWheelSize && products.length > 0) {
+          const sizeFiltered = products.filter(p => p.name?.includes(detectedWheelSize));
+          if (sizeFiltered.length > 0) {
+            products = sizeFiltered;
+          }
+        }
+        
         if (products.length === 0) {
           products = fallbackProducts.slice(0, 10);
+        } else {
+          products = products.slice(0, 10);
         }
         console.log(`✅ Fallback našiel ${products.length} produktov (bez cenového filtra)`);
       }
@@ -482,13 +604,42 @@ app.post('/chat', async (req, res) => {
     }
 
     // Vytvor kontext pre AI - STRIKTNÉ PRAVIDLÁ
+    // Zisti či sme našli to čo zákazník hľadal
+    let matchInfo = '';
+    if (bikeType && wantsElectric && bikeTypeKeywords && bikeTypeKeywords.length > 0) {
+      const hasCorrectType = products.some(p => {
+        const nameLower = (p.name || '').toLowerCase();
+        return bikeTypeKeywords.some(kw => nameLower.includes(kw.toLowerCase()));
+      });
+      
+      if (!hasCorrectType) {
+        const typeNames = {
+          'horske': 'HORSKÝ',
+          'celoodpruzene': 'CELOODPRUŽENÝ',
+          'mestske': 'MESTSKÝ',
+          'treking': 'TREKINGOVÝ',
+          'gravel': 'GRAVEL',
+          'cestne': 'CESTNÝ'
+        };
+        const typeName = typeNames[bikeType] || bikeType.toUpperCase();
+        
+        matchInfo = `
+⚠️ DÔLEŽITÉ: Zákazník hľadá ${typeName} E-BIKE, ale v ponuke NEMÁME presne tento typ.
+Produkty nižšie sú ALTERNATÍVY. 
+MUSÍŠ zákazníkovi JASNE POVEDAŤ že nemáme ${typeName.toLowerCase()} e-biky a opýtať sa či má záujem o alternatívu.
+NEODPORÚČAJ alternatívy ako keby to bolo presne to čo hľadal!
+`;
+        console.log(`⚠️ Nenašli sa ${typeName} e-biky - budú ponúknuté alternatívy`);
+      }
+    }
+    
     if (products.length > 0) {
       productsContext = `
 
 ███████████████████████████████████████████████████████
 █ STOP! PREČÍTAJ TOTO PRED ODPOVEĎOU! █
 ███████████████████████████████████████████████████████
-
+${matchInfo}
 🔒 POVINNÉ PRAVIDLÁ PRE PRODUKTY:
 
 TU SÚ JEDINÉ PRODUKTY KTORÉ MÔŽEŠ ODPORÚČAŤ:
