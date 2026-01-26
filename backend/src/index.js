@@ -371,19 +371,19 @@ app.post('/chat', async (req, res) => {
     if (/detsk|dieta|deti|syn|dcer|junior|kids/.test(msgLower)) {
       bikeType = 'detske';
       bikeTypeKeywords = ['numove', 'acid 1', 'acid 2'];
-    } else if (/les|lesa|teren|off.?road|trail|horsk|mtb|mountain/.test(msgLower)) {
+    } else if (/les|lesa|teren|off.?road|trail|horsk|horак|mtb|mountain/.test(msgLower)) {
       bikeType = 'horske';
       bikeTypeKeywords = ['reaction', 'aim', 'attention', 'stereo', 'ams'];
     } else if (/celoodpruz|full.?sus|enduro|downhill/.test(msgLower)) {
       bikeType = 'celoodpruzene';
       bikeTypeKeywords = ['stereo', 'ams'];
-    } else if (/cestn|road|silnic|asfalt|zavod/.test(msgLower)) {
+    } else if (/cestn|cestak|cestak|road|silnic|asfalt|zavod|roadbike/.test(msgLower)) {
       bikeType = 'cestne';
       bikeTypeKeywords = ['attain', 'litening', 'agree', 'aerium'];
-    } else if (/gravel|cyklokros|sotorik|polnacka/.test(msgLower)) {
+    } else if (/gravel|gravelak|cyklokros|sotorik|polnacka/.test(msgLower)) {
       bikeType = 'gravel';
       bikeTypeKeywords = ['nuroad'];
-    } else if (/trek|turistik|vylet|cest|allroad/.test(msgLower)) {
+    } else if (/trek|turistik|vylet|trekingov|trekingak|allroad/.test(msgLower)) {
       bikeType = 'treking';
       bikeTypeKeywords = ['nature', 'touring', 'kathmandu', 'nuride'];
     } else if (/mest|city|urban|dochadz|prac/.test(msgLower)) {
