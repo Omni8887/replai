@@ -368,33 +368,46 @@ app.post('/chat', async (req, res) => {
     let bikeType = null;
     let bikeTypeKeywords = [];
     
+    // Definuj modely pre každý typ - na bonus aj penalizáciu
+    const modelTypeMap = {
+      'horske': ['reaction', 'aim', 'attention', 'phenix'],
+      'celoodpruzene': ['stereo', 'ams'],
+      'cestne': ['attain', 'litening', 'agree', 'aerium'],
+      'gravel': ['nuroad'],
+      'treking': ['nature', 'touring', 'kathmandu', 'nuride'],
+      'mestske': ['nulane', 'ella', 'editor', 'compact', 'supreme'],
+      'detske': ['numove', 'acid', 'cubie', 'rookie'],
+      'transportne': ['longtail', 'fold', 'trike', 'cargo'],
+      'dirt': ['flying circus']
+    };
+    
     if (/detsk|dieta|deti|syn|dcer|junior|kids/.test(msgLower)) {
       bikeType = 'detske';
-      bikeTypeKeywords = ['numove', 'acid 1', 'acid 2'];
-    } else if (/les|lesa|teren|off.?road|trail|horsk|horак|mtb|mountain/.test(msgLower)) {
+      bikeTypeKeywords = modelTypeMap.detske;
+    } else if (/les|lesa|teren|off.?road|trail|horsk|mtb|mountain/.test(msgLower)) {
       bikeType = 'horske';
-      bikeTypeKeywords = ['reaction', 'aim', 'attention', 'stereo', 'ams'];
+      bikeTypeKeywords = modelTypeMap.horske;
     } else if (/celoodpruz|full.?sus|enduro|downhill/.test(msgLower)) {
       bikeType = 'celoodpruzene';
-      bikeTypeKeywords = ['stereo', 'ams'];
-    } else if (/cestn|cestak|cestak|road|silnic|asfalt|zavod|roadbike/.test(msgLower)) {
+      bikeTypeKeywords = modelTypeMap.celoodpruzene;
+    } else if (/cestn|cestak|road|silnic|asfalt|zavod|roadbike/.test(msgLower)) {
       bikeType = 'cestne';
-      bikeTypeKeywords = ['attain', 'litening', 'agree', 'aerium'];
+      bikeTypeKeywords = modelTypeMap.cestne;
     } else if (/gravel|gravelak|cyklokros|sotorik|polnacka/.test(msgLower)) {
       bikeType = 'gravel';
-      bikeTypeKeywords = ['nuroad'];
+      bikeTypeKeywords = modelTypeMap.gravel;
     } else if (/trek|turistik|vylet|trekingov|trekingak|allroad/.test(msgLower)) {
       bikeType = 'treking';
-      bikeTypeKeywords = ['nature', 'touring', 'kathmandu', 'nuride'];
+      bikeTypeKeywords = modelTypeMap.treking;
     } else if (/mest|city|urban|dochadz|prac/.test(msgLower)) {
       bikeType = 'mestske';
-      bikeTypeKeywords = ['nulane', 'ella', 'editor', 'compact', 'supreme'];
+      bikeTypeKeywords = modelTypeMap.mestske;
     } else if (/cargo|naklad|preprav|rodinn|family|longtail|skladac/.test(msgLower)) {
       bikeType = 'transportne';
-      bikeTypeKeywords = ['longtail', 'fold', 'trike', 'cargo'];
+      bikeTypeKeywords = modelTypeMap.transportne;
     } else if (/dirt|skakan|jump|pump/.test(msgLower)) {
       bikeType = 'dirt';
-      bikeTypeKeywords = ['flying circus'];
+      bikeTypeKeywords = modelTypeMap.dirt;
     }
     
     if (bikeType) {
@@ -526,20 +539,37 @@ app.post('/chat', async (req, res) => {
           }
         }
         
-        // PENALIZÁCIA za nesprávny typ
-        if (bikeType === 'horske' || bikeType === 'celoodpruzene') {
-          // Ak hľadá horský/celoodpružený, penalizuj gravel a treking
-          if (nameLower.includes('nuroad') || nameLower.includes('nuride') || 
-              nameLower.includes('touring') || nameLower.includes('nature')) {
-            score -= 200;
-          }
-        }
-        
-        if (bikeType === 'treking' || bikeType === 'mestske') {
-          // Ak hľadá treking/mestský, penalizuj horské
-          if (nameLower.includes('reaction') || nameLower.includes('stereo') || 
-              nameLower.includes('ams') || nameLower.includes('aim')) {
-            score -= 200;
+        // PENALIZÁCIA za nesprávny typ - použijem modelTypeMap
+        if (bikeType && modelTypeMap) {
+          // Prejdi všetky typy a penalizuj modely z iných kategórií
+          for (const [otherType, otherModels] of Object.entries(modelTypeMap)) {
+            // Preskočí ak je to rovnaký typ alebo príbuzný typ
+            if (otherType === bikeType) continue;
+            
+            // Príbuzné typy - nepenalizovať tak silno
+            const relatedTypes = {
+              'horske': ['celoodpruzene'],
+              'celoodpruzene': ['horske'],
+              'cestne': ['gravel'],
+              'gravel': ['cestne', 'treking'],
+              'treking': ['gravel', 'mestske'],
+              'mestske': ['treking']
+            };
+            
+            const isRelated = relatedTypes[bikeType]?.includes(otherType);
+            
+            // Skontroluj či produkt patrí do inej kategórie
+            for (const otherModel of otherModels) {
+              if (nameLower.includes(otherModel.toLowerCase())) {
+                if (isRelated) {
+                  score -= 100;  // Menšia penalizácia za príbuzný typ
+                } else {
+                  score -= 300;  // Veľká penalizácia za úplne iný typ
+                  console.log(`   ✗ ${p.name} - nesprávny typ (${otherType} vs ${bikeType}) (-300)`);
+                }
+                break;
+              }
+            }
           }
         }
         
