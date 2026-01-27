@@ -652,10 +652,9 @@
           }),
         });
 
-        this.hideTypingIndicator();
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          this.hideTypingIndicator();
           
           if (errorData.limit_reached) {
             this.appendMessage('Asistent je momentálne nedostupný. Zanechajte nám prosím váš email alebo telefón a budeme vás kontaktovať.', false);
@@ -666,13 +665,58 @@
           throw new Error(errorData.error || 'Network error');
         }
 
-        // === NOVÝ KÓD - JSON ODPOVEĎ ===
-        const data = await response.json();
-        
-        if (data.text) {
-          this.appendMessage(data.text, false);
-        } else if (data.error) {
-          this.appendMessage('Prepáčte, nastala chyba. Skúste to znova.', false);
+        // === SSE STREAMING ===
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let aiResponse = '';
+        let responseDiv = null;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(5).trim();
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.text !== undefined) {
+                  aiResponse += parsed.text;
+
+                  // Skry typing indicator a vytvor response div pri prvom texte
+                  if (!responseDiv) {
+                    this.hideTypingIndicator();
+                    responseDiv = document.createElement('div');
+                    responseDiv.classList.add('replai-message', 'assistant');
+                    responseDiv.innerHTML = '<div class="replai-message-bubble"></div>';
+                    this.messagesContainer.appendChild(responseDiv);
+                  }
+
+                  // Aktualizuj text s formátovaním
+                  let formattedContent = aiResponse
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+
+                  responseDiv.querySelector('.replai-message-bubble').innerHTML = formattedContent;
+                  this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }
+              } catch (e) {}
+            }
+          }
+        }
+
+        // Ulož kompletnú odpoveď
+        if (aiResponse) {
+          this.messages.push({
+            role: 'assistant',
+            content: aiResponse
+          });
         }
 
       } catch (error) {

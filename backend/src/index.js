@@ -830,11 +830,27 @@ Namiesto toho:
         .update({ messages_this_month: clientData.messages_this_month + 1 })
         .eq('id', client.id);
 
-      // Pošli validovanú odpoveď
-      res.json({ 
-        text: fullResponse,
-        done: true 
-      });
+      // === SIMULOVANÝ STREAMING - pošli validovanú odpoveď po častiach ===
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // Rozdeľ odpoveď na slová
+      const words = fullResponse.split(/(\s+)/);
+      
+      // Pošli po skupinách slov (3-5 slov naraz pre plynulejší efekt)
+      const chunkSize = 4;
+      for (let i = 0; i < words.length; i += chunkSize) {
+        const chunk = words.slice(i, i + chunkSize).join('');
+        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        
+        // Krátka pauza medzi chunkmi (30-50ms)
+        await new Promise(resolve => setTimeout(resolve, 35));
+      }
+      
+      // Označ koniec
+      res.write('data: [DONE]\n\n');
+      res.end();
 
     } catch (aiError) {
       console.error('AI Error:', aiError);

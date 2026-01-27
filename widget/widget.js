@@ -5,7 +5,6 @@
 
   const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 .replai-widget {
   position: fixed;
   bottom: 24px;
@@ -13,7 +12,6 @@
   z-index: 999999;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-
 .replai-button {
   width: 60px;
   height: 60px;
@@ -28,18 +26,15 @@
   border: none;
   position: relative;
 }
-
 .replai-button:hover {
   transform: scale(1.05) translateY(-2px);
   box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5);
 }
-
 .replai-button svg {
   width: 28px;
   height: 28px;
   color: white;
 }
-
 .replai-button-status {
   position: absolute;
   top: -2px;
@@ -51,22 +46,18 @@
   background: #ef4444;
   transition: background 0.3s ease;
 }
-
 .replai-button-status.online {
   background: #22c55e;
 }
-
 .replai-widget.open .replai-button {
   display: none;
 }
-
 .replai-widget.open {
   width: 400px;
   height: 560px;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 48px);
 }
-
 .replai-container {
   display: none;
   flex-direction: column;
@@ -78,11 +69,9 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-
 .replai-widget.open .replai-container {
   display: flex;
 }
-
 .replai-header {
   display: flex;
   justify-content: space-between;
@@ -91,13 +80,11 @@
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
   color: white;
 }
-
 .replai-header-info {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .replai-header-avatar {
   width: 40px;
   height: 40px;
@@ -107,19 +94,16 @@
   align-items: center;
   justify-content: center;
 }
-
 .replai-header-avatar svg {
   width: 22px;
   height: 22px;
   color: white;
 }
-
 .replai-header h3 {
   font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
-
 .replai-header-status {
   display: flex;
   align-items: center;
@@ -127,7 +111,6 @@
   font-size: 12px;
   margin: 4px 0 0 0;
 }
-
 .replai-status-dot {
   width: 8px;
   height: 8px;
@@ -135,22 +118,18 @@
   background: #ef4444;
   transition: background 0.3s ease;
 }
-
 .replai-status-dot.online {
   background: #4ade80;
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
 }
-
 .replai-status-text {
   opacity: 0.9;
 }
-
 .replai-header-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .replai-header-btn {
   display: flex;
   justify-content: center;
@@ -164,49 +143,39 @@
   transition: all 0.2s ease;
   color: white;
 }
-
 .replai-header-btn:hover {
   background: rgba(255, 255, 255, 0.25);
 }
-
 .replai-header-btn svg {
   width: 18px;
   height: 18px;
 }
-
 .replai-messages {
   flex-grow: 1;
   overflow-y: auto;
   padding: 20px;
   background: #f8fafc;
 }
-
 .replai-messages::-webkit-scrollbar {
   width: 6px;
 }
-
 .replai-messages::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .replai-messages::-webkit-scrollbar-thumb {
   background-color: #e2e8f0;
   border-radius: 3px;
 }
-
 .replai-message {
   margin-bottom: 16px;
   display: flex;
 }
-
 .replai-message.user {
   justify-content: flex-end;
 }
-
 .replai-message.assistant {
   justify-content: flex-start;
 }
-
 .replai-message-bubble {
   max-width: 80%;
   padding: 14px 18px;
@@ -214,13 +183,11 @@
   line-height: 1.5;
   font-size: 14px;
 }
-
 .replai-message.user .replai-message-bubble {
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
   color: white;
   border-bottom-right-radius: 6px;
 }
-
 .replai-message.assistant .replai-message-bubble {
   background: white;
   color: #334155;
@@ -228,7 +195,6 @@
   border-bottom-left-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-
 .replai-link {
   color: #7c3aed;
   text-decoration: underline;
@@ -236,31 +202,25 @@
   cursor: pointer;
   transition: color 0.2s ease;
 }
-
 .replai-link:hover {
   color: #5b21b6;
 }
-
 .replai-message.user .replai-link {
   color: #e9d5ff;
 }
-
 .replai-message.user .replai-link:hover {
   color: white;
 }
-
 .replai-input-area {
   padding: 16px 20px 20px;
   background: white;
   border-top: 1px solid #f1f5f9;
 }
-
 .replai-input-wrapper {
   display: flex;
   gap: 12px;
   align-items: flex-end;
 }
-
 .replai-input {
   flex-grow: 1;
   min-height: 44px;
@@ -276,22 +236,18 @@
   outline: none;
   transition: all 0.2s ease;
 }
-
 .replai-input:focus {
   border-color: #7c3aed;
   background: white;
   box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
 }
-
 .replai-input::placeholder {
   color: #94a3b8;
 }
-
 .replai-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
 .replai-send-btn {
   width: 44px;
   height: 44px;
@@ -306,29 +262,24 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .replai-send-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
-
 .replai-send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
-
 .replai-send-btn svg {
   width: 20px;
   height: 20px;
 }
-
 .replai-typing {
   display: none;
   padding: 0 20px 16px;
 }
-
 .replai-typing-bubble {
   display: inline-flex;
   align-items: center;
@@ -339,7 +290,6 @@
   border-radius: 18px;
   border-bottom-left-radius: 6px;
 }
-
 .replai-typing-dot {
   width: 8px;
   height: 8px;
@@ -347,15 +297,12 @@
   border-radius: 50%;
   animation: replai-typing 1.4s infinite ease-in-out;
 }
-
 .replai-typing-dot:nth-child(2) {
   animation-delay: 0.2s;
 }
-
 .replai-typing-dot:nth-child(3) {
   animation-delay: 0.4s;
 }
-
 @keyframes replai-typing {
   0%, 60%, 100% {
     transform: translateY(0);
@@ -366,7 +313,6 @@
     opacity: 1;
   }
 }
-
 .replai-offline-msg {
   display: none;
   background: #fef2f2;
@@ -378,7 +324,6 @@
   font-size: 13px;
   text-align: center;
 }
-
 .replai-powered {
   text-align: center;
   padding: 8px;
@@ -386,13 +331,11 @@
   color: #94a3b8;
   background: #f8fafc;
 }
-
 .replai-powered a {
   color: #7c3aed;
   text-decoration: none;
   font-weight: 500;
 }
-
 .replai-powered a:hover {
   text-decoration: underline;
 }
@@ -444,8 +387,10 @@
       </div>
       <div class="replai-messages" id="replaiMessages"></div>
       <div class="replai-typing" id="replaiTyping">
-        <div class="replai-typing-dots">
-          <span></span><span></span><span></span>
+        <div class="replai-typing-bubble">
+          <span class="replai-typing-dot"></span>
+          <span class="replai-typing-dot"></span>
+          <span class="replai-typing-dot"></span>
         </div>
       </div>
       <div class="replai-input-area">
@@ -464,7 +409,7 @@
         </div>
       </div>
       <div class="replai-powered">
-        Powered by <a href="#" target="_blank">Replai</a>
+        Powered by <a href="https://replai.sk" target="_blank">Replai</a>
       </div>
     </div>
   </div>
@@ -487,28 +432,28 @@
       this.statusDot = document.getElementById('replaiStatusDot');
       this.statusText = document.getElementById('replaiStatusText');
       this.offlineMsg = document.getElementById('replaiOfflineMsg');
-      
+
       this.isOpen = false;
       this.isOnline = false;
       this.currentThreadId = localStorage.getItem('replai_thread_id') || null;
       this.messages = [];
       this.settings = null;
-      
+
       this.init();
     }
 
     async init() {
       await this.checkOnlineStatus();
       await this.loadSettings();
-      
+
       if (this.currentThreadId) {
         await this.loadMessagesFromServer();
       } else {
         this.showWelcomeMessage();
       }
-      
+
       this.initializeEventListeners();
-      
+
       // Check status every 30 seconds
       setInterval(() => this.checkOnlineStatus(), 30000);
     }
@@ -519,6 +464,7 @@
           method: 'GET',
           timeout: 5000 
         });
+
         if (response.ok) {
           this.setOnlineStatus(true);
         } else {
@@ -531,7 +477,7 @@
 
     setOnlineStatus(online) {
       this.isOnline = online;
-      
+
       if (online) {
         this.buttonStatus.classList.add('online');
         this.statusDot.classList.add('online');
@@ -566,7 +512,7 @@
 
     applySettings() {
       if (!this.settings) return;
-      
+
       if (this.settings.title) {
         this.titleEl.textContent = this.settings.title;
       }
@@ -582,7 +528,6 @@
         const response = await fetch(`${BACKEND_URL}/messages/${this.currentThreadId}`, {
           headers: { 'X-API-Key': API_KEY }
         });
-        
         if (response.ok) {
           this.messages = await response.json();
           this.renderMessages();
@@ -595,12 +540,12 @@
 
     renderMessages() {
       this.messagesContainer.innerHTML = '';
-      
+
       if (this.messages.length === 0) {
         this.showWelcomeMessage();
         return;
       }
-      
+
       this.messages.forEach(msg => {
         this.appendMessage(msg.content, msg.role === 'user', false);
       });
@@ -618,7 +563,6 @@
       this.button.addEventListener('click', () => this.openChat());
       this.closeBtn.addEventListener('click', () => this.closeChat());
       this.newThreadBtn.addEventListener('click', () => this.createNewThread());
-
       this.input.addEventListener('input', () => this.adjustTextareaHeight());
       this.input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -626,7 +570,6 @@
           this.sendMessage();
         }
       });
-
       this.sendBtn.addEventListener('click', () => this.sendMessage());
     }
 
@@ -649,17 +592,16 @@
     appendMessage(message, isUser = false, save = true) {
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('replai-message', isUser ? 'user' : 'assistant');
-      
+
       let formattedContent = message
-     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-     .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" class="replai-link">$1</a>')
-     .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" class="replai-link">$2</a>');
-      
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+        .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+
       messageDiv.innerHTML = `<div class="replai-message-bubble">${formattedContent}</div>`;
-      
       this.messagesContainer.appendChild(messageDiv);
       this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-      
+
       if (save) {
         this.messages.push({
           role: isUser ? 'user' : 'assistant',
@@ -679,7 +621,7 @@
 
     async sendMessage() {
       if (!this.isOnline) return;
-      
+
       const userInput = this.input.value.trim();
       if (!userInput) return;
 
@@ -688,13 +630,15 @@
       }
 
       this.sendBtn.disabled = true;
+      this.input.disabled = true;
       this.input.value = '';
       this.adjustTextareaHeight();
+
       this.appendMessage(userInput, true);
 
       try {
         this.showTypingIndicator();
-        
+
         const response = await fetch(`${BACKEND_URL}/chat`, {
           method: 'POST',
           headers: {
@@ -710,15 +654,18 @@
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          this.hideTypingIndicator();
+          
           if (errorData.limit_reached) {
-            this.hideTypingIndicator();
             this.appendMessage('Asistent je momentálne nedostupný. Zanechajte nám prosím váš email alebo telefón a budeme vás kontaktovať.', false);
             this.setOnlineStatus(false);
             return;
           }
-          throw new Error('Network error');
+          
+          throw new Error(errorData.error || 'Network error');
         }
 
+        // === SSE STREAMING ===
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let aiResponse = '';
@@ -740,7 +687,8 @@
                 const parsed = JSON.parse(data);
                 if (parsed.text !== undefined) {
                   aiResponse += parsed.text;
-                  
+
+                  // Skry typing indicator a vytvor response div pri prvom texte
                   if (!responseDiv) {
                     this.hideTypingIndicator();
                     responseDiv = document.createElement('div');
@@ -748,12 +696,13 @@
                     responseDiv.innerHTML = '<div class="replai-message-bubble"></div>';
                     this.messagesContainer.appendChild(responseDiv);
                   }
-                  
+
+                  // Aktualizuj text s formátovaním
                   let formattedContent = aiResponse
-  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
-  .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
-                  
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\[([^\]]+)\]\s*\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+
                   responseDiv.querySelector('.replai-message-bubble').innerHTML = formattedContent;
                   this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
                 }
@@ -762,19 +711,21 @@
           }
         }
 
+        // Ulož kompletnú odpoveď
         if (aiResponse) {
           this.messages.push({
             role: 'assistant',
             content: aiResponse
           });
         }
+
       } catch (error) {
         console.error('Chat error:', error);
-        this.appendMessage('Prepáčte, nastala chyba. Skúste to znova.', false);
-        this.setOnlineStatus(false);
-      } finally {
         this.hideTypingIndicator();
+        this.appendMessage('Prepáčte, nastala chyba. Skúste to znova.', false);
+      } finally {
         this.sendBtn.disabled = !this.isOnline;
+        this.input.disabled = !this.isOnline;
         this.input.focus();
       }
     }
