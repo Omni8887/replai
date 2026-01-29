@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword.jsx'
 import Analytics from './pages/Analytics.jsx'
 import VerifyEmail from './pages/VerifyEmail.jsx'
 import SuperAdmin from './pages/SuperAdmin.jsx'
+import Bookings from './pages/Bookings.jsx'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -47,6 +48,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="superadmin" element={<SuperAdmin />} />
+          <Route path="bookings" element={<Bookings />} />
         </Route>
       </Routes>
     </AuthProvider>

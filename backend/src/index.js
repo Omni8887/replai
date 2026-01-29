@@ -2455,6 +2455,732 @@ app.post('/promo/apply', authMiddleware, async (req, res) => {
 });
 
 // ============================================
+// BOOKING SYSTEM ENDPOINTS
+// Vlož tento kód do index.js pred "// START SERVER"
+// ============================================
+
+// GET /bookings - Zoznam rezervácií klienta
+app.get('/bookings', authMiddleware, async (req, res) => {
+  try {
+    const { location, status, search } = req.query;
+    
+    let query = supabase
+      .from('bookings')
+      .select(`
+        *,
+        booking_locations(name),
+        booking_services(name, price)
+      `)
+      .eq('client_id', req.clientId)
+      .order('booking_date', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    if (search) {
+      query = query.or(`customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,customer_phone.ilike.%${search}%,booking_number.ilike.%${search}%`);
+    }
+    
+    const { data: bookings, error } = await query;
+    
+    if (error) throw error;
+    
+    // Filtruj podľa location ak je zadaná
+    let filtered = bookings || [];
+    if (location) {
+      const { data: loc } = await supabase
+        .from('booking_locations')
+        .select('id')
+        .eq('client_id', req.clientId)
+        .eq('code', location)
+        .single();
+      
+      if (loc) {
+        filtered = filtered.filter(b => b.location_id === loc.id);
+      }
+    }
+    
+    // Transformuj dáta
+    const result = filtered.map(b => ({
+      ...b,
+      location_name: b.booking_locations?.name,
+      service_name: b.booking_services?.name,
+      estimated_price: b.booking_services?.price
+    }));
+    
+    res.json({ bookings: result });
+  } catch (error) {
+    console.error('Bookings list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /bookings/stats - Štatistiky rezervácií
+app.get('/bookings/stats', authMiddleware, async (req, res) => {
+  try {
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('status')
+      .eq('client_id', req.clientId);
+    
+    const stats = {
+      total: bookings?.length || 0,
+      pending: bookings?.filter(b => b.status === 'pending').length || 0,
+      confirmed: bookings?.filter(b => b.status === 'confirmed').length || 0,
+      in_progress: bookings?.filter(b => b.status === 'in_progress').length || 0,
+      completed: bookings?.filter(b => b.status === 'completed').length || 0,
+      cancelled: bookings?.filter(b => b.status === 'cancelled').length || 0
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Bookings stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /bookings/locations - Prevádzky klienta
+app.get('/bookings/locations', authMiddleware, async (req, res) => {
+  try {
+    const { data: locations } = await supabase
+      .from('booking_locations')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .eq('is_active', true)
+      .order('name');
+    
+    res.json(locations || []);
+  } catch (error) {
+    console.error('Booking locations error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /bookings/services - Služby klienta
+app.get('/bookings/services', authMiddleware, async (req, res) => {
+  try {
+    const { data: services } = await supabase
+      .from('booking_services')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .eq('is_active', true)
+      .order('sort_order');
+    
+    res.json(services || []);
+  } catch (error) {
+    console.error('Booking services error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /bookings/:id - Detail rezervácie
+app.get('/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        booking_locations(name, address, phone),
+        booking_services(name, price)
+      `)
+      .eq('id', id)
+      .eq('client_id', req.clientId)
+      .single();
+    
+    if (error || !booking) {
+      return res.status(404).json({ error: 'Rezervácia nenájdená' });
+    }
+    
+    res.json({
+      ...booking,
+      location_name: booking.booking_locations?.name,
+      location_address: booking.booking_locations?.address,
+      location_phone: booking.booking_locations?.phone,
+      service_name: booking.booking_services?.name,
+      estimated_price: booking.booking_services?.price
+    });
+  } catch (error) {
+    console.error('Booking detail error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/:id - Úprava rezervácie
+app.put('/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, final_price, admin_notes } = req.body;
+    
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .update({
+        status,
+        final_price: final_price || null,
+        admin_notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('client_id', req.clientId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json({ success: true, booking });
+  } catch (error) {
+    console.error('Booking update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /bookings/:id - Vymazanie rezervácie
+app.delete('/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', id)
+      .eq('client_id', req.clientId);
+    
+    if (error) throw error;
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Booking delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// PUBLIC BOOKING ENDPOINTS (pre widget/chatbot)
+// ============================================
+
+// GET /public/booking/locations - Prevádzky pre widget
+app.get('/public/booking/locations', async (req, res) => {
+  try {
+    const { client_id } = req.query;
+    
+    if (!client_id) {
+      return res.status(400).json({ error: 'client_id required' });
+    }
+    
+    const { data: locations } = await supabase
+      .from('booking_locations')
+      .select('id, code, name, address, phone')
+      .eq('client_id', client_id)
+      .eq('is_active', true)
+      .order('name');
+    
+    res.json(locations || []);
+  } catch (error) {
+    console.error('Public locations error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /public/booking/services - Služby pre widget
+app.get('/public/booking/services', async (req, res) => {
+  try {
+    const { client_id } = req.query;
+    
+    if (!client_id) {
+      return res.status(400).json({ error: 'client_id required' });
+    }
+    
+    const { data: services } = await supabase
+      .from('booking_services')
+      .select('id, code, name, description, price, price_type, duration_minutes')
+      .eq('client_id', client_id)
+      .eq('is_active', true)
+      .order('sort_order');
+    
+    res.json(services || []);
+  } catch (error) {
+    console.error('Public services error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /public/booking/availability/days - Dostupné dni v mesiaci
+app.get('/public/booking/availability/days', async (req, res) => {
+  try {
+    const { client_id, location, month } = req.query;
+    
+    if (!client_id || !location || !month) {
+      return res.status(400).json({ error: 'client_id, location and month required' });
+    }
+    
+    // Získaj location
+    const { data: loc } = await supabase
+      .from('booking_locations')
+      .select('id')
+      .eq('client_id', client_id)
+      .eq('code', location)
+      .single();
+    
+    if (!loc) {
+      return res.status(400).json({ error: 'Invalid location' });
+    }
+    
+    // Získaj working hours
+    const { data: workingHours } = await supabase
+      .from('booking_working_hours')
+      .select('day_of_week, is_closed')
+      .eq('location_id', loc.id);
+    
+    const closedDays = (workingHours || [])
+      .filter(w => w.is_closed)
+      .map(w => w.day_of_week);
+    
+    // Získaj blokované dni
+    const { data: blocked } = await supabase
+      .from('booking_blocked_slots')
+      .select('blocked_date')
+      .eq('location_id', loc.id);
+    
+    const blockedDates = (blocked || []).map(b => {
+      const d = new Date(b.blocked_date);
+      return d.toISOString().split('T')[0];
+    });
+    
+    // Vygeneruj dni v mesiaci
+    const [year, monthNum] = month.split('-').map(Number);
+    const daysInMonth = new Date(year, monthNum, 0).getDate();
+    const today = new Date().toISOString().split('T')[0];
+    
+    const days = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const date = new Date(dateStr);
+      const dayOfWeek = date.getDay();
+      
+      const available = 
+        dateStr >= today &&
+        !closedDays.includes(dayOfWeek) &&
+        !blockedDates.includes(dateStr);
+      
+      days.push({ date: dateStr, available });
+    }
+    
+    res.json({ days });
+  } catch (error) {
+    console.error('Availability days error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /public/booking/availability - Voľné sloty pre deň
+app.get('/public/booking/availability', async (req, res) => {
+  try {
+    const { client_id, location, date } = req.query;
+    
+    if (!client_id || !location || !date) {
+      return res.status(400).json({ error: 'client_id, location and date required' });
+    }
+    
+    // Získaj location
+    const { data: loc } = await supabase
+      .from('booking_locations')
+      .select('id')
+      .eq('client_id', client_id)
+      .eq('code', location)
+      .single();
+    
+    if (!loc) {
+      return res.status(400).json({ error: 'Invalid location' });
+    }
+    
+    // Získaj settings
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('slot_duration, max_bookings_per_slot')
+      .eq('client_id', client_id)
+      .single();
+    
+    const slotDuration = settings?.slot_duration || 60;
+    const maxPerSlot = settings?.max_bookings_per_slot || 2;
+    
+    // Získaj working hours pre daný deň
+    const dayOfWeek = new Date(date).getDay();
+    const { data: wh } = await supabase
+      .from('booking_working_hours')
+      .select('open_time, close_time, is_closed')
+      .eq('location_id', loc.id)
+      .eq('day_of_week', dayOfWeek)
+      .single();
+    
+    if (!wh || wh.is_closed) {
+      return res.json({ slots: [] });
+    }
+    
+    // Získaj existujúce rezervácie
+    const { data: existingBookings } = await supabase
+      .from('bookings')
+      .select('booking_time')
+      .eq('location_id', loc.id)
+      .eq('booking_date', date)
+      .neq('status', 'cancelled');
+    
+    const bookingCounts = {};
+    (existingBookings || []).forEach(b => {
+      const time = b.booking_time.substring(0, 5);
+      bookingCounts[time] = (bookingCounts[time] || 0) + 1;
+    });
+    
+    // Generuj sloty
+    const slots = [];
+    let currentTime = new Date(`2000-01-01T${wh.open_time}`);
+    const endTime = new Date(`2000-01-01T${wh.close_time}`);
+    const now = new Date();
+    const isToday = date === now.toISOString().split('T')[0];
+    
+    while (currentTime < endTime) {
+      const timeStr = currentTime.toTimeString().substring(0, 5);
+      const booked = bookingCounts[timeStr] || 0;
+      
+      let available = booked < maxPerSlot;
+      
+      if (isToday) {
+        const slotDateTime = new Date(`${date}T${timeStr}`);
+        if (slotDateTime <= now) {
+          available = false;
+        }
+      }
+      
+      slots.push({ time: timeStr, available });
+      
+      currentTime = new Date(currentTime.getTime() + slotDuration * 60000);
+    }
+    
+    res.json({ slots });
+  } catch (error) {
+    console.error('Availability error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /public/booking - Vytvorenie rezervácie
+app.post('/public/booking', async (req, res) => {
+  try {
+    const {
+      client_id,
+      location_code,
+      service_code,
+      customer_name,
+      customer_email,
+      customer_phone,
+      booking_date,
+      booking_time,
+      bike_brand,
+      bike_model,
+      problem_description,
+      conversation_id
+    } = req.body;
+    
+    if (!client_id || !location_code || !service_code || !customer_name || !customer_email || !customer_phone || !booking_date || !booking_time) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Získaj location
+    const { data: loc } = await supabase
+      .from('booking_locations')
+      .select('id')
+      .eq('client_id', client_id)
+      .eq('code', location_code)
+      .single();
+    
+    if (!loc) {
+      return res.status(400).json({ error: 'Invalid location' });
+    }
+    
+    // Získaj service
+    const { data: svc } = await supabase
+      .from('booking_services')
+      .select('id, price')
+      .eq('client_id', client_id)
+      .eq('code', service_code)
+      .single();
+    
+    if (!svc) {
+      return res.status(400).json({ error: 'Invalid service' });
+    }
+    
+    // Získaj prefix pre booking number
+    const { data: clientData } = await supabase
+      .from('clients')
+      .select('name')
+      .eq('id', client_id)
+      .single();
+    
+    const prefix = clientData?.name?.substring(0, 2).toUpperCase() || 'BK';
+    const year = new Date().getFullYear();
+    
+    // Počet rezervácií tohto roka
+    const { count } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', client_id)
+      .gte('created_at', `${year}-01-01`);
+    
+    const bookingNumber = `${prefix}-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
+    
+    // Vytvor rezerváciu
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .insert({
+        client_id,
+        location_id: loc.id,
+        service_id: svc.id,
+        booking_number: bookingNumber,
+        customer_name,
+        customer_email,
+        customer_phone,
+        booking_date,
+        booking_time,
+        bike_brand,
+        bike_model,
+        problem_description,
+        estimated_price: svc.price,
+        conversation_id,
+        status: 'pending'
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json({ success: true, booking });
+  } catch (error) {
+    console.error('Create booking error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// BOOKING SETTINGS ENDPOINTS
+// ============================================
+
+// GET /bookings/settings - Nastavenia rezervačného systému
+app.get('/bookings/settings', authMiddleware, async (req, res) => {
+  try {
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .single();
+    
+    res.json(settings || {
+      slot_duration: 60,
+      max_bookings_per_slot: 2,
+      min_advance_hours: 24,
+      max_advance_days: 30
+    });
+  } catch (error) {
+    console.error('Booking settings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/settings - Uložiť nastavenia
+app.put('/bookings/settings', authMiddleware, async (req, res) => {
+  try {
+    const { slot_duration, max_bookings_per_slot, min_advance_hours, max_advance_days } = req.body;
+    
+    const { data, error } = await supabase
+      .from('booking_settings')
+      .upsert({
+        client_id: req.clientId,
+        slot_duration,
+        max_bookings_per_slot,
+        min_advance_hours,
+        max_advance_days,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Update booking settings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// LOCATIONS CRUD
+// ============================================
+
+// POST /bookings/locations - Pridať prevádzku
+app.post('/bookings/locations', authMiddleware, async (req, res) => {
+  try {
+    const { code, name, address, city, phone, email } = req.body;
+    
+    const { data, error } = await supabase
+      .from('booking_locations')
+      .insert({
+        client_id: req.clientId,
+        code,
+        name,
+        address,
+        city,
+        phone,
+        email
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Create location error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/locations/:id - Upraviť prevádzku
+app.put('/bookings/locations/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, address, city, phone, email, is_active } = req.body;
+    
+    const { data, error } = await supabase
+      .from('booking_locations')
+      .update({ name, address, city, phone, email, is_active, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('client_id', req.clientId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Update location error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// SERVICES CRUD
+// ============================================
+
+// POST /bookings/services - Pridať službu
+app.post('/bookings/services', authMiddleware, async (req, res) => {
+  try {
+    const { code, name, description, price, price_type, duration_minutes, sort_order } = req.body;
+    
+    const { data, error } = await supabase
+      .from('booking_services')
+      .insert({
+        client_id: req.clientId,
+        code,
+        name,
+        description,
+        price,
+        price_type: price_type || 'fixed',
+        duration_minutes: duration_minutes || 60,
+        sort_order: sort_order || 0
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Create service error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/services/:id - Upraviť službu
+app.put('/bookings/services/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, price_type, duration_minutes, sort_order, is_active } = req.body;
+    
+    const { data, error } = await supabase
+      .from('booking_services')
+      .update({ name, description, price, price_type, duration_minutes, sort_order, is_active })
+      .eq('id', id)
+      .eq('client_id', req.clientId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Update service error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// WORKING HOURS
+// ============================================
+
+// GET /bookings/locations/:id/hours - Otváracie hodiny prevádzky
+app.get('/bookings/locations/:id/hours', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data } = await supabase
+      .from('booking_working_hours')
+      .select('*')
+      .eq('location_id', id)
+      .order('day_of_week');
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Working hours error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/locations/:id/hours - Uložiť otváracie hodiny
+app.put('/bookings/locations/:id/hours', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { hours } = req.body; // Array of { day_of_week, open_time, close_time, is_closed }
+    
+    // Vymaž staré
+    await supabase
+      .from('booking_working_hours')
+      .delete()
+      .eq('location_id', id);
+    
+    // Vlož nové
+    if (hours && hours.length > 0) {
+      const { error } = await supabase
+        .from('booking_working_hours')
+        .insert(hours.map(h => ({
+          location_id: id,
+          day_of_week: h.day_of_week,
+          open_time: h.open_time,
+          close_time: h.close_time,
+          is_closed: h.is_closed || false
+        })));
+      
+      if (error) throw error;
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update working hours error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
 // START SERVER
 // ============================================
 
