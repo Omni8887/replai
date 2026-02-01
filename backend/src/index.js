@@ -555,6 +555,58 @@ app.post('/chat', async (req, res) => {
       console.log(`🔋 "Malá batéria" → 400-500 Wh`);
     }
 
+    // === DETEKCIA VEĽKOSTI KOLESA (pre detské bicykle) ===
+    let wheelSize = null;
+    
+    // Priama detekcia: "20 palcov", "24"", "26 inch"
+    const wheelMatch = fullContext.match(/(\d{2})\s*(?:palc|"|´|inch|cole|")/);
+    if (wheelMatch) {
+      wheelSize = wheelMatch[1];
+      console.log(`🎡 Veľkosť kolesa (priama): ${wheelSize}"`);
+    }
+    
+    // Detekcia výšky dieťaťa a mapovanie na veľkosť kolesa
+    // Tabuľka: 12"=85-100cm | 16"=100-115cm | 20"=116-124cm | 24"=125-145cm | 26"=140-160cm
+    if (!wheelSize && /detsk|dieta|deti|syn|dcer|vnuk|vnuc/i.test(fullContext)) {
+      const heightMatch = fullContext.match(/(\d{2,3})\s*cm|(\d{2,3})\s*centim|vysk.*?(\d{2,3})|mer.*?(\d{2,3})\s*cm/i);
+      if (heightMatch) {
+        const childHeight = parseInt(heightMatch[1] || heightMatch[2] || heightMatch[3] || heightMatch[4]);
+        console.log(`👶 Výška dieťaťa: ${childHeight}cm`);
+        
+        // Mapovanie výšky na veľkosť kolesa
+        if (childHeight >= 85 && childHeight < 100) {
+          wheelSize = '12';
+        } else if (childHeight >= 100 && childHeight < 116) {
+          wheelSize = '16';
+        } else if (childHeight >= 116 && childHeight < 125) {
+          wheelSize = '20';
+        } else if (childHeight >= 125 && childHeight < 145) {
+          wheelSize = '24';
+        } else if (childHeight >= 140 && childHeight <= 160) {
+          wheelSize = '26';
+        }
+        
+        if (wheelSize) {
+          console.log(`🎡 Veľkosť kolesa (z výšky ${childHeight}cm): ${wheelSize}"`);
+        }
+      }
+    }
+    
+    // Mapovanie veľkosti kolesa na číslo v názve CUBE produktov (160, 200, 240...)
+    const wheelSizeToProductName = {
+      '12': '120',
+      '14': '140',
+      '16': '160',
+      '18': '180',
+      '20': '200',
+      '24': '240',
+      '26': '260'
+    };
+    const wheelSizeFilter = wheelSize ? wheelSizeToProductName[wheelSize] : null;
+    if (wheelSizeFilter) {
+      console.log(`🔍 Filter produktov: názov obsahuje "${wheelSizeFilter}"`);
+    }
+
     // === DETEKCIA ČI CHCE ALTERNATÍVY ===
     const wantsAlternatives = /podobn|ine |iny |alternativ|dals|nemusi|nemus|okrem|bez /.test(msgNorm);
     if (wantsAlternatives) {
@@ -676,6 +728,11 @@ app.post('/chat', async (req, res) => {
           query = query.ilike('name', `%${batterySize}%`);
         }
         
+        // Filter veľkosti kolesa pre detské bicykle (v názve je napr. "200" pre 20")
+        if (wheelSizeFilter && category.includes('Detské')) {
+          query = query.ilike('name', `%${wheelSizeFilter}%`);
+        }
+        
         // Ak je maxPrice, zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte)
         const sortAsc = !maxPrice;
         const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
@@ -685,6 +742,25 @@ app.post('/chat', async (req, res) => {
       // Ak sa nenašlo s batériou, skús bez filtra batérie
       if (categoryProducts.length === 0 && batterySize && wantsElektro) {
         console.log(`⚠️ Nenašlo sa s batériou ${batterySize}Wh, skúšam bez filtra...`);
+        for (const category of targetCategories.slice(0, 4)) {
+          let query = supabase
+            .from('products')
+            .select('name, description, price, category, url')
+            .eq('client_id', client.id)
+            .eq('category', category);
+          
+          if (maxPrice) query = query.lte('price', maxPrice);
+          if (minPrice) query = query.gte('price', minPrice);
+          
+          const sortAsc = !maxPrice;
+          const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
+          if (data) categoryProducts.push(...data);
+        }
+      }
+      
+      // Ak sa nenašlo s veľkosťou kolesa, informuj ale ponúkni aj iné veľkosti
+      if (categoryProducts.length === 0 && wheelSizeFilter) {
+        console.log(`⚠️ Nenašlo sa s veľkosťou ${wheelSize}", skúšam bez filtra...`);
         for (const category of targetCategories.slice(0, 4)) {
           let query = supabase
             .from('products')
