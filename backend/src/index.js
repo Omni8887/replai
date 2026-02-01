@@ -375,10 +375,16 @@ app.post('/chat', async (req, res) => {
     // === DETEKCIA CENY ===
     let maxPrice = null;
     let minPrice = null;
+    let displayMaxPrice = null; // Pre zobrazenie zákazníkovi
     
     // "do X€"
     const maxMatch = fullContext.match(/do\s*(\d+)/);
-    if (maxMatch) maxPrice = parseInt(maxMatch[1]);
+    if (maxMatch) {
+      displayMaxPrice = parseInt(maxMatch[1]);
+      // Pridaj 10% toleranciu - zákazník často myslí "približne"
+      maxPrice = Math.round(displayMaxPrice * 1.10);
+      console.log(`💰 "Do ${displayMaxPrice}€" → filter do ${maxPrice}€ (+10% tolerancia)`);
+    }
     
     // "od X€"
     const minMatch = fullContext.match(/od\s*(\d+)/);
@@ -391,8 +397,8 @@ app.post('/chat', async (req, res) => {
       minPrice = Math.round(aroundPrice * 0.7);
       maxPrice = Math.round(aroundPrice * 1.3);
       console.log(`💰 "Okolo ${aroundPrice}€" → ${minPrice}€ - ${maxPrice}€`);
-    } else if (maxPrice || minPrice) {
-      console.log(`💰 Cena: ${minPrice || 0}€ - ${maxPrice || '∞'}€`);
+    } else if (minPrice) {
+      console.log(`💰 Od ${minPrice}€`);
     }
 
     // === DETEKCIA ČI CHCE ALTERNATÍVY ===
@@ -511,7 +517,10 @@ app.post('/chat', async (req, res) => {
         if (maxPrice) query = query.lte('price', maxPrice);
         if (minPrice) query = query.gte('price', minPrice);
         
-        const { data } = await query.order('price', { ascending: true }).limit(15);
+        // Ak je maxPrice, zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte)
+        // Inak zoraď od najlacnejšieho
+        const sortAsc = !maxPrice;
+        const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
         if (data) categoryProducts.push(...data);
       }
       
@@ -576,9 +585,19 @@ app.post('/chat', async (req, res) => {
       );
     }
 
-    // Zoraď podľa ceny a limituj
-    products.sort((a, b) => (a.price || 0) - (b.price || 0));
-    products = products.slice(0, 10);
+    // Zoraď a limituj - ak je maxPrice, daj mix (najdrahšie + najlacnejšie)
+    if (maxPrice && products.length > 10) {
+      // Zoraď od najdrahšieho
+      products.sort((a, b) => (b.price || 0) - (a.price || 0));
+      // Vezmi top 6 najdrahších a top 4 najlacnejších
+      const expensive = products.slice(0, 6);
+      const cheap = products.slice(-4);
+      products = [...expensive, ...cheap];
+      console.log(`📊 Mix: ${expensive.length} drahších + ${cheap.length} lacnejších`);
+    } else {
+      products.sort((a, b) => (b.price || 0) - (a.price || 0));
+      products = products.slice(0, 10);
+    }
     
     console.log(`✅ Finálne: ${products.length} produktov`);
     if (products.length > 0) {
