@@ -390,11 +390,21 @@ app.post('/chat', async (req, res) => {
     targetCategories = [...new Set(targetCategories)];
     console.log('📁 Kategórie:', targetCategories.slice(0, 4).join(', '));
     
-    // Extrahuj cenu
-    const maxPriceMatch = fullContext.match(/do\s*(\d+)/);
-    const minPriceMatch = fullContext.match(/od\s*(\d+)/);
-    const maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
-    const minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
+  // Extrahuj cenu
+  const maxPriceMatch = fullContext.match(/do\s*(\d+)/);
+  const minPriceMatch = fullContext.match(/od\s*(\d+)/);
+  const aroundPriceMatch = fullContext.match(/okolo\s*(\d+)|cca\s*(\d+)|priblizne\s*(\d+)|zhruba\s*(\d+)/);
+  
+  let maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
+  let minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
+  
+  // Ak je "okolo X€", nastav rozsah ±30%
+  if (aroundPriceMatch) {
+    const aroundPrice = parseInt(aroundPriceMatch[1] || aroundPriceMatch[2] || aroundPriceMatch[3] || aroundPriceMatch[4]);
+    minPrice = Math.round(aroundPrice * 0.7);
+    maxPrice = Math.round(aroundPrice * 1.3);
+    console.log(`💰 "Okolo ${aroundPrice}€" → rozsah ${minPrice}€ - ${maxPrice}€`);
+  }
     
     // Extrahuj veľkosť kolesa
     const wheelMatch = fullContext.match(/(\d{2})\s*(?:palc|"|´|inch|cole)/);
