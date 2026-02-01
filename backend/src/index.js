@@ -381,14 +381,19 @@ app.post('/chat', async (req, res) => {
     const maxMatch = fullContext.match(/do\s*(\d+)/);
     if (maxMatch) {
       displayMaxPrice = parseInt(maxMatch[1]);
-      // Pridaj 10% toleranciu - zákazník často myslí "približne"
+      // Pridaj 10% toleranciu hore
       maxPrice = Math.round(displayMaxPrice * 1.10);
-      console.log(`💰 "Do ${displayMaxPrice}€" → filter do ${maxPrice}€ (+10% tolerancia)`);
+      // Automaticky nastav minimum na 70% - zákazník s rozpočtom 4000€ nechce bicykel za 1000€
+      minPrice = Math.round(displayMaxPrice * 0.70);
+      console.log(`💰 "Do ${displayMaxPrice}€" → filter ${minPrice}€ - ${maxPrice}€`);
     }
     
-    // "od X€"
+    // "od X€" - prepíše automatické minimum
     const minMatch = fullContext.match(/od\s*(\d+)/);
-    if (minMatch) minPrice = parseInt(minMatch[1]);
+    if (minMatch) {
+      minPrice = parseInt(minMatch[1]);
+      console.log(`💰 Od ${minPrice}€`);
+    }
     
     // "okolo X€", "cca X€", "tak X€", "priblizne X€"
     const aroundMatch = fullContext.match(/(?:okolo|cca|tak|priblizne|zhruba)\s*(\d+)/);
@@ -397,8 +402,6 @@ app.post('/chat', async (req, res) => {
       minPrice = Math.round(aroundPrice * 0.7);
       maxPrice = Math.round(aroundPrice * 1.3);
       console.log(`💰 "Okolo ${aroundPrice}€" → ${minPrice}€ - ${maxPrice}€`);
-    } else if (minPrice) {
-      console.log(`💰 Od ${minPrice}€`);
     }
 
     // === DETEKCIA ČI CHCE ALTERNATÍVY ===
@@ -585,19 +588,9 @@ app.post('/chat', async (req, res) => {
       );
     }
 
-    // Zoraď a limituj - ak je maxPrice, daj mix (najdrahšie + najlacnejšie)
-    if (maxPrice && products.length > 10) {
-      // Zoraď od najdrahšieho
-      products.sort((a, b) => (b.price || 0) - (a.price || 0));
-      // Vezmi top 6 najdrahších a top 4 najlacnejších
-      const expensive = products.slice(0, 6);
-      const cheap = products.slice(-4);
-      products = [...expensive, ...cheap];
-      console.log(`📊 Mix: ${expensive.length} drahších + ${cheap.length} lacnejších`);
-    } else {
-      products.sort((a, b) => (b.price || 0) - (a.price || 0));
-      products = products.slice(0, 10);
-    }
+    // Zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte) a limituj
+    products.sort((a, b) => (b.price || 0) - (a.price || 0));
+    products = products.slice(0, 10);
     
     console.log(`✅ Finálne: ${products.length} produktov`);
     if (products.length > 0) {
