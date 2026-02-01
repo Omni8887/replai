@@ -256,166 +256,150 @@ app.post('/chat', async (req, res) => {
     const days = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
     const currentDateTime = `\n\nAKTUÁLNY ČAS: ${days[now.getDay()]}, ${now.toLocaleDateString('sk-SK')} ${now.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}`;
 
-// ============================================
-// NOVÁ PRODUCT SEARCH - NÁHRADA PRE INDEX.JS
-// ============================================
-// 
-// INŠTRUKCIE:
-// 1. V index.js nájdi riadok: "// === VYLEPŠENÉ VYHĽADÁVANIE PRODUKTOV ==="
-// 2. Vymaž všetko od tohto riadku až po: "const systemPrompt = (client.system_prompt"
-// 3. Vlož namiesto toho tento kód:
-// ============================================
-
-    // === NOVÁ INTELIGENTNÁ PRODUCT SEARCH ===
+    // ============================================
+    // VYLEPŠENÉ VYHĽADÁVANIE PRODUKTOV v2
+    // ============================================
     
-    // Mapovanie zákazníckych výrazov na kategórie
-    const CATEGORY_MAP = {
-      // Bicykle
-      'horsk': ['Bicykle > Horské pevné', 'Bicykle > Celoodpružené bicykle'],
-      'mtb': ['Bicykle > Horské pevné', 'Bicykle > Celoodpružené bicykle'],
-      'celoodpruz': ['Bicykle > Celoodpružené bicykle'],
-      'full': ['Bicykle > Celoodpružené bicykle'],
-      'enduro': ['Bicykle > Celoodpružené bicykle'],
-      'trail': ['Bicykle > Celoodpružené bicykle'],
-      'cestn': ['Bicykle > Cestné'],
-      'silnic': ['Bicykle > Cestné'],
-      'road': ['Bicykle > Cestné'],
-      'gravel': ['Bicykle > Gravel'],
-      'trek': ['Bicykle > Trekingové'],
-      'turistik': ['Bicykle > Trekingové'],
-      'mest': ['Bicykle > Mestské'],
-      'city': ['Bicykle > Mestské'],
-      'dirt': ['Bicykle > Dirt'],
-      'detsk': ['Bicykle > Detské'],
-      'dieta': ['Bicykle > Detské'],
-      'deti': ['Bicykle > Detské'],
-      'junior': ['Bicykle > Juniorské', 'Bicykle > Detské'],
-      
-      // Komponenty
-      'prilba': ['Oblečenie > Prilby'],
-      'helma': ['Oblečenie > Prilby'],
-      'pedal': ['Komponenty > Pedále'],
-      'sedlo': ['Komponenty > Sedlá'],
-      'vidlic': ['Komponenty > Vidlice'],
-      'brzd': ['Komponenty > Brzdy'],
-      'koleso': ['Komponenty > Kolesá'],
-      'kolesa': ['Komponenty > Kolesá'],
-      'plast': ['Komponenty > Plášte'],
-      'dusa': ['Komponenty > Duše'],
-      'retaz': ['Komponenty > Reťaze'],
-      
-      // Doplnky
-      'svetl': ['Doplnky > Svetlá'],
-      'pump': ['Doplnky > Pumpy'],
-      'zamok': ['Doplnky > Zámky'],
-      'nosic': ['Doplnky > Nosiče'],
-      'blatnik': ['Doplnky > Blatníky'],
-      'taska': ['Doplnky > Tašky', 'Doplnky > Batohy a Ľadvinky'],
-      'batoh': ['Doplnky > Batohy a Ľadvinky'],
-      'flasa': ['Doplnky > Fľašky'],
-      
-      // Oblečenie
-      'dres': ['Oblečenie > Dresy'],
-      'bund': ['Oblečenie > Bundy'],
-      'rukav': ['Oblečenie > Rukavice'],
-      'ponozk': ['Oblečenie > Ponožky'],
-      'obuv': ['Oblečenie > Obuv'],
-      'tretry': ['Oblečenie > Obuv'],
-      'okulia': ['Oblečenie > Okuliare']
+    // Normalizuj text - odstráň diakritiku
+    const normalize = (text) => {
+      return text.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[áä]/g, 'a').replace(/[éě]/g, 'e').replace(/[íý]/g, 'i')
+        .replace(/[óô]/g, 'o').replace(/[úů]/g, 'u').replace(/ž/g, 'z')
+        .replace(/š/g, 's').replace(/č/g, 'c').replace(/ř/g, 'r')
+        .replace(/ď/g, 'd').replace(/ť/g, 't').replace(/ň/g, 'n').replace(/ľ/g, 'l');
     };
 
-    // Elektro kombinácie
-    const ELEKTRO_CATEGORIES = {
-      'horsk': ['Elektrobicykle > Horské - Pevné elektro', 'Elektrobicykle > Celoodpružené elektro'],
-      'celoodpruz': ['Elektrobicykle > Celoodpružené elektro'],
-      'trek': ['Elektrobicykle > Trekingové elektro'],
-      'mest': ['Elektrobicykle > Mestské elektro'],
-      'gravel': ['Elektrobicykle > Gravel elektro'],
-      'detsk': ['Elektrobicykle > Juniorské elektro'],
-      'junior': ['Elektrobicykle > Juniorské elektro'],
-      'cargo': ['Elektrobicykle > Transportné'],
-      'naklad': ['Elektrobicykle > Transportné']
-    };
-
-    // Normalizuj správu
-    const msgNorm = message.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[áä]/g, 'a').replace(/[éě]/g, 'e').replace(/[íý]/g, 'i')
-      .replace(/[óô]/g, 'o').replace(/[úů]/g, 'u').replace(/ž/g, 'z')
-      .replace(/š/g, 's').replace(/č/g, 'c').replace(/ř/g, 'r')
-      .replace(/ď/g, 'd').replace(/ť/g, 't').replace(/ň/g, 'n').replace(/ľ/g, 'l');
+    const msgNorm = normalize(message);
     
-    // Pridaj kontext z predchádzajúcich správ
+    // Spoj s kontextom z predchádzajúcich správ
     let fullContext = msgNorm;
     if (context.length > 0) {
-      const prevMessages = context.filter(m => m.role === 'user').map(m => m.content).join(' ').toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const prevMessages = context.filter(m => m.role === 'user').map(m => normalize(m.content)).join(' ');
       fullContext = prevMessages + ' ' + msgNorm;
     }
     
     console.log('🔍 Hľadám produkty pre:', message.substring(0, 80));
-    
+    console.log('📝 Full context:', fullContext.substring(0, 100));
+
+    // === DETEKCIA TYPU BICYKLA ===
+    const CATEGORY_KEYWORDS = {
+      'Bicykle > Cestné': ['cestn', 'cestak', 'cestny', 'cestnej', 'silnic', 'road', 'roadbike', 'zavod', 'asfalt'],
+      'Bicykle > Horské pevné': ['horsk', 'horsky', 'mtb', 'mountain', 'hardtail', 'teren', 'les'],
+      'Bicykle > Celoodpružené bicykle': ['celoodpruz', 'fullsus', 'full sus', 'enduro', 'trail', 'downhill'],
+      'Bicykle > Gravel': ['gravel', 'gravelak', 'cyklokros', 'sotorik'],
+      'Bicykle > Trekingové': ['trek', 'treking', 'turistik', 'vylet', 'touring'],
+      'Bicykle > Mestské': ['mest', 'mestsky', 'city', 'urban', 'dochadz'],
+      'Bicykle > Detské': ['detsk', 'detsky', 'dieta', 'deti', 'syn', 'dcer'],
+      'Bicykle > Juniorské': ['junior', 'juniorsk'],
+      'Bicykle > Dirt': ['dirt', 'jump', 'skakan']
+    };
+
+    const ELEKTRO_KEYWORDS = {
+      'Elektrobicykle > Celoodpružené elektro': ['celoodpruz', 'fullsus', 'full sus', 'enduro'],
+      'Elektrobicykle > Horské - Pevné elektro': ['horsk', 'horsky', 'mtb', 'mountain', 'hardtail'],
+      'Elektrobicykle > Trekingové elektro': ['trek', 'treking', 'turistik', 'touring'],
+      'Elektrobicykle > Mestské elektro': ['mest', 'mestsky', 'city', 'urban'],
+      'Elektrobicykle > Gravel elektro': ['gravel', 'gravelak'],
+      'Elektrobicykle > Juniorské elektro': ['junior', 'detsk']
+    };
+
+    // CUBE modely - pre priame vyhľadávanie
+    const CUBE_MODELS = ['agree', 'attain', 'litening', 'aerium', 'nuroad', 'reaction', 'aim', 'attention', 'stereo', 'ams', 'kathmandu', 'touring', 'nature', 'hyde', 'ella', 'supreme', 'nuride', 'nulane'];
+
     // Detekuj či hľadá e-bike
-    const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(fullContext);
+    const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater/.test(fullContext);
     
     // Nájdi cieľové kategórie
     let targetCategories = [];
+    const keywordMap = wantsElektro ? ELEKTRO_KEYWORDS : CATEGORY_KEYWORDS;
     
-    if (wantsElektro) {
-      // Hľadaj elektro kombinácie
-      for (const [keyword, categories] of Object.entries(ELEKTRO_CATEGORIES)) {
+    for (const [category, keywords] of Object.entries(keywordMap)) {
+      for (const keyword of keywords) {
         if (fullContext.includes(keyword)) {
-          targetCategories.push(...categories);
-        }
-      }
-      // Default elektro kategórie
-      if (targetCategories.length === 0) {
-        targetCategories = [
-          'Elektrobicykle > Celoodpružené elektro',
-          'Elektrobicykle > Horské - Pevné elektro',
-          'Elektrobicykle > Trekingové elektro',
-          'Elektrobicykle > Mestské elektro'
-        ];
-      }
-    } else {
-      // Hľadaj v CATEGORY_MAP
-      for (const [keyword, categories] of Object.entries(CATEGORY_MAP)) {
-        if (fullContext.includes(keyword)) {
-          targetCategories.push(...categories);
+          if (!targetCategories.includes(category)) {
+            targetCategories.push(category);
+          }
+          break;
         }
       }
     }
     
-    // Odstráň duplikáty
-    targetCategories = [...new Set(targetCategories)];
-    console.log('📁 Kategórie:', targetCategories.slice(0, 4).join(', '));
+    // Ak hľadá elektro a nenašiel špecifickú kategóriu, daj všetky elektro
+    if (wantsElektro && targetCategories.length === 0) {
+      targetCategories = [
+        'Elektrobicykle > Celoodpružené elektro',
+        'Elektrobicykle > Horské - Pevné elektro',
+        'Elektrobicykle > Trekingové elektro',
+        'Elektrobicykle > Mestské elektro'
+      ];
+    }
     
-  // Extrahuj cenu
-  const maxPriceMatch = fullContext.match(/do\s*(\d+)/);
-  const minPriceMatch = fullContext.match(/od\s*(\d+)/);
-  const aroundPriceMatch = fullContext.match(/okolo\s*(\d+)|cca\s*(\d+)|priblizne\s*(\d+)|zhruba\s*(\d+)/);
-  
-  let maxPrice = maxPriceMatch ? parseInt(maxPriceMatch[1]) : null;
-  let minPrice = minPriceMatch ? parseInt(minPriceMatch[1]) : null;
-  
-  // Ak je "okolo X€", nastav rozsah ±30%
-  if (aroundPriceMatch) {
-    const aroundPrice = parseInt(aroundPriceMatch[1] || aroundPriceMatch[2] || aroundPriceMatch[3] || aroundPriceMatch[4]);
-    minPrice = Math.round(aroundPrice * 0.7);
-    maxPrice = Math.round(aroundPrice * 1.3);
-    console.log(`💰 "Okolo ${aroundPrice}€" → rozsah ${minPrice}€ - ${maxPrice}€`);
-  }
+    console.log('📁 Kategórie:', targetCategories.join(', ') || 'žiadne');
+    console.log('⚡ Elektro:', wantsElektro);
+
+    // === DETEKCIA CENY ===
+    let maxPrice = null;
+    let minPrice = null;
     
-    // Extrahuj veľkosť kolesa
-    const wheelMatch = fullContext.match(/(\d{2})\s*(?:palc|"|´|inch|cole)/);
-    const wheelSize = wheelMatch ? wheelMatch[1] : null;
-    const wheelSizeMap = { '12': '120', '14': '140', '16': '160', '18': '180', '20': '200', '24': '240', '26': '260' };
+    // "do X€"
+    const maxMatch = fullContext.match(/do\s*(\d+)/);
+    if (maxMatch) maxPrice = parseInt(maxMatch[1]);
     
-    // Hľadaj produkty
+    // "od X€"
+    const minMatch = fullContext.match(/od\s*(\d+)/);
+    if (minMatch) minPrice = parseInt(minMatch[1]);
+    
+    // "okolo X€", "cca X€", "tak X€", "priblizne X€"
+    const aroundMatch = fullContext.match(/(?:okolo|cca|tak|priblizne|zhruba)\s*(\d+)/);
+    if (aroundMatch) {
+      const aroundPrice = parseInt(aroundMatch[1]);
+      minPrice = Math.round(aroundPrice * 0.7);
+      maxPrice = Math.round(aroundPrice * 1.3);
+      console.log(`💰 "Okolo ${aroundPrice}€" → ${minPrice}€ - ${maxPrice}€`);
+    } else if (maxPrice || minPrice) {
+      console.log(`💰 Cena: ${minPrice || 0}€ - ${maxPrice || '∞'}€`);
+    }
+
+    // === DETEKCIA KONKRÉTNEHO MODELU ===
+    let searchModel = null;
+    for (const model of CUBE_MODELS) {
+      if (fullContext.includes(model)) {
+        searchModel = model;
+        console.log(`🏷️ Hľadám model: ${model}`);
+        break;
+      }
+    }
+
+    // === HĽADANIE PRODUKTOV ===
     let products = [];
+
+    // 1. Ak hľadá konkrétny model - hľadaj v názve
+    if (searchModel) {
+      let query = supabase
+        .from('products')
+        .select('name, description, price, category, url')
+        .eq('client_id', client.id)
+        .ilike('name', `%${searchModel}%`);
+      
+      if (maxPrice) query = query.lte('price', maxPrice);
+      if (minPrice) query = query.gte('price', minPrice);
+      
+      // Ak hľadá elektro model, filtruj na Hybrid
+      if (wantsElektro) {
+        query = query.ilike('name', '%Hybrid%');
+      } else {
+        // Ak NEhľadá elektro, vylúč Hybrid
+        query = query.not('name', 'ilike', '%Hybrid%');
+      }
+      
+      const { data } = await query.order('price', { ascending: true }).limit(20);
+      products = data || [];
+      console.log(`📦 Model "${searchModel}": ${products.length} produktov`);
+    }
     
-    // Hľadaj podľa kategórií
-    if (targetCategories.length > 0) {
+    // 2. Ak máme kategórie - hľadaj podľa kategórií
+    if (products.length === 0 && targetCategories.length > 0) {
       for (const category of targetCategories.slice(0, 4)) {
         let query = supabase
           .from('products')
@@ -429,9 +413,14 @@ app.post('/chat', async (req, res) => {
         const { data } = await query.order('price', { ascending: true }).limit(15);
         if (data) products.push(...data);
       }
-    } else {
-      // Fallback - hľadaj v názve
+      console.log(`📦 Kategórie: ${products.length} produktov`);
+    }
+    
+    // 3. Fallback - hľadaj kľúčové slová v názve
+    if (products.length === 0) {
       const keywords = msgNorm.split(/\s+/).filter(w => w.length > 3).slice(0, 3);
+      console.log(`🔎 Fallback keywords: ${keywords.join(', ')}`);
+      
       for (const keyword of keywords) {
         let query = supabase
           .from('products')
@@ -445,7 +434,10 @@ app.post('/chat', async (req, res) => {
         const { data } = await query.limit(10);
         if (data) products.push(...data);
       }
+      console.log(`📦 Fallback: ${products.length} produktov`);
     }
+
+    // === POST-PROCESSING ===
     
     // Odstráň duplikáty
     const seen = new Set();
@@ -454,15 +446,8 @@ app.post('/chat', async (req, res) => {
       seen.add(p.url);
       return true;
     });
-    
-    // Filtruj podľa veľkosti kolesa
-    if (wheelSize && products.length > 0) {
-      const cubeSize = wheelSizeMap[wheelSize] || wheelSize;
-      const filtered = products.filter(p => p.name.includes(cubeSize) || p.name.includes(wheelSize));
-      if (filtered.length > 0) products = filtered;
-    }
-    
-    // Ak hľadá elektro, filtruj len elektro
+
+    // Ak hľadá elektro, nechaj len elektro
     if (wantsElektro) {
       products = products.filter(p => 
         p.name.toLowerCase().includes('hybrid') || 
@@ -470,24 +455,24 @@ app.post('/chat', async (req, res) => {
       );
     }
     
-    // Ak NEhľadá elektro a hľadá bicykel, vylúč elektro
+    // Ak NEhľadá elektro ale hľadá bicykel, vylúč elektro
     if (!wantsElektro && targetCategories.some(c => c.startsWith('Bicykle'))) {
       products = products.filter(p => 
         !p.name.toLowerCase().includes('hybrid') && 
         !p.category.toLowerCase().includes('elektro')
       );
     }
-    
-    // Zoraď a limituj
+
+    // Zoraď podľa ceny a limituj
     products.sort((a, b) => (a.price || 0) - (b.price || 0));
     products = products.slice(0, 10);
     
-    console.log(`✅ Nájdených: ${products.length} produktov`);
+    console.log(`✅ Finálne: ${products.length} produktov`);
     if (products.length > 0) {
-      console.log('   Top 3:', products.slice(0, 3).map(p => p.name.substring(0, 40) + '...').join(', '));
+      console.log('   Top 3:', products.slice(0, 3).map(p => `${p.name.substring(0, 35)}... (${p.price}€)`).join(', '));
     }
 
-    // Vytvor kontext pre AI
+    // === VYTVOR KONTEXT PRE AI ===
     let productsContext = '';
     
     if (products.length > 0) {
@@ -512,9 +497,6 @@ NENAŠLI SA PRODUKTY PRE TÚTO OTÁZKU.
 Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktovať predajňu.
 `;
     }
-
-    // Pokračuj s pôvodným kódom...
-
 
     const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
 
@@ -2230,7 +2212,6 @@ app.post('/promo/apply', authMiddleware, async (req, res) => {
 
 // ============================================
 // BOOKING SYSTEM ENDPOINTS
-// Vlož tento kód do index.js pred "// START SERVER"
 // ============================================
 
 // GET /bookings - Zoznam rezervácií klienta
