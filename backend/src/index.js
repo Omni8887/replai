@@ -316,10 +316,44 @@ app.post('/chat', async (req, res) => {
     
     for (const [category, keywords] of Object.entries(keywordMap)) {
       for (const keyword of keywords) {
+        // Hľadaj v celom kontexte (vrátane predchádzajúcich správ)
         if (fullContext.includes(keyword)) {
           if (!targetCategories.includes(category)) {
             targetCategories.push(category);
           }
+          break;
+        }
+      }
+    }
+    
+    // Ak nenašiel kategóriu ale hľadá konkrétny model, urči kategóriu podľa modelu
+    const MODEL_CATEGORIES = {
+      'agree': 'Bicykle > Cestné',
+      'attain': 'Bicykle > Cestné',
+      'litening': 'Bicykle > Cestné',
+      'aerium': 'Bicykle > Cestné',
+      'nuroad': 'Bicykle > Gravel',
+      'reaction': 'Bicykle > Horské pevné',
+      'aim': 'Bicykle > Horské pevné',
+      'attention': 'Bicykle > Horské pevné',
+      'stereo': 'Bicykle > Celoodpružené bicykle',
+      'ams': 'Bicykle > Celoodpružené bicykle',
+      'kathmandu': 'Bicykle > Trekingové',
+      'touring': 'Bicykle > Trekingové',
+      'nature': 'Bicykle > Trekingové',
+      'nuride': 'Bicykle > Trekingové',
+      'hyde': 'Bicykle > Mestské',
+      'ella': 'Bicykle > Mestské',
+      'supreme': 'Bicykle > Mestské',
+      'nulane': 'Bicykle > Mestské'
+    };
+    
+    // Ak nemáme kategóriu, skús ju odvodiť z modelu v kontexte
+    if (targetCategories.length === 0) {
+      for (const [model, category] of Object.entries(MODEL_CATEGORIES)) {
+        if (fullContext.includes(model)) {
+          targetCategories.push(category);
+          console.log(`📁 Kategória odvodená z modelu "${model}": ${category}`);
           break;
         }
       }
@@ -361,13 +395,53 @@ app.post('/chat', async (req, res) => {
       console.log(`💰 Cena: ${minPrice || 0}€ - ${maxPrice || '∞'}€`);
     }
 
+    // === DETEKCIA ČI CHCE ALTERNATÍVY ===
+    const wantsAlternatives = /podobn|ine |iny |alternativ|dals|nemusi|nemus|okrem|bez /.test(msgNorm);
+    if (wantsAlternatives) {
+      console.log('🔄 Zákazník chce alternatívy/iné modely');
+    }
+
     // === DETEKCIA KONKRÉTNEHO MODELU ===
     let searchModel = null;
+    let searchedModel = null; // Model z kontextu pre vylúčenie pri alternatívach
+    let modelInCurrentMsg = false;
+    
+    // Najprv skontroluj či je model v AKTUÁLNEJ správe
     for (const model of CUBE_MODELS) {
-      if (fullContext.includes(model)) {
+      if (msgNorm.includes(model)) {
         searchModel = model;
-        console.log(`🏷️ Hľadám model: ${model}`);
+        modelInCurrentMsg = true;
+        console.log(`🏷️ Model v aktuálnej správe: ${model}`);
         break;
+      }
+    }
+    
+    // Ak nie je v aktuálnej správe, hľadaj v kontexte
+    if (!searchModel) {
+      for (const model of CUBE_MODELS) {
+        if (fullContext.includes(model)) {
+          searchedModel = model; // Ulož pre prípadné vylúčenie
+          if (!wantsAlternatives) {
+            searchModel = model;
+            console.log(`🏷️ Model z kontextu: ${model}`);
+          } else {
+            console.log(`🔄 Model "${model}" z kontextu - bude vylúčený`);
+          }
+          break;
+        }
+      }
+    } else {
+      searchedModel = searchModel;
+    }
+    
+    // === RESET CENOVÉHO FILTRA PRE NOVÝ MODEL ===
+    // Ak je nový model v aktuálnej správe BEZ novej ceny, resetuj cenový filter
+    if (modelInCurrentMsg) {
+      const hasPriceInCurrentMsg = /do\s*\d|od\s*\d|okolo\s*\d|cca\s*\d|tak\s*\d|priblizne\s*\d|zhruba\s*\d|\d+\s*€|\d+\s*eur/i.test(message.toLowerCase());
+      if (!hasPriceInCurrentMsg) {
+        maxPrice = null;
+        minPrice = null;
+        console.log('💰 Reset cenového filtra - nový model bez ceny');
       }
     }
 
@@ -396,10 +470,37 @@ app.post('/chat', async (req, res) => {
       const { data } = await query.order('price', { ascending: true }).limit(20);
       products = data || [];
       console.log(`📦 Model "${searchModel}": ${products.length} produktov`);
+      
+      // Ak sa nenašiel model v cenovom rozpätí, skús bez cenového filtra
+      if (products.length === 0 && (maxPrice || minPrice)) {
+        console.log(`⚠️ Model "${searchModel}" nenájdený v cenovom rozpätí, skúšam bez limitu...`);
+        let queryNoPrice = supabase
+          .from('products')
+          .select('name, description, price, category, url')
+          .eq('client_id', client.id)
+          .ilike('name', `%${searchModel}%`);
+        
+        if (wantsElektro) {
+          queryNoPrice = queryNoPrice.ilike('name', '%Hybrid%');
+        } else {
+          queryNoPrice = queryNoPrice.not('name', 'ilike', '%Hybrid%');
+        }
+        
+        const { data: noPriceData } = await queryNoPrice.order('price', { ascending: true }).limit(5);
+        
+        if (noPriceData && noPriceData.length > 0) {
+          console.log(`📦 Model "${searchModel}" mimo cenový rozsah: ${noPriceData.length} produktov`);
+          // Model existuje ale mimo cenový rozsah - ponúkneme alternatívy z kategórie
+          searchModel = null; // Reset aby sa hľadalo podľa kategórie
+        }
+      }
     }
     
-    // 2. Ak máme kategórie - hľadaj podľa kategórií
-    if (products.length === 0 && targetCategories.length > 0) {
+    // 2. Ak máme kategórie a (nenašli sme model ALEBO chce alternatívy) - hľadaj podľa kategórií
+    if ((products.length === 0 || wantsAlternatives) && targetCategories.length > 0) {
+      console.log(`📁 Hľadám podľa kategórií: ${targetCategories.join(', ')}`);
+      let categoryProducts = [];
+      
       for (const category of targetCategories.slice(0, 4)) {
         let query = supabase
           .from('products')
@@ -411,7 +512,19 @@ app.post('/chat', async (req, res) => {
         if (minPrice) query = query.gte('price', minPrice);
         
         const { data } = await query.order('price', { ascending: true }).limit(15);
-        if (data) products.push(...data);
+        if (data) categoryProducts.push(...data);
+      }
+      
+      // Ak sme hľadali konkrétny model a chceme alternatívy, vylúč ten model
+      if (searchedModel && wantsAlternatives && categoryProducts.length > 0) {
+        categoryProducts = categoryProducts.filter(p => 
+          !p.name.toLowerCase().includes(searchedModel)
+        );
+        console.log(`🔄 Vylúčený model "${searchedModel}", zostáva: ${categoryProducts.length} alternatív`);
+      }
+      
+      if (categoryProducts.length > 0) {
+        products = categoryProducts;
       }
       console.log(`📦 Kategórie: ${products.length} produktov`);
     }
