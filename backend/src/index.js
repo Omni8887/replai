@@ -559,19 +559,33 @@ app.post('/chat', async (req, res) => {
     let wheelSize = null;
     
     // Priama detekcia: "20 palcov", "24"", "26 inch"
-    const wheelMatch = fullContext.match(/(\d{2})\s*(?:palc|"|´|inch|cole|")/);
+    const wheelMatch = msgNorm.match(/(\d{2})\s*(?:palc|"|´|inch|cole|")/);
     if (wheelMatch) {
       wheelSize = wheelMatch[1];
       console.log(`🎡 Veľkosť kolesa (priama): ${wheelSize}"`);
     }
     
-    // Detekcia výšky dieťaťa a mapovanie na veľkosť kolesa
+    // Detekcia výšky dieťaťa - PRIORITNE z aktuálnej správy
     // Tabuľka: 12"=85-100cm | 16"=100-115cm | 20"=116-124cm | 24"=125-145cm | 26"=140-160cm
-    if (!wheelSize && /detsk|dieta|deti|syn|dcer|vnuk|vnuc/i.test(fullContext)) {
-      const heightMatch = fullContext.match(/(\d{2,3})\s*cm|(\d{2,3})\s*centim|vysk.*?(\d{2,3})|mer.*?(\d{2,3})\s*cm/i);
+    if (!wheelSize) {
+      // Najprv skús aktuálnu správu
+      let heightMatch = msgNorm.match(/(\d{2,3})\s*cm|(\d{2,3})\s*centim|vysk.*?(\d{2,3})|mer.*?(\d{2,3})/i);
+      let heightSource = 'aktuálna správa';
+      
+      // Ak nie je v aktuálnej správe, skús kontext (ale len ak je tam detské kľúčové slovo)
+      if (!heightMatch && /detsk|dieta|deti|syn|dcer|vnuk|vnuc/i.test(fullContext)) {
+        // Vezmi POSLEDNÚ výšku z kontextu (nie prvú)
+        const allHeights = fullContext.match(/(\d{2,3})\s*cm/gi);
+        if (allHeights && allHeights.length > 0) {
+          const lastHeight = allHeights[allHeights.length - 1];
+          heightMatch = lastHeight.match(/(\d{2,3})/);
+          heightSource = 'kontext (posledná)';
+        }
+      }
+      
       if (heightMatch) {
         const childHeight = parseInt(heightMatch[1] || heightMatch[2] || heightMatch[3] || heightMatch[4]);
-        console.log(`👶 Výška dieťaťa: ${childHeight}cm`);
+        console.log(`👶 Výška dieťaťa: ${childHeight}cm (zdroj: ${heightSource})`);
         
         // Mapovanie výšky na veľkosť kolesa
         if (childHeight >= 85 && childHeight < 100) {
