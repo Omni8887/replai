@@ -3269,12 +3269,93 @@ app.post('/public/booking', async (req, res) => {
     
     if (error) throw error;
     
+    // Pošli potvrdzujúci email zákazníkovi
+    const { data: locationData } = await supabase
+      .from('booking_locations')
+      .select('name, address, phone')
+      .eq('id', loc.id)
+      .single();
+    
+    const { data: serviceData } = await supabase
+      .from('booking_services')
+      .select('name, price')
+      .eq('id', svc.id)
+      .single();
+    
+    await sendBookingCreatedEmail({
+      ...booking,
+      booking_locations: locationData,
+      booking_services: serviceData
+    });
+    
     res.json({ success: true, booking });
   } catch (error) {
     console.error('Create booking error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Email: Rezervácia vytvorená
+async function sendBookingCreatedEmail(booking) {
+  try {
+    const serviceName = booking.booking_services?.name || 'Servis';
+    const servicePrice = booking.booking_services?.price || 0;
+    const locationName = booking.booking_locations?.name || 'Predajňa';
+    const locationAddress = booking.booking_locations?.address || '';
+    const locationPhone = booking.booking_locations?.phone || '';
+    
+    const bookingDate = booking.booking_date ? new Date(booking.booking_date).toLocaleDateString('sk-SK') : '';
+    const bookingTime = booking.booking_time || '';
+    
+    await resend.emails.send({
+      from: 'Replai <noreply@replai.sk>',
+      to: booking.customer_email,
+      subject: `📅 Rezervácia prijatá - ${booking.booking_number}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">📅 Rezervácia prijatá!</h1>
+          </div>
+          
+          <div style="padding: 30px; background: #f9fafb;">
+            <p>Dobrý deň <strong>${booking.customer_name}</strong>,</p>
+            
+            <p>ďakujeme za vašu rezerváciu. Prijali sme ju a čoskoro vám pošleme potvrdenie.</p>
+            
+            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #7c3aed;">
+              <h3 style="margin-top: 0; color: #7c3aed;">📋 Detaily rezervácie</h3>
+              <p><strong>Číslo rezervácie:</strong> ${booking.booking_number}</p>
+              <p><strong>Služba:</strong> ${serviceName}</p>
+              <p><strong>Orientačná cena:</strong> od ${servicePrice}€</p>
+              <p><strong>Dátum:</strong> ${bookingDate}</p>
+              <p><strong>Čas:</strong> ${bookingTime}</p>
+              ${booking.bike_brand || booking.bike_model ? `<p><strong>Bicykel:</strong> ${[booking.bike_brand, booking.bike_model].filter(Boolean).join(' ')}</p>` : ''}
+              ${booking.problem_description ? `<p><strong>Popis:</strong> ${booking.problem_description}</p>` : ''}
+            </div>
+            
+            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #7c3aed;">📍 Prevádzka</h3>
+              <p><strong>${locationName}</strong></p>
+              <p>${locationAddress}</p>
+              ${locationPhone ? `<p>📞 ${locationPhone}</p>` : ''}
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
+            
+            <p>S pozdravom,<br><strong>Tím Fenixbike</strong></p>
+          </div>
+          
+          <div style="background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px;">
+            <p>© 2024 Fenixbike.sk | Tento email bol odoslaný automaticky</p>
+          </div>
+        </div>
+      `
+    });
+    console.log(`📧 Email "rezervácia vytvorená" odoslaný na ${booking.customer_email}`);
+  } catch (error) {
+    console.error('Failed to send booking created email:', error);
+  }
+}
 
 // ============================================
 // BOOKING SETTINGS ENDPOINTS
