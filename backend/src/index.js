@@ -2826,11 +2826,6 @@ app.put('/bookings/:id', authMiddleware, async (req, res) => {
       await sendServiceCompletedEmail(oldBooking, final_price);
     }
     
-    // Ak sa status zmenil na "confirmed", pošli potvrdenie
-    if (status === 'confirmed' && oldBooking?.status !== 'confirmed' && oldBooking?.customer_email) {
-      await sendBookingConfirmedEmail(oldBooking);
-    }
-    
     res.json({ success: true, booking });
   } catch (error) {
     console.error('Booking update error:', error);
@@ -2889,65 +2884,6 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
     console.log(`📧 Email "servis dokončený" odoslaný na ${booking.customer_email}`);
   } catch (error) {
     console.error('Failed to send service completed email:', error);
-  }
-}
-
-// Email: Rezervácia potvrdená
-async function sendBookingConfirmedEmail(booking) {
-  try {
-    const serviceName = booking.booking_services?.name || 'Servis';
-    const locationName = booking.booking_locations?.name || 'Predajňa';
-    const locationAddress = booking.booking_locations?.address || '';
-    const locationPhone = booking.booking_locations?.phone || '';
-    
-    const bookingDate = booking.booking_date ? new Date(booking.booking_date).toLocaleDateString('sk-SK') : '';
-    const bookingTime = booking.booking_time || '';
-    
-    await resend.emails.send({
-      from: 'Replai <noreply@replai.sk>',
-      to: booking.customer_email,
-      subject: `✅ Rezervácia potvrdená - ${booking.booking_number}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">✅ Rezervácia potvrdená!</h1>
-          </div>
-          
-          <div style="padding: 30px; background: #f9fafb;">
-            <p>Dobrý deň <strong>${booking.customer_name}</strong>,</p>
-            
-            <p>vaša rezervácia bola potvrdená. Tešíme sa na vás!</p>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #7c3aed;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📅 Detaily rezervácie</h3>
-              <p><strong>Číslo:</strong> ${booking.booking_number}</p>
-              <p><strong>Služba:</strong> ${serviceName}</p>
-              <p><strong>Dátum:</strong> ${bookingDate}</p>
-              <p><strong>Čas:</strong> ${bookingTime}</p>
-              ${booking.notes ? `<p><strong>Poznámka:</strong> ${booking.notes}</p>` : ''}
-            </div>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📍 Kde nás nájdete</h3>
-              <p><strong>${locationName}</strong></p>
-              <p>${locationAddress}</p>
-              ${locationPhone ? `<p>📞 ${locationPhone}</p>` : ''}
-            </div>
-            
-            <p style="color: #6b7280; font-size: 14px;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
-            
-            <p>S pozdravom,<br><strong>Tím Fenixbike</strong></p>
-          </div>
-          
-          <div style="background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px;">
-            <p>© 2024 Fenixbike.sk | Tento email bol odoslaný automaticky</p>
-          </div>
-        </div>
-      `
-    });
-    console.log(`📧 Email "rezervácia potvrdená" odoslaný na ${booking.customer_email}`);
-  } catch (error) {
-    console.error('Failed to send booking confirmed email:', error);
   }
 }
 
