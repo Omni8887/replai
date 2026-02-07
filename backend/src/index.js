@@ -2838,45 +2838,67 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
   try {
     const serviceName = booking.booking_services?.name || 'Servis';
     const locationName = booking.booking_locations?.name || 'Predajňa';
+    const locationAddress = booking.booking_locations?.address || '';
     const locationPhone = booking.booking_locations?.phone || '';
     const price = finalPrice || booking.booking_services?.price || 0;
     
     await resend.emails.send({
-      from: 'Replai <noreply@replai.sk>',
+      from: 'CUBE Store Bratislava <noreply@replai.sk>',
       to: booking.customer_email,
-      subject: `✅ Váš servis je dokončený - ${booking.booking_number}`,
+      subject: `Váš bicykel je pripravený - ${booking.booking_number}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">✅ Servis dokončený!</h1>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          
+          <!-- Header -->
+          <div style="background: #111111; padding: 30px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
+              <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
+            </div>
+            <div style="color: #888888; font-size: 11px; margin-top: 5px; letter-spacing: 3px;">BRATISLAVA</div>
           </div>
           
-          <div style="padding: 30px; background: #f9fafb;">
-            <p>Dobrý deň <strong>${booking.customer_name}</strong>,</p>
-            
-            <p>s radosťou vám oznamujeme, že váš servis bol úspešne dokončený a bicykel je pripravený na vyzdvihnutie.</p>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #7c3aed;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📋 Detaily zákazky</h3>
-              <p><strong>Číslo zákazky:</strong> ${booking.booking_number}</p>
-              <p><strong>Služba:</strong> ${serviceName}</p>
-              <p><strong>Cena:</strong> ${price}€</p>
-              ${booking.admin_notes ? `<p><strong>Poznámka:</strong> ${booking.admin_notes}</p>` : ''}
+          <!-- Title -->
+          <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
+            <div style="width: 60px; height: 60px; background: #e8f5e9; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 28px;">✓</span>
             </div>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📍 Vyzdvihnutie</h3>
-              <p><strong>${locationName}</strong></p>
-              <p>${booking.booking_locations?.address || ''}</p>
-              ${locationPhone ? `<p>📞 ${locationPhone}</p>` : ''}
-            </div>
-            
-            <p>Tešíme sa na vás!</p>
-            <p>S pozdravom,<br><strong>Tím Fenixbike</strong></p>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Servis dokončený</h1>
+            <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Váš bicykel je pripravený na vyzdvihnutie</p>
           </div>
           
-          <div style="background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px;">
-            <p>© 2024 Fenixbike.sk | Tento email bol odoslaný automaticky</p>
+          <!-- Content -->
+          <div style="padding: 30px;">
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">Dobrý deň <strong>${booking.customer_name}</strong>,</p>
+            
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">váš servis bol úspešne dokončený. Bicykel si môžete vyzdvihnúť počas otváracích hodín.</p>
+            
+            <!-- Booking Details -->
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 3px solid #22c55e;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">Detaily zákazky</h3>
+              <table style="width: 100%; font-size: 14px; color: #333;">
+                <tr><td style="padding: 5px 0; color: #666;">Číslo:</td><td style="padding: 5px 0; font-weight: 600;">${booking.booking_number}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Služba:</td><td style="padding: 5px 0;">${serviceName}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Cena:</td><td style="padding: 5px 0; font-weight: 600; font-size: 16px;">${price}€</td></tr>
+              </table>
+              ${booking.admin_notes ? `<p style="margin: 15px 0 0; padding-top: 15px; border-top: 1px solid #ddd; font-size: 14px; color: #666;"><strong>Poznámka:</strong> ${booking.admin_notes}</p>` : ''}
+            </div>
+            
+            <!-- Location -->
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Vyzdvihnutie</h3>
+              <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
+              <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
+              ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
+            </div>
+            
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">Tešíme sa na vás!</p>
+            
+            <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
+            <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
           </div>
         </div>
       `
@@ -3244,45 +3266,62 @@ async function sendBookingCreatedEmail(booking) {
     const bookingTime = booking.booking_time || '';
     
     await resend.emails.send({
-      from: 'Replai <noreply@replai.sk>',
+      from: 'CUBE Store Bratislava <noreply@replai.sk>',
       to: booking.customer_email,
-      subject: `📅 Rezervácia prijatá - ${booking.booking_number}`,
+      subject: `Rezervácia servisu prijatá - ${booking.booking_number}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">📅 Rezervácia prijatá!</h1>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          
+          <!-- Header -->
+          <div style="background: #111111; padding: 30px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
+              <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
+            </div>
+            <div style="color: #888888; font-size: 11px; margin-top: 5px; letter-spacing: 3px;">BRATISLAVA</div>
           </div>
           
-          <div style="padding: 30px; background: #f9fafb;">
-            <p>Dobrý deň <strong>${booking.customer_name}</strong>,</p>
-            
-            <p>ďakujeme za vašu rezerváciu. Prijali sme ju a čoskoro vám pošleme potvrdenie.</p>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 4px solid #7c3aed;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📋 Detaily rezervácie</h3>
-              <p><strong>Číslo rezervácie:</strong> ${booking.booking_number}</p>
-              <p><strong>Služba:</strong> ${serviceName}</p>
-              <p><strong>Orientačná cena:</strong> od ${servicePrice}€</p>
-              <p><strong>Dátum:</strong> ${bookingDate}</p>
-              <p><strong>Čas:</strong> ${bookingTime}</p>
-              ${booking.bike_brand || booking.bike_model ? `<p><strong>Bicykel:</strong> ${[booking.bike_brand, booking.bike_model].filter(Boolean).join(' ')}</p>` : ''}
-              ${booking.problem_description ? `<p><strong>Popis:</strong> ${booking.problem_description}</p>` : ''}
-            </div>
-            
-            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #7c3aed;">📍 Prevádzka</h3>
-              <p><strong>${locationName}</strong></p>
-              <p>${locationAddress}</p>
-              ${locationPhone ? `<p>📞 ${locationPhone}</p>` : ''}
-            </div>
-            
-            <p style="color: #6b7280; font-size: 14px;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
-            
-            <p>S pozdravom,<br><strong>Tím Fenixbike</strong></p>
+          <!-- Title -->
+          <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia prijatá</h1>
+            <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Ďakujeme za vašu rezerváciu</p>
           </div>
           
-          <div style="background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px;">
-            <p>© 2024 Fenixbike.sk | Tento email bol odoslaný automaticky</p>
+          <!-- Content -->
+          <div style="padding: 30px;">
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">Dobrý deň <strong>${booking.customer_name}</strong>,</p>
+            
+            <p style="color: #333; font-size: 15px; line-height: 1.6;">vašu rezerváciu sme úspešne prijali. Nižšie nájdete všetky detaily.</p>
+            
+            <!-- Booking Details -->
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 3px solid #f26522;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">Detaily rezervácie</h3>
+              <table style="width: 100%; font-size: 14px; color: #333;">
+                <tr><td style="padding: 5px 0; color: #666;">Číslo:</td><td style="padding: 5px 0; font-weight: 600;">${booking.booking_number}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Služba:</td><td style="padding: 5px 0;">${serviceName}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Cena od:</td><td style="padding: 5px 0; font-weight: 600;">${servicePrice}€</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Dátum:</td><td style="padding: 5px 0;">${bookingDate}</td></tr>
+                <tr><td style="padding: 5px 0; color: #666;">Čas:</td><td style="padding: 5px 0;">${bookingTime}</td></tr>
+                ${booking.bike_brand || booking.bike_model ? `<tr><td style="padding: 5px 0; color: #666;">Bicykel:</td><td style="padding: 5px 0;">${[booking.bike_brand, booking.bike_model].filter(Boolean).join(' ')}</td></tr>` : ''}
+              </table>
+              ${booking.problem_description ? `<p style="margin: 15px 0 0; padding-top: 15px; border-top: 1px solid #ddd; font-size: 14px; color: #666;"><strong>Popis:</strong> ${booking.problem_description}</p>` : ''}
+            </div>
+            
+            <!-- Location -->
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Prevádzka</h3>
+              <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
+              <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
+              ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
+            </div>
+            
+            <p style="color: #888; font-size: 13px; line-height: 1.6;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
+            
+            <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
+            <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
           </div>
         </div>
       `
