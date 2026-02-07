@@ -3000,6 +3000,15 @@ app.get('/public/booking/availability/days', async (req, res) => {
       return res.status(400).json({ error: 'Invalid location' });
     }
     
+    // Získaj settings (max per day)
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('max_bookings_per_day')
+      .eq('client_id', client_id)
+      .single();
+    
+    const maxPerDay = settings?.max_bookings_per_day || 2;
+    
     // Získaj working hours
     const { data: workingHours } = await supabase
       .from('booking_working_hours')
@@ -3021,8 +3030,27 @@ app.get('/public/booking/availability/days', async (req, res) => {
       return d.toISOString().split('T')[0];
     });
     
-    // Vygeneruj dni v mesiaci
+    // Získaj počet rezervácií pre každý deň v mesiaci
     const [year, monthNum] = month.split('-').map(Number);
+    const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(monthNum).padStart(2, '0')}-31`;
+    
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('booking_date')
+      .eq('location_id', loc.id)
+      .gte('booking_date', startDate)
+      .lte('booking_date', endDate)
+      .neq('status', 'cancelled');
+    
+    // Spočítaj rezervácie na deň
+    const bookingsPerDay = {};
+    (bookings || []).forEach(b => {
+      const dateStr = new Date(b.booking_date).toISOString().split('T')[0];
+      bookingsPerDay[dateStr] = (bookingsPerDay[dateStr] || 0) + 1;
+    });
+    
+    // Vygeneruj dni v mesiaci
     const daysInMonth = new Date(year, monthNum, 0).getDate();
     const today = new Date().toISOString().split('T')[0];
     
@@ -3031,13 +3059,15 @@ app.get('/public/booking/availability/days', async (req, res) => {
       const dateStr = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const date = new Date(dateStr);
       const dayOfWeek = date.getDay();
+      const dayBookings = bookingsPerDay[dateStr] || 0;
       
       const available = 
         dateStr >= today &&
         !closedDays.includes(dayOfWeek) &&
-        !blockedDates.includes(dateStr);
+        !blockedDates.includes(dateStr) &&
+        dayBookings < maxPerDay;  // Max 2 na deň
       
-      days.push({ date: dateStr, available });
+      days.push({ date: dateStr, available, bookings: dayBookings });
     }
     
     res.json({ days });
@@ -3071,12 +3101,12 @@ app.get('/public/booking/availability', async (req, res) => {
     // Získaj settings
     const { data: settings } = await supabase
       .from('booking_settings')
-      .select('slot_duration, max_bookings_per_slot')
+      .select('slot_duration, max_bookings_per_day')
       .eq('client_id', client_id)
       .single();
     
     const slotDuration = settings?.slot_duration || 60;
-    const maxPerSlot = settings?.max_bookings_per_slot || 2;
+    const maxPerDay = settings?.max_bookings_per_day || 2;
     
     // Získaj working hours pre daný deň
     const dayOfWeek = new Date(date).getDay();
@@ -3091,7 +3121,7 @@ app.get('/public/booking/availability', async (req, res) => {
       return res.json({ slots: [] });
     }
     
-    // Získaj existujúce rezervácie
+    // Získaj existujúce rezervácie na daný deň
     const { data: existingBookings } = await supabase
       .from('bookings')
       .select('booking_time')
@@ -3099,11 +3129,12 @@ app.get('/public/booking/availability', async (req, res) => {
       .eq('booking_date', date)
       .neq('status', 'cancelled');
     
-    const bookingCounts = {};
-    (existingBookings || []).forEach(b => {
-      const time = b.booking_time.substring(0, 5);
-      bookingCounts[time] = (bookingCounts[time] || 0) + 1;
-    });
+    const totalBookingsToday = (existingBookings || []).length;
+    
+    // Ak už je max rezervácií na deň, vráť prázdne sloty
+    if (totalBookingsToday >= maxPerDay) {
+      return res.json({ slots: [], message: 'Tento deň je už plne obsadený' });
+    }
     
     // Generuj sloty
     const slots = [];
@@ -3114,9 +3145,8 @@ app.get('/public/booking/availability', async (req, res) => {
     
     while (currentTime < endTime) {
       const timeStr = currentTime.toTimeString().substring(0, 5);
-      const booked = bookingCounts[timeStr] || 0;
       
-      let available = booked < maxPerSlot;
+      let available = true;
       
       if (isToday) {
         const slotDateTime = new Date(`${date}T${timeStr}`);
@@ -3181,6 +3211,26 @@ app.post('/public/booking', async (req, res) => {
     
     if (!svc) {
       return res.status(400).json({ error: 'Invalid service' });
+    }
+    
+    // Skontroluj max rezervácií na deň pre danú prevádzku
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('max_bookings_per_day')
+      .eq('client_id', client_id)
+      .single();
+    
+    const maxPerDay = settings?.max_bookings_per_day || 2;
+    
+    const { data: existingBookings } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('location_id', loc.id)
+      .eq('booking_date', booking_date)
+      .neq('status', 'cancelled');
+    
+    if ((existingBookings || []).length >= maxPerDay) {
+      return res.status(400).json({ error: 'Tento deň je už plne obsadený. Vyberte prosím iný termín.' });
     }
     
     // Získaj prefix pre booking number
@@ -3347,7 +3397,7 @@ app.get('/bookings/settings', authMiddleware, async (req, res) => {
     
     res.json(settings || {
       slot_duration: 60,
-      max_bookings_per_slot: 2,
+      max_bookings_per_day: 2,
       min_advance_hours: 24,
       max_advance_days: 30
     });
@@ -3360,14 +3410,14 @@ app.get('/bookings/settings', authMiddleware, async (req, res) => {
 // PUT /bookings/settings - Uložiť nastavenia
 app.put('/bookings/settings', authMiddleware, async (req, res) => {
   try {
-    const { slot_duration, max_bookings_per_slot, min_advance_hours, max_advance_days } = req.body;
+    const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days } = req.body;
     
     const { data, error } = await supabase
       .from('booking_settings')
       .upsert({
         client_id: req.clientId,
         slot_duration,
-        max_bookings_per_slot,
+        max_bookings_per_day,
         min_advance_hours,
         max_advance_days,
         updated_at: new Date().toISOString()
