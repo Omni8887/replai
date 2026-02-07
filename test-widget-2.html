@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test rezervácie - Fenix Bike</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .widget {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+    }
+    
+    .header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .brand {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111;
+    }
+    
+    .progress {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      margin: 16px 0;
+    }
+    
+    .progress-step {
+      flex: 1;
+      height: 3px;
+      background: #e5e5e5;
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+    
+    .progress-step.active {
+      background: #111;
+    }
+    
+    .content {
+      padding: 20px 24px;
+      min-height: 300px;
+    }
+    
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 16px;
+    }
+    
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .option:hover {
+      border-color: #ccc;
+      background: #fafafa;
+    }
+    
+    .option.selected {
+      border-color: #111;
+      background: #fafafa;
+    }
+    
+    .option-radio {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .option.selected .option-radio {
+      border-color: #111;
+    }
+    
+    .option.selected .option-radio::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: #111;
+      border-radius: 50%;
+    }
+    
+    .option-content {
+      flex: 1;
+    }
+    
+    .option-name {
+      font-weight: 500;
+      color: #111;
+      font-size: 14px;
+    }
+    
+    .option-meta {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+    
+    .option-price {
+      font-weight: 600;
+      color: #111;
+      font-size: 14px;
+    }
+    
+    .calendar {
+      margin-top: 8px;
+    }
+    
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .calendar-nav {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #e5e5e5;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .calendar-nav:hover {
+      background: #f5f5f5;
+    }
+    
+    .calendar-month {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    
+    .calendar-day-name {
+      font-size: 11px;
+      color: #888;
+      padding: 8px 0;
+      font-weight: 500;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .calendar-day:hover:not(.disabled):not(.empty) {
+      background: #f5f5f5;
+    }
+    
+    .calendar-day.selected {
+      background: #111;
+      color: #fff;
+    }
+    
+    .calendar-day.disabled {
+      color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .calendar-day.empty {
+      cursor: default;
+    }
+    
+    .time-slots {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .time-slot {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .time-slot:hover:not(.disabled) {
+      border-color: #ccc;
+      background: #fafafa;
+    }
+    
+    .time-slot.selected {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    
+    .time-slot.disabled {
+      color: #ccc;
+      cursor: not-allowed;
+      background: #fafafa;
+    }
+    
+    .form-group {
+      margin-bottom: 14px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #111;
+    }
+    
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .footer {
+      padding: 16px 24px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+    
+    .btn-secondary {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #f5f5f5;
+    }
+    
+    .btn-primary {
+      background: #111;
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: #333;
+    }
+    
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .success {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #dcfce7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    
+    .success-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: #16a34a;
+    }
+    
+    .success h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    
+    .success p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .booking-number {
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: 600;
+      background: #f5f5f5;
+      padding: 8px 16px;
+      border-radius: 6px;
+      display: inline-block;
+      margin: 16px 0;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+    }
+    
+    .error {
+      background: #fef2f2;
+      color: #b91c1c;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="header">
+    <div class="brand">CUBE Store Bratislava</div>
+    <div class="title">Rezervácia servisu</div>
+  </div>
+  
+  <div class="progress">
+    <div class="progress-step active" data-step="1"></div>
+    <div class="progress-step" data-step="2"></div>
+    <div class="progress-step" data-step="3"></div>
+    <div class="progress-step" data-step="4"></div>
+    <div class="progress-step" data-step="5"></div>
+  </div>
+  
+  <div class="content" id="content">
+    <div class="loading">Načítavam...</div>
+  </div>
+  
+  <div class="footer">
+    <button class="btn btn-secondary" id="btn-back" style="display:none" onclick="prevStep()">Späť</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextStep()" disabled>Pokračovať</button>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://replai-backend.onrender.com';
+const CLIENT_ID = 'fa961f37-48c7-40a5-95d5-0bd8cdbbe5d4';
+
+let currentStep = 1;
+let data = {
+  locations: [],
+  services: [],
+  availableDays: [],
+  availableSlots: [],
+  selectedLocation: null,
+  selectedService: null,
+  selectedDate: null,
+  selectedTime: null,
+  customerName: '',
+  customerEmail: '',
+  customerPhone: '',
+  bikeBrand: '',
+  bikeModel: '',
+  problemDescription: ''
+};
+
+let currentMonth = new Date();
+
+async function init() {
+  await loadLocations();
+  renderStep();
+}
+
+async function loadLocations() {
+  try {
+    const res = await fetch(`${API_URL}/public/booking/locations?client_id=${CLIENT_ID}`);
+    data.locations = await res.json();
+  } catch (err) {
+    console.error('Error loading locations:', err);
+  }
+}
+
+async function loadServices() {
+  try {
+    const res = await fetch(`${API_URL}/public/booking/services?client_id=${CLIENT_ID}`);
+    data.services = await res.json();
+  } catch (err) {
+    console.error('Error loading services:', err);
+  }
+}
+
+async function loadAvailableDays() {
+  try {
+    const month = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+    const res = await fetch(`${API_URL}/public/booking/availability/days?client_id=${CLIENT_ID}&location=${data.selectedLocation.code}&month=${month}`);
+    const result = await res.json();
+    data.availableDays = result.days || [];
+  } catch (err) {
+    console.error('Error loading days:', err);
+  }
+}
+
+async function loadAvailableSlots() {
+  try {
+    const res = await fetch(`${API_URL}/public/booking/availability?client_id=${CLIENT_ID}&location=${data.selectedLocation.code}&date=${data.selectedDate}`);
+    const result = await res.json();
+    data.availableSlots = result.slots || [];
+  } catch (err) {
+    console.error('Error loading slots:', err);
+  }
+}
+
+function renderStep() {
+  const content = document.getElementById('content');
+  const btnBack = document.getElementById('btn-back');
+  const btnNext = document.getElementById('btn-next');
+  
+  // Update progress
+  document.querySelectorAll('.progress-step').forEach((el, i) => {
+    el.classList.toggle('active', i < currentStep);
+  });
+  
+  btnBack.style.display = currentStep > 1 ? 'block' : 'none';
+  
+  switch(currentStep) {
+    case 1: renderLocations(content); break;
+    case 2: renderServices(content); break;
+    case 3: renderCalendar(content); break;
+    case 4: renderForm(content); break;
+    case 5: renderSuccess(content); break;
+  }
+  
+  updateNextButton();
+}
+
+function renderLocations(container) {
+  if (!data.locations.length) {
+    container.innerHTML = '<div class="error">Nepodarilo sa načítať prevádzky</div>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="step-title">Vyberte prevádzku</div>
+    <div class="options">
+      ${data.locations.map(loc => `
+        <div class="option ${data.selectedLocation?.id === loc.id ? 'selected' : ''}" onclick="selectLocation('${loc.id}')">
+          <div class="option-radio"></div>
+          <div class="option-content">
+            <div class="option-name">${loc.name}</div>
+            <div class="option-meta">${loc.address}, ${loc.city}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectLocation(id) {
+  data.selectedLocation = data.locations.find(l => l.id === id);
+  data.selectedDate = null;
+  data.selectedTime = null;
+  renderStep();
+}
+
+async function renderServices(container) {
+  if (!data.services.length) {
+    container.innerHTML = '<div class="loading">Načítavam služby...</div>';
+    await loadServices();
+  }
+  
+  container.innerHTML = `
+    <div class="step-title">Vyberte službu</div>
+    <div class="options">
+      ${data.services.map(svc => `
+        <div class="option ${data.selectedService?.id === svc.id ? 'selected' : ''}" onclick="selectService('${svc.id}')">
+          <div class="option-radio"></div>
+          <div class="option-content">
+            <div class="option-name">${svc.name}</div>
+            <div class="option-meta">${svc.description || ''}</div>
+          </div>
+          <div class="option-price">${svc.price}€</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectService(id) {
+  data.selectedService = data.services.find(s => s.id === id);
+  renderStep();
+}
+
+async function renderCalendar(container) {
+  container.innerHTML = '<div class="loading">Načítavam kalendár...</div>';
+  await loadAvailableDays();
+  
+  const monthNames = ['Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 'Júl', 'August', 'September', 'Október', 'November', 'December'];
+  const dayNames = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'];
+  
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  
+  let daysHtml = dayNames.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+  
+  for (let i = 0; i < startOffset; i++) {
+    daysHtml += '<div class="calendar-day empty"></div>';
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayData = data.availableDays.find(d => d.date === dateStr);
+    const available = dayData?.available;
+    const selected = data.selectedDate === dateStr;
+    
+    daysHtml += `<div class="calendar-day ${selected ? 'selected' : ''} ${!available ? 'disabled' : ''}" 
+                      onclick="${available ? `selectDate('${dateStr}')` : ''}">${day}</div>`;
+  }
+  
+  container.innerHTML = `
+    <div class="step-title">Vyberte dátum a čas</div>
+    <div class="calendar">
+      <div class="calendar-header">
+        <button class="calendar-nav" onclick="prevMonth()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="calendar-month">${monthNames[month]} ${year}</div>
+        <button class="calendar-nav" onclick="nextMonth()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="calendar-grid">${daysHtml}</div>
+    </div>
+    ${data.selectedDate ? `<div id="time-slots-container"></div>` : ''}
+  `;
+  
+  if (data.selectedDate) {
+    await renderTimeSlots();
+  }
+  
+  updateNextButton();
+}
+
+async function renderTimeSlots() {
+  const container = document.getElementById('time-slots-container');
+  if (!container) return;
+  
+  container.innerHTML = '<div class="loading" style="padding:20px 0">Načítavam časy...</div>';
+  await loadAvailableSlots();
+  
+  if (!data.availableSlots.length) {
+    container.innerHTML = '<div class="error">Žiadne voľné termíny</div>';
+    updateNextButton();
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="step-title" style="margin-top:20px">Vyberte čas</div>
+    <div class="time-slots">
+      ${data.availableSlots.map(slot => `
+        <div class="time-slot ${data.selectedTime === slot.time ? 'selected' : ''} ${!slot.available ? 'disabled' : ''}"
+             onclick="${slot.available ? `selectTime('${slot.time}')` : ''}">${slot.time}</div>
+      `).join('')}
+    </div>
+  `;
+  
+  updateNextButton();
+}
+
+async function selectDate(date) {
+  data.selectedDate = date;
+  data.selectedTime = null;
+  await renderCalendar(document.getElementById('content'));
+}
+
+function selectTime(time) {
+  data.selectedTime = time;
+  // Re-renderuj time sloty pre vizuálne zvýraznenie
+  const container = document.getElementById('time-slots-container');
+  if (container && data.availableSlots.length) {
+    container.innerHTML = `
+      <div class="step-title" style="margin-top:20px">Vyberte čas</div>
+      <div class="time-slots">
+        ${data.availableSlots.map(slot => `
+          <div class="time-slot ${data.selectedTime === slot.time ? 'selected' : ''} ${!slot.available ? 'disabled' : ''}"
+               onclick="${slot.available ? `selectTime('${slot.time}')` : ''}">${slot.time}</div>
+        `).join('')}
+      </div>
+    `;
+  }
+  updateNextButton();
+}
+
+function prevMonth() {
+  currentMonth.setMonth(currentMonth.getMonth() - 1);
+  data.selectedDate = null;
+  data.selectedTime = null;
+  renderCalendar(document.getElementById('content'));
+}
+
+function nextMonth() {
+  currentMonth.setMonth(currentMonth.getMonth() + 1);
+  data.selectedDate = null;
+  data.selectedTime = null;
+  renderCalendar(document.getElementById('content'));
+}
+
+function renderForm(container) {
+  container.innerHTML = `
+    <div class="step-title">Vaše údaje</div>
+    <div class="form-group">
+      <label>Meno a priezvisko *</label>
+      <input type="text" id="customer-name" value="${data.customerName}" oninput="data.customerName = this.value; updateNextButton()">
+    </div>
+    <div class="form-group">
+      <label>Email *</label>
+      <input type="email" id="customer-email" value="${data.customerEmail}" oninput="data.customerEmail = this.value; updateNextButton()">
+    </div>
+    <div class="form-group">
+      <label>Telefón *</label>
+      <input type="tel" id="customer-phone" value="${data.customerPhone}" oninput="data.customerPhone = this.value; updateNextButton()">
+    </div>
+    <div class="form-group">
+      <label>Značka bicykla</label>
+      <input type="text" id="bike-brand" value="${data.bikeBrand}" oninput="data.bikeBrand = this.value">
+    </div>
+    <div class="form-group">
+      <label>Model bicykla</label>
+      <input type="text" id="bike-model" value="${data.bikeModel}" oninput="data.bikeModel = this.value">
+    </div>
+    <div class="form-group">
+      <label>Popis problému</label>
+      <textarea id="problem-desc" oninput="data.problemDescription = this.value">${data.problemDescription}</textarea>
+    </div>
+  `;
+  
+  document.getElementById('btn-next').textContent = 'Odoslať rezerváciu';
+  updateNextButton();
+}
+
+function renderSuccess(container) {
+  container.innerHTML = `
+    <div class="success">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Rezervácia odoslaná!</h2>
+      <p>Číslo vašej rezervácie:</p>
+      <div class="booking-number">${data.bookingNumber}</div>
+      <p>Potvrdenie sme poslali na ${data.customerEmail}</p>
+    </div>
+  `;
+  
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-back').style.display = 'none';
+}
+
+function updateNextButton() {
+  const btn = document.getElementById('btn-next');
+  let enabled = false;
+  
+  switch(currentStep) {
+    case 1: enabled = !!data.selectedLocation; break;
+    case 2: enabled = !!data.selectedService; break;
+    case 3: enabled = !!data.selectedDate && !!data.selectedTime; break;
+    case 4: 
+      enabled = data.customerName.trim() && data.customerEmail.trim() && data.customerPhone.trim();
+      break;
+  }
+  
+  btn.disabled = !enabled;
+}
+
+async function nextStep() {
+  if (currentStep === 4) {
+    await submitBooking();
+    return;
+  }
+  
+  currentStep++;
+  renderStep();
+}
+
+function prevStep() {
+  currentStep--;
+  renderStep();
+}
+
+async function submitBooking() {
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true;
+  btn.textContent = 'Odosielam...';
+  
+  try {
+    const res = await fetch(`${API_URL}/public/booking`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: CLIENT_ID,
+        location_code: data.selectedLocation.code,
+        service_code: data.selectedService.code,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone,
+        booking_date: data.selectedDate,
+        booking_time: data.selectedTime,
+        bike_brand: data.bikeBrand,
+        bike_model: data.bikeModel,
+        problem_description: data.problemDescription
+      })
+    });
+    
+    const result = await res.json();
+    
+    if (result.success) {
+      data.bookingNumber = result.booking.booking_number;
+      currentStep = 5;
+      renderStep();
+    } else {
+      alert('Chyba: ' + (result.error || 'Nepodarilo sa vytvoriť rezerváciu'));
+      btn.disabled = false;
+      btn.textContent = 'Odoslať rezerváciu';
+    }
+  } catch (err) {
+    console.error('Submit error:', err);
+    alert('Chyba pri odosielaní rezervácie');
+    btn.disabled = false;
+    btn.textContent = 'Odoslať rezerváciu';
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
