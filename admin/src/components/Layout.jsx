@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
@@ -35,7 +35,8 @@ export default function Layout() {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/conversations', label: 'Konverzácie', icon: MessageSquare },
-    { to: '/bookings', label: 'Rezervácie', icon: Calendar },  // <-- NOVÉ
+    { to: '/bookings', label: 'Rezervácie', icon: Calendar },
+    { to: '/rental', label: 'Požičovňa', icon: Bike },
     { to: '/products', label: 'Produkty', icon: Package },
     { to: '/analytics', label: 'Analytika', icon: BarChart3 },
     { to: '/usage', label: 'Spotreba', icon: Coins, adminOnly: true },
