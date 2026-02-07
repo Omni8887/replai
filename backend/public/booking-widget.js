@@ -148,8 +148,27 @@
         }
         
         .fbw-mode-icon {
-          font-size: 32px;
-          margin-bottom: 8px;
+          width: 48px;
+          height: 48px;
+          margin: 0 auto 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f5f5f5;
+          border-radius: 12px;
+        }
+        
+        .fbw-mode-icon svg {
+          width: 28px;
+          height: 28px;
+        }
+        
+        .fbw-mode-card.selected .fbw-mode-icon {
+          background: rgba(255,255,255,0.2);
+        }
+        
+        .fbw-mode-card.selected .fbw-mode-icon svg {
+          stroke: #fff;
         }
         
         .fbw-mode-title {
@@ -747,12 +766,22 @@
           <p class="fbw-section-desc">Vyberte typ rezervácie</p>
           <div class="fbw-mode-grid">
             <div class="fbw-mode-card" onclick="FenixBooking.selectMode('service')">
-              <div class="fbw-mode-icon">🔧</div>
+              <div class="fbw-mode-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
               <div class="fbw-mode-title">Servis</div>
               <div class="fbw-mode-desc">Oprava a údržba bicykla</div>
             </div>
             <div class="fbw-mode-card" onclick="FenixBooking.selectMode('rental')">
-              <div class="fbw-mode-icon">🚴</div>
+              <div class="fbw-mode-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="5.5" cy="17.5" r="3.5"/>
+                  <circle cx="18.5" cy="17.5" r="3.5"/>
+                  <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h3"/>
+                </svg>
+              </div>
               <div class="fbw-mode-title">Požičovňa</div>
               <div class="fbw-mode-desc">Testovací bicykel na deň</div>
             </div>
@@ -918,7 +947,7 @@
           <p class="fbw-section-desc">Skontrolujte údaje pred odoslaním</p>
           <div class="fbw-summary-list" id="fbw-rental-summary"></div>
           <div class="fbw-deposit-warning">
-            <strong>⚠️ Kaucia 500€</strong><br>
+            <strong>Kaucia 500€</strong><br>
             Pri vyzdvihnutí bicykla je potrebné uhradiť vratnú kauciu v hotovosti.
           </div>
           <div id="fbw-rental-submit-error" class="fbw-error" style="display:none; margin-top: 16px;"></div>
@@ -1138,7 +1167,12 @@
 
   // Render functions
   function renderLocations() {
-    const container = document.getElementById(state.mode === 'rental' ? 'fbw-rental-locations' : 'fbw-locations');
+    const containerId = state.mode === 'rental' ? 'fbw-rental-locations' : 'fbw-locations';
+    const container = document.getElementById(containerId);
+    if (!container) {
+      console.error('Container not found:', containerId);
+      return;
+    }
     container.innerHTML = state.locations.map(loc => `
       <div class="fbw-list-item ${state.selectedLocation?.id === loc.id ? 'selected' : ''}" 
            onclick="FenixBooking.selectLocation('${loc.id}')">

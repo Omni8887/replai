@@ -3812,7 +3812,7 @@ async function sendRentalBookingEmail(booking) {
           
           <!-- Title -->
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
-            <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">🚴 Rezervácia testovacieho bicykla</h1>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia testovacieho bicykla</h1>
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Ďakujeme za vašu rezerváciu</p>
           </div>
           
@@ -3839,16 +3839,16 @@ async function sendRentalBookingEmail(booking) {
             <!-- Deposit Warning -->
             <div style="background: #fff3cd; border-radius: 8px; padding: 15px 20px; margin: 25px 0; border-left: 3px solid #ffc107;">
               <p style="margin: 0; font-size: 14px; color: #856404;">
-                <strong>⚠️ Kaucia:</strong> Pri vyzdvihnutí bicykla je potrebné uhradiť vratnú kauciu <strong>${booking.deposit}€</strong> v hotovosti.
+                <strong>Kaucia:</strong> Pri vyzdvihnutí bicykla je potrebné uhradiť vratnú kauciu <strong>${booking.deposit}€</strong> v hotovosti.
               </p>
             </div>
             
             <!-- Location -->
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
-              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Miesto vyzdvihnutia</h3>
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">Miesto vyzdvihnutia</h3>
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${booking.location_name}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${booking.location_address}</p>
-              ${booking.location_phone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${booking.location_phone}</p>` : ''}
+              ${booking.location_phone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">Tel: ${booking.location_phone}</p>` : ''}
             </div>
             
             <p style="color: #888; font-size: 13px; line-height: 1.6;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
