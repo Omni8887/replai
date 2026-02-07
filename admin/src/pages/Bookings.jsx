@@ -161,6 +161,11 @@ export default function Bookings() {
   }
 
   const formatDate = (str) => new Date(str).toLocaleDateString('sk-SK')
+  
+  const formatDateTime = (str) => {
+    const d = new Date(str)
+    return d.toLocaleDateString('sk-SK') + ' ' + d.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })
+  }
 
   return (
     <div className="bookings-page">
@@ -572,6 +577,7 @@ export default function Bookings() {
           <thead>
             <tr>
               <th>Číslo</th>
+              <th>Vytvorené</th>
               <th>Zákazník</th>
               <th>Prevádzka</th>
               <th>Služba</th>
@@ -582,13 +588,17 @@ export default function Bookings() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="empty-state">Načítavam...</td></tr>
+              <tr><td colSpan="8" className="empty-state">Načítavam...</td></tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan="7" className="empty-state">Žiadne rezervácie</td></tr>
+              <tr><td colSpan="8" className="empty-state">Žiadne rezervácie</td></tr>
             ) : (
               bookings.map(b => (
                 <tr key={b.id}>
                   <td><span className="cell-booking">{b.booking_number}</span></td>
+                  <td>
+                    <div>{formatDate(b.created_at)}</div>
+                    <div className="cell-meta">{new Date(b.created_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</div>
+                  </td>
                   <td>
                     <div className="cell-customer">{b.customer_name}</div>
                     <div className="cell-meta">{b.customer_phone}</div>
@@ -639,6 +649,7 @@ export default function Bookings() {
             </div>
             <div className="modal-body">
               <div className="detail-item"><span className="detail-label">Číslo</span><span className="detail-value">{detailModal.booking_number}</span></div>
+              <div className="detail-item"><span className="detail-label">Vytvorené</span><span className="detail-value">{formatDateTime(detailModal.created_at)}</span></div>
               <div className="detail-item"><span className="detail-label">Zákazník</span><span className="detail-value">{detailModal.customer_name}</span></div>
               <div className="detail-item"><span className="detail-label">Email</span><span className="detail-value">{detailModal.customer_email}</span></div>
               <div className="detail-item"><span className="detail-label">Telefón</span><span className="detail-value">{detailModal.customer_phone}</span></div>
