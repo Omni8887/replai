@@ -1,6 +1,13 @@
 (function() {
-  const API_URL = 'https://replai-backend.onrender.com';
-  const CLIENT_ID = 'fa961f37-48c7-40a5-95d5-0bd8cdbbe5d4';
+  // Načítaj konfiguráciu zo script tagu
+  const currentScript = document.currentScript || document.querySelector('script[data-client-id]');
+  const API_URL = currentScript?.getAttribute('data-backend-url') || 'https://replai-backend.onrender.com';
+  const CLIENT_ID = currentScript?.getAttribute('data-client-id');
+  
+  if (!CLIENT_ID) {
+    console.error('Fenix Booking Widget: Chýba data-client-id atribút');
+    return;
+  }
   
   let state = {
     mode: null, // 'service' or 'rental'
