@@ -1708,6 +1708,21 @@
 
   // Initialize
   createWidget();
+  
+  // Pridaj event listenery na inputy pre real-time validáciu
+  setTimeout(() => {
+    const inputIds = [
+      'fbw-name', 'fbw-email', 'fbw-phone', 'fbw-bike-brand', 'fbw-bike-model', 'fbw-problem',
+      'fbw-rental-name', 'fbw-rental-email', 'fbw-rental-phone'
+    ];
+    inputIds.forEach(id => {
+      const input = document.getElementById(id);
+      if (input) {
+        input.addEventListener('input', updateButtons);
+        input.addEventListener('change', updateButtons);
+      }
+    });
+  }, 100);
 
   // Expose public API
   window.FenixBooking = {
