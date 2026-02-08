@@ -1111,7 +1111,8 @@
     try {
       const res = await fetch(`${API_URL}/public/booking/locations?client_id=${CLIENT_ID}`);
       const data = await res.json();
-      state.locations = data.locations || [];
+      // API vracia priamo pole, nie objekt s locations
+      state.locations = Array.isArray(data) ? data : (data.locations || []);
       renderLocations();
     } catch (err) {
       console.error('Error loading locations:', err);
@@ -1122,7 +1123,8 @@
     try {
       const res = await fetch(`${API_URL}/public/booking/services?client_id=${CLIENT_ID}`);
       const data = await res.json();
-      state.services = data.services || [];
+      // API vracia priamo pole, nie objekt s services
+      state.services = Array.isArray(data) ? data : (data.services || []);
       renderServices();
     } catch (err) {
       console.error('Error loading services:', err);
@@ -1133,7 +1135,8 @@
     try {
       const res = await fetch(`${API_URL}/public/rental/bikes?client_id=${CLIENT_ID}`);
       const data = await res.json();
-      state.bikes = data.bikes || [];
+      // API vracia priamo pole, nie objekt s bikes
+      state.bikes = Array.isArray(data) ? data : (data.bikes || []);
       renderBikes();
     } catch (err) {
       console.error('Error loading bikes:', err);
@@ -1150,7 +1153,8 @@
         `${API_URL}/public/booking/availability/days?client_id=${CLIENT_ID}&location=${state.selectedLocation.code}&year=${year}&month=${month}`
       );
       const data = await res.json();
-      state.availableDays = data.days || [];
+      // API vracia priamo pole, nie objekt s days
+      state.availableDays = Array.isArray(data) ? data : (data.days || []);
       renderCalendar();
     } catch (err) {
       console.error('Error loading availability:', err);
@@ -1165,7 +1169,8 @@
         `${API_URL}/public/booking/availability?client_id=${CLIENT_ID}&location=${state.selectedLocation.code}&date=${date}`
       );
       const data = await res.json();
-      state.availableSlots = data.slots || [];
+      // API vracia priamo pole, nie objekt s slots
+      state.availableSlots = Array.isArray(data) ? data : (data.slots || []);
       renderTimes();
     } catch (err) {
       console.error('Error loading slots:', err);
