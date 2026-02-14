@@ -2753,6 +2753,82 @@ app.get('/bookings/services', authMiddleware, async (req, res) => {
   }
 });
 
+
+// GET /bookings/settings - Nastavenia rezervačného systému
+app.get('/bookings/settings', authMiddleware, async (req, res) => {
+  try {
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('*')
+      .eq('client_id', req.clientId)
+      .maybeSingle();
+    
+    res.json(settings || {
+      slot_duration: 60,
+      max_bookings_per_day: 2,
+      min_advance_hours: 24,
+      max_advance_days: 30,
+      rental_enabled: false
+    });
+  } catch (error) {
+    console.error('Booking settings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /bookings/settings - Uložiť nastavenia
+app.put('/bookings/settings', authMiddleware, async (req, res) => {
+  try {
+    const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days, rental_enabled } = req.body;
+    
+    // Skontroluj či existuje záznam
+    const { data: existing } = await supabase
+      .from('booking_settings')
+      .select('id')
+      .eq('client_id', req.clientId)
+      .maybeSingle();
+    
+    let result;
+    if (existing) {
+      // Update
+      const updateData = { updated_at: new Date().toISOString() };
+      if (slot_duration !== undefined) updateData.slot_duration = slot_duration;
+      if (max_bookings_per_day !== undefined) updateData.max_bookings_per_day = max_bookings_per_day;
+      if (min_advance_hours !== undefined) updateData.min_advance_hours = min_advance_hours;
+      if (max_advance_days !== undefined) updateData.max_advance_days = max_advance_days;
+      if (rental_enabled !== undefined) updateData.rental_enabled = rental_enabled;
+      
+      result = await supabase
+        .from('booking_settings')
+        .update(updateData)
+        .eq('client_id', req.clientId)
+        .select()
+        .single();
+    } else {
+      // Insert
+      result = await supabase
+        .from('booking_settings')
+        .insert({
+          client_id: req.clientId,
+          slot_duration: slot_duration || 60,
+          max_bookings_per_day: max_bookings_per_day || 2,
+          min_advance_hours: min_advance_hours || 24,
+          max_advance_days: max_advance_days || 30,
+          rental_enabled: rental_enabled || false
+        })
+        .select()
+        .single();
+    }
+    
+    if (result.error) throw result.error;
+    
+    res.json(result.data);
+  } catch (error) {
+    console.error('Update booking settings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /bookings/:id - Detail rezervácie
 app.get('/bookings/:id', authMiddleware, async (req, res) => {
   try {
@@ -2944,10 +3020,10 @@ app.get('/public/booking/settings', async (req, res) => {
     }
     
     const { data: settings } = await supabase
-      .from('booking_settings')
-      .select('rental_enabled')
-      .eq('client_id', client_id)
-      .single();
+    .from('booking_settings')
+    .select('rental_enabled')
+    .eq('client_id', client_id)
+    .maybeSingle();
     
     res.json({ 
       rental_enabled: settings?.rental_enabled || false 
@@ -3410,80 +3486,7 @@ async function sendBookingCreatedEmail(booking) {
 // BOOKING SETTINGS ENDPOINTS
 // ============================================
 
-// GET /bookings/settings - Nastavenia rezervačného systému
-app.get('/bookings/settings', authMiddleware, async (req, res) => {
-  try {
-    const { data: settings } = await supabase
-      .from('booking_settings')
-      .select('*')
-      .eq('client_id', req.clientId)
-      .maybeSingle();
-    
-    res.json(settings || {
-      slot_duration: 60,
-      max_bookings_per_day: 2,
-      min_advance_hours: 24,
-      max_advance_days: 30,
-      rental_enabled: false
-    });
-  } catch (error) {
-    console.error('Booking settings error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
-// PUT /bookings/settings - Uložiť nastavenia
-app.put('/bookings/settings', authMiddleware, async (req, res) => {
-  try {
-    const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days, rental_enabled } = req.body;
-    
-    // Skontroluj či existuje záznam
-    const { data: existing } = await supabase
-      .from('booking_settings')
-      .select('id')
-      .eq('client_id', req.clientId)
-      .maybeSingle();
-    
-    let result;
-    if (existing) {
-      // Update
-      const updateData = { updated_at: new Date().toISOString() };
-      if (slot_duration !== undefined) updateData.slot_duration = slot_duration;
-      if (max_bookings_per_day !== undefined) updateData.max_bookings_per_day = max_bookings_per_day;
-      if (min_advance_hours !== undefined) updateData.min_advance_hours = min_advance_hours;
-      if (max_advance_days !== undefined) updateData.max_advance_days = max_advance_days;
-      if (rental_enabled !== undefined) updateData.rental_enabled = rental_enabled;
-      
-      result = await supabase
-        .from('booking_settings')
-        .update(updateData)
-        .eq('client_id', req.clientId)
-        .select()
-        .single();
-    } else {
-      // Insert
-      result = await supabase
-        .from('booking_settings')
-        .insert({
-          client_id: req.clientId,
-          slot_duration: slot_duration || 60,
-          max_bookings_per_day: max_bookings_per_day || 2,
-          min_advance_hours: min_advance_hours || 24,
-          max_advance_days: max_advance_days || 30,
-          rental_enabled: rental_enabled || false
-        })
-        .select()
-        .single();
-    }
-    
-    if (result.error) throw result.error;
-    
-    res.json(result.data);
-  } catch (error) {
-    console.error('Update booking settings error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // ============================================
 // LOCATIONS CRUD
