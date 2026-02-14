@@ -3417,13 +3417,14 @@ app.get('/bookings/settings', authMiddleware, async (req, res) => {
       .from('booking_settings')
       .select('*')
       .eq('client_id', req.clientId)
-      .single();
+      .maybeSingle();
     
     res.json(settings || {
       slot_duration: 60,
       max_bookings_per_day: 2,
       min_advance_hours: 24,
-      max_advance_days: 30
+      max_advance_days: 30,
+      rental_enabled: false
     });
   } catch (error) {
     console.error('Booking settings error:', error);
@@ -3436,26 +3437,48 @@ app.put('/bookings/settings', authMiddleware, async (req, res) => {
   try {
     const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days, rental_enabled } = req.body;
     
-    const updateData = {
-      client_id: req.clientId,
-      updated_at: new Date().toISOString()
-    };
-    
-    if (slot_duration !== undefined) updateData.slot_duration = slot_duration;
-    if (max_bookings_per_day !== undefined) updateData.max_bookings_per_day = max_bookings_per_day;
-    if (min_advance_hours !== undefined) updateData.min_advance_hours = min_advance_hours;
-    if (max_advance_days !== undefined) updateData.max_advance_days = max_advance_days;
-    if (rental_enabled !== undefined) updateData.rental_enabled = rental_enabled;
-    
-    const { data, error } = await supabase
+    // Skontroluj či existuje záznam
+    const { data: existing } = await supabase
       .from('booking_settings')
-      .upsert(updateData)
-      .select()
-      .single();
+      .select('id')
+      .eq('client_id', req.clientId)
+      .maybeSingle();
     
-    if (error) throw error;
+    let result;
+    if (existing) {
+      // Update
+      const updateData = { updated_at: new Date().toISOString() };
+      if (slot_duration !== undefined) updateData.slot_duration = slot_duration;
+      if (max_bookings_per_day !== undefined) updateData.max_bookings_per_day = max_bookings_per_day;
+      if (min_advance_hours !== undefined) updateData.min_advance_hours = min_advance_hours;
+      if (max_advance_days !== undefined) updateData.max_advance_days = max_advance_days;
+      if (rental_enabled !== undefined) updateData.rental_enabled = rental_enabled;
+      
+      result = await supabase
+        .from('booking_settings')
+        .update(updateData)
+        .eq('client_id', req.clientId)
+        .select()
+        .single();
+    } else {
+      // Insert
+      result = await supabase
+        .from('booking_settings')
+        .insert({
+          client_id: req.clientId,
+          slot_duration: slot_duration || 60,
+          max_bookings_per_day: max_bookings_per_day || 2,
+          min_advance_hours: min_advance_hours || 24,
+          max_advance_days: max_advance_days || 30,
+          rental_enabled: rental_enabled || false
+        })
+        .select()
+        .single();
+    }
     
-    res.json(data);
+    if (result.error) throw result.error;
+    
+    res.json(result.data);
   } catch (error) {
     console.error('Update booking settings error:', error);
     res.status(500).json({ error: 'Server error' });
