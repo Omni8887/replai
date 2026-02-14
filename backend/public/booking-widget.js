@@ -12,6 +12,7 @@
   let state = {
     mode: null, // 'service' or 'rental'
     step: 0,
+    rental_enabled: true, // default true, načíta sa z backendu
     // Service state
     locations: [],
     services: [],
@@ -1037,7 +1038,12 @@
       return;
     }
     
-    backBtn.style.display = 'block';
+    // Skry tlačidlo späť ak sme na prvom kroku a rental je vypnutý
+    if (state.step === 's1' && !state.rental_enabled) {
+      backBtn.style.display = 'none';
+    } else {
+      backBtn.style.display = 'block';
+    }
     nextBtn.style.display = 'block';
     
     // Update next button text
@@ -1581,7 +1587,13 @@
   function back() {
     if (state.mode === 'service') {
       switch (state.step) {
-        case 's1': showSection(0); state.mode = null; break;
+        case 's1': 
+          // Ak je rental vypnutý, nejdi späť na mode selection
+          if (state.rental_enabled) {
+            showSection(0); 
+            state.mode = null; 
+          }
+          break;
         case 's2': showSection('s1'); break;
         case 's3': showSection('s2'); break;
         case 's4': showSection('s3'); break;
@@ -1706,8 +1718,32 @@
     }
   }
 
+  // Načítaj nastavenia (rental ON/OFF)
+  async function loadSettings() {
+    try {
+      const res = await fetch(`${API_URL}/public/booking/settings?client_id=${CLIENT_ID}`);
+      const data = await res.json();
+      state.rental_enabled = data.rental_enabled || false;
+      
+      // Ak je rental vypnutý, automaticky nastav mode=service a preskoč výber
+      if (!state.rental_enabled) {
+        state.mode = 'service';
+        loadLocations();
+        showSection('s1');
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
+      // Default: rental vypnutý
+      state.rental_enabled = false;
+      state.mode = 'service';
+      loadLocations();
+      showSection('s1');
+    }
+  }
+
   // Initialize
   createWidget();
+  loadSettings(); // Načítaj nastavenia
   
   // Pridaj event listenery na inputy pre real-time validáciu
   setTimeout(() => {

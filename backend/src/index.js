@@ -2933,6 +2933,30 @@ app.delete('/bookings/:id', authMiddleware, async (req, res) => {
 // PUBLIC BOOKING ENDPOINTS (pre widget/chatbot)
 // ============================================
 
+
+// GET /public/booking/settings - Nastavenia pre widget
+app.get('/public/booking/settings', async (req, res) => {
+  try {
+    const { client_id } = req.query;
+    
+    if (!client_id) {
+      return res.status(400).json({ error: 'client_id required' });
+    }
+    
+    const { data: settings } = await supabase
+      .from('booking_settings')
+      .select('rental_enabled')
+      .eq('client_id', client_id)
+      .single();
+    
+    res.json({ 
+      rental_enabled: settings?.rental_enabled || false 
+    });
+  } catch (error) {
+    console.error('Public settings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // GET /public/booking/locations - Prevádzky pre widget
 app.get('/public/booking/locations', async (req, res) => {
   try {
@@ -3410,18 +3434,22 @@ app.get('/bookings/settings', authMiddleware, async (req, res) => {
 // PUT /bookings/settings - Uložiť nastavenia
 app.put('/bookings/settings', authMiddleware, async (req, res) => {
   try {
-    const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days } = req.body;
+    const { slot_duration, max_bookings_per_day, min_advance_hours, max_advance_days, rental_enabled } = req.body;
+    
+    const updateData = {
+      client_id: req.clientId,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (slot_duration !== undefined) updateData.slot_duration = slot_duration;
+    if (max_bookings_per_day !== undefined) updateData.max_bookings_per_day = max_bookings_per_day;
+    if (min_advance_hours !== undefined) updateData.min_advance_hours = min_advance_hours;
+    if (max_advance_days !== undefined) updateData.max_advance_days = max_advance_days;
+    if (rental_enabled !== undefined) updateData.rental_enabled = rental_enabled;
     
     const { data, error } = await supabase
       .from('booking_settings')
-      .upsert({
-        client_id: req.clientId,
-        slot_duration,
-        max_bookings_per_day,
-        min_advance_hours,
-        max_advance_days,
-        updated_at: new Date().toISOString()
-      })
+      .upsert(updateData)
       .select()
       .single();
     

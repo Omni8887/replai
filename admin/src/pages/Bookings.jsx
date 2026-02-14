@@ -47,9 +47,14 @@ export default function Bookings() {
   const [editModal, setEditModal] = useState(null)
   const [editForm, setEditForm] = useState({ status: '', final_price: '', admin_notes: '' })
   const [contactTemplate, setContactTemplate] = useState('ready')
+  
+  // Rental toggle state
+  const [rentalEnabled, setRentalEnabled] = useState(false)
+  const [savingRental, setSavingRental] = useState(false)
 
   useEffect(() => {
     loadData()
+    loadSettings()
   }, [])
 
   const loadData = async () => {
@@ -60,6 +65,33 @@ export default function Bookings() {
       console.error(err)
     }
     setLoading(false)
+  }
+  
+  const loadSettings = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/bookings/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setRentalEnabled(res.data.rental_enabled || false)
+    } catch (err) {
+      console.error('Error loading settings:', err)
+    }
+  }
+  
+  const toggleRental = async () => {
+    setSavingRental(true)
+    try {
+      const newValue = !rentalEnabled
+      await axios.put(`${API_URL}/bookings/settings`, 
+        { rental_enabled: newValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setRentalEnabled(newValue)
+    } catch (err) {
+      console.error('Error saving settings:', err)
+      alert('Nepodarilo sa uložiť nastavenie')
+    }
+    setSavingRental(false)
   }
 
   const loadBookings = async (f = filters) => {
@@ -179,12 +211,71 @@ export default function Bookings() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 24px;
+          flex-wrap: wrap;
+          gap: 12px;
         }
         
         .page-title {
           font-size: 20px;
           font-weight: 600;
           color: #111;
+        }
+        
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        
+        .rental-toggle {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 14px;
+          background: #f8f8f8;
+          border-radius: 8px;
+          border: 1px solid #eaeaea;
+        }
+        
+        .rental-toggle-label {
+          font-size: 13px;
+          color: #555;
+        }
+        
+        .toggle-switch {
+          position: relative;
+          width: 44px;
+          height: 24px;
+          background: #ddd;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        
+        .toggle-switch.active {
+          background: #22c55e;
+        }
+        
+        .toggle-switch.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        .toggle-switch::after {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          background: #fff;
+          border-radius: 50%;
+          transition: transform 0.2s;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active::after {
+          transform: translateX(20px);
         }
         
         .stats-grid {
@@ -500,12 +591,27 @@ export default function Bookings() {
           .filters {
             width: 100%;
           }
+          
+          .header-actions {
+            width: 100%;
+            justify-content: space-between;
+          }
         }
       `}</style>
 
       <div className="page-header">
         <h1 className="page-title">Rezervácie</h1>
-        <button className="btn btn-ghost" onClick={loadData}>Obnoviť</button>
+        <div className="header-actions">
+          <div className="rental-toggle">
+            <span className="rental-toggle-label">Požičovňa bicyklov</span>
+            <div 
+              className={`toggle-switch ${rentalEnabled ? 'active' : ''} ${savingRental ? 'disabled' : ''}`}
+              onClick={!savingRental ? toggleRental : undefined}
+              title={rentalEnabled ? 'Klikni pre vypnutie' : 'Klikni pre zapnutie'}
+            />
+          </div>
+          <button className="btn btn-ghost" onClick={loadData}>Obnoviť</button>
+        </div>
       </div>
 
       <div className="stats-grid">
