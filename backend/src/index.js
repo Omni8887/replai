@@ -143,10 +143,21 @@ async function handleBookingTool(toolName, toolInput, clientId) {
     }
     
     case 'get_booking_services': {
+      // Najprv zisti client_id z location
+      const { data: location } = await supabase
+        .from('booking_locations')
+        .select('client_id')
+        .eq('id', toolInput.location_id)
+        .single();
+      
+      if (!location) {
+        return { message: 'Prevádzka nebola nájdená.' };
+      }
+      
       const { data } = await supabase
         .from('booking_services')
-        .select('id, name, description, duration, price')
-        .eq('location_id', toolInput.location_id)
+        .select('id, name, description, duration_minutes, price')
+        .eq('client_id', location.client_id)
         .eq('is_active', true)
         .order('price');
       
