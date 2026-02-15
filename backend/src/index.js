@@ -1260,22 +1260,32 @@ try {
     
     const bookingInstructions = `
 
-    REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
-    Máš nástroje pre rezerváciu servisu. VŽDY ich používaj na overenie!
-    
-    POSTUP:
-    1. get_booking_locations - zisti prevádzky
-    2. get_booking_services - ponúkni služby (pýtaj sa na výber služby!)
-    3. get_available_days - ukáž dostupné dni (VŽDY OVER cez tento tool!)
-    4. get_available_slots - ukáž voľné časy pre vybraný deň (VŽDY ZAVOLAJ pred potvrdením času!)
-    5. create_booking - vytvor rezerváciu až keď máš: prevádzku, službu, dátum, čas, meno, email, telefón
-    
-    KRITICKÉ:
-    - NIKDY nehádaj či je deň voľný - VŽDY použi get_available_days alebo get_available_slots!
-    - Keď zákazník povie konkrétny dátum (napr. "17.2."), IHNEĎ zavolaj get_available_slots pre tento dátum
-    - Pýtaj sa postupne: najprv službu, potom deň, potom čas, potom kontakt
-    - Ak zákazník ešte nevybral službu, opýtaj sa na ňu PRED výberom času
-    `;
+REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
+DNEŠNÝ DÁTUM: ${new Date().toISOString().split('T')[0]} (${days[now.getDay()]})
+
+Máš nástroje pre rezerváciu servisu. VŽDY ich používaj!
+
+NÁSTROJE:
+- get_booking_locations: Získa prevádzky (volaj ako prvé)
+- get_booking_services: Získa služby pre prevádzku (potrebuješ location_id)
+- get_available_days: Získa dostupné dni (potrebuješ location_id)
+- get_available_slots: Získa voľné časy pre DEŇ (potrebuješ location_id a date vo formáte YYYY-MM-DD)
+- create_booking: Vytvorí rezerváciu (až keď máš VŠETKO)
+
+POSTUP:
+1. Zákazník chce servis → zavolaj get_booking_locations
+2. Vyberie prevádzku → zavolaj get_booking_services a get_available_days
+3. Vyberie službu a deň → zavolaj get_available_slots s dátumom vo formáte YYYY-MM-DD
+4. Vyberie čas → opýtaj sa na meno, email a telefón
+5. Dá kontakt → zavolaj create_booking
+
+KRITICKÉ PRAVIDLÁ:
+- Keď zákazník povie dátum (napr. "17.2", "zajtra", "utorok"), VŽDY ho preveď na YYYY-MM-DD formát a zavolaj get_available_slots
+- NIKDY nehádaj či je termín voľný - VŽDY použi tool!
+- Ponúkaj konkrétne možnosti zo zoznamu ktorý ti vráti tool
+- location_id pre "Tri Veže" je "703f75e8-6aea-4588-86a4-139f6b9f2ca2"
+- location_id pre "Sport Mall" je "ded49cea-1957-48e6-b946-4932780dbe0f"
+`;
     
     let claudeMessages = [...messages];
     let iterations = 0;
