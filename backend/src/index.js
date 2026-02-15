@@ -291,6 +291,8 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       // Nájdi service - môže byť ID alebo názov
       let serviceData = null;
+      
+      // Skús najprv ako UUID
       const { data: serviceById } = await supabase
         .from('booking_services')
         .select('id, name, price')
@@ -305,12 +307,13 @@ async function handleBookingTool(toolName, toolInput, clientId) {
           .from('booking_services')
           .select('id, name, price')
           .ilike('name', `%${service_id}%`)
+          .limit(1)
           .maybeSingle();
         serviceData = serviceByName;
       }
       
       if (!serviceData) {
-        return { error: 'Služba nebola nájdená.' };
+        return { error: 'Služba nebola nájdená: ' + service_id };
       }
       
       // Získaj location info
@@ -333,22 +336,22 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       const bookingNumber = `FB-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
       
-      // Vytvor rezerváciu
+      // Vytvor rezerváciu - LEN stĺpce ktoré existujú
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert({
           client_id: location.client_id,
-          location_id,
+          location_id: location_id,
           service_id: serviceData.id,
+          booking_number: bookingNumber,
+          customer_name: customer_name,
+          customer_email: customer_email,
+          customer_phone: customer_phone,
           booking_date: date,
           booking_time: time,
-          customer_name,
-          customer_email,
-          customer_phone,
           problem_description: note || null,
-          status: 'pending',
-          booking_number: bookingNumber,
-          booking_type: 'service'
+          estimated_price: serviceData.price,
+          status: 'pending'
         })
         .select()
         .single();
@@ -370,9 +373,9 @@ async function handleBookingTool(toolName, toolInput, clientId) {
           location: location.name,
           address: location.address,
           date: `${dayNames[dateObj.getDay()]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`,
-          time,
-          customer_name,
-          customer_email
+          time: time,
+          customer_name: customer_name,
+          customer_email: customer_email
         }
       };
     }
