@@ -1260,19 +1260,22 @@ try {
     
     const bookingInstructions = `
 
-REZERVAČNÝ SYSTÉM:
-Máš nástroje pre rezerváciu servisu bicykla. Postup:
-1. get_booking_locations - zisti prevádzky
-2. get_booking_services - ponúkni služby pre vybranú prevádzku  
-3. get_available_days - ukáž dostupné dni
-4. get_available_slots - ukáž voľné časy pre vybraný deň
-5. create_booking - vytvor rezerváciu (až keď máš všetko: prevádzka, služba, dátum, čas, meno, email, telefón)
-
-DÔLEŽITÉ:
-- Ponúkaj konkrétne možnosti na výber
-- Pýtaj sa postupne, nie všetko naraz
-- Na konci potvrď rezerváciu s číslom a všetkými detailmi
-`;
+    REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
+    Máš nástroje pre rezerváciu servisu. VŽDY ich používaj na overenie!
+    
+    POSTUP:
+    1. get_booking_locations - zisti prevádzky
+    2. get_booking_services - ponúkni služby (pýtaj sa na výber služby!)
+    3. get_available_days - ukáž dostupné dni (VŽDY OVER cez tento tool!)
+    4. get_available_slots - ukáž voľné časy pre vybraný deň (VŽDY ZAVOLAJ pred potvrdením času!)
+    5. create_booking - vytvor rezerváciu až keď máš: prevádzku, službu, dátum, čas, meno, email, telefón
+    
+    KRITICKÉ:
+    - NIKDY nehádaj či je deň voľný - VŽDY použi get_available_days alebo get_available_slots!
+    - Keď zákazník povie konkrétny dátum (napr. "17.2."), IHNEĎ zavolaj get_available_slots pre tento dátum
+    - Pýtaj sa postupne: najprv službu, potom deň, potom čas, potom kontakt
+    - Ak zákazník ešte nevybral službu, opýtaj sa na ňu PRED výberom času
+    `;
     
     let claudeMessages = [...messages];
     let iterations = 0;
