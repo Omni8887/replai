@@ -275,12 +275,13 @@ async function handleBookingTool(toolName, toolInput, clientId) {
     case 'create_booking': {
       const { location_id, service_id, date, time, customer_name, customer_email, customer_phone, note } = toolInput;
       
+      // Skontroluj či slot nie je obsadený
       const { data: existing } = await supabase
         .from('bookings')
         .select('id')
         .eq('location_id', location_id)
-        .eq('date', date)
-        .eq('time', time)
+        .eq('booking_date', date)
+        .eq('booking_time', time)
         .in('status', ['pending', 'confirmed'])
         .maybeSingle();
       
@@ -288,38 +289,63 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         return { error: 'Tento termín je už obsadený. Vyberte iný čas.' };
       }
       
-      const { data: service } = await supabase
+      // Nájdi service - môže byť ID alebo názov
+      let serviceData = null;
+      const { data: serviceById } = await supabase
         .from('booking_services')
-        .select('name, price')
+        .select('id, name, price')
         .eq('id', service_id)
-        .single();
+        .maybeSingle();
       
+      if (serviceById) {
+        serviceData = serviceById;
+      } else {
+        // Skús hľadať podľa názvu
+        const { data: serviceByName } = await supabase
+          .from('booking_services')
+          .select('id, name, price')
+          .ilike('name', `%${service_id}%`)
+          .maybeSingle();
+        serviceData = serviceByName;
+      }
+      
+      if (!serviceData) {
+        return { error: 'Služba nebola nájdená.' };
+      }
+      
+      // Získaj location info
       const { data: location } = await supabase
         .from('booking_locations')
-        .select('name, address')
+        .select('name, address, client_id')
         .eq('id', location_id)
         .single();
       
+      if (!location) {
+        return { error: 'Prevádzka nebola nájdená.' };
+      }
+      
+      // Generuj booking number
       const year = new Date().getFullYear();
       const { count } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', clientId);
+        .eq('client_id', location.client_id);
       
       const bookingNumber = `FB-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
       
+      // Vytvor rezerváciu
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert({
-          client_id: clientId,
+          client_id: location.client_id,
           location_id,
-          service_id,
-          date,
-          time,
+          service_id: serviceData.id,
+          booking_date: date,
+          booking_time: time,
           customer_name,
           customer_email,
           customer_phone,
-          note: note || null,
+          problem_description: note || null,
           status: 'pending',
           booking_number: bookingNumber,
           booking_type: 'service'
@@ -329,7 +355,7 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       if (error) {
         console.error('Create booking error:', error);
-        return { error: 'Nepodarilo sa vytvoriť rezerváciu.' };
+        return { error: 'Nepodarilo sa vytvoriť rezerváciu: ' + error.message };
       }
       
       const dateObj = new Date(date);
@@ -339,10 +365,10 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         success: true,
         booking: {
           booking_number: bookingNumber,
-          service: service?.name,
-          price: service?.price,
-          location: location?.name,
-          address: location?.address,
+          service: serviceData.name,
+          price: serviceData.price,
+          location: location.name,
+          address: location.address,
           date: `${dayNames[dateObj.getDay()]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`,
           time,
           customer_name,
