@@ -31,6 +31,287 @@ const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
 
+// BOOKING TOOLS DEFINÍCIA
+const BOOKING_TOOLS = [
+  {
+    name: "get_booking_locations",
+    description: "Získa zoznam prevádzok kde je možné objednať servis bicykla.",
+    input_schema: { type: "object", properties: {}, required: [] }
+  },
+  {
+    name: "get_booking_services", 
+    description: "Získa služby pre prevádzku.",
+    input_schema: { 
+      type: "object", 
+      properties: { location_id: { type: "string" } }, 
+      required: ["location_id"] 
+    }
+  },
+  {
+    name: "get_available_days",
+    description: "Získa dostupné dni pre rezerváciu.",
+    input_schema: { 
+      type: "object", 
+      properties: { location_id: { type: "string" } }, 
+      required: ["location_id"] 
+    }
+  },
+  {
+    name: "get_available_slots",
+    description: "Získa voľné časy pre deň.",
+    input_schema: { 
+      type: "object", 
+      properties: { 
+        location_id: { type: "string" }, 
+        date: { type: "string" } 
+      }, 
+      required: ["location_id", "date"] 
+    }
+  },
+  {
+    name: "create_booking",
+    description: "Vytvorí rezerváciu.",
+    input_schema: { 
+      type: "object", 
+      properties: { 
+        location_id: { type: "string" },
+        service_id: { type: "string" },
+        date: { type: "string" },
+        time: { type: "string" },
+        customer_name: { type: "string" },
+        customer_email: { type: "string" },
+        customer_phone: { type: "string" },
+        note: { type: "string" }
+      }, 
+      required: ["location_id", "service_id", "date", "time", "customer_name", "customer_email", "customer_phone"] 
+    }
+  }
+];
+
+function isBookingRelated(message) {
+  const kw = ['servis', 'objedna', 'rezerv', 'termin', 'oprav', 'prevadzk'];
+  return kw.some(k => message.toLowerCase().includes(k));
+}
+
+// BOOKING TOOL HANDLER
+async function handleBookingTool(toolName, toolInput, clientId) {
+  console.log(`🔧 Booking tool: ${toolName}`, JSON.stringify(toolInput));
+  
+  switch (toolName) {
+    case 'get_booking_locations': {
+      const { data } = await supabase
+        .from('booking_locations')
+        .select('id, name, address')
+        .eq('client_id', clientId)
+        .eq('is_active', true)
+        .order('name');
+      
+      if (!data || data.length === 0) {
+        return { message: 'Momentálne nie sú dostupné žiadne prevádzky.' };
+      }
+      return { locations: data };
+    }
+    
+    case 'get_booking_services': {
+      const { data } = await supabase
+        .from('booking_services')
+        .select('id, name, description, duration, price')
+        .eq('location_id', toolInput.location_id)
+        .eq('is_active', true)
+        .order('price');
+      
+      if (!data || data.length === 0) {
+        return { message: 'Pre túto prevádzku nie sú dostupné služby.' };
+      }
+      return { services: data };
+    }
+    
+    case 'get_available_days': {
+      const { data: settings } = await supabase
+        .from('booking_settings')
+        .select('*')
+        .eq('client_id', clientId)
+        .maybeSingle();
+      
+      const minAdvanceHours = settings?.min_advance_hours || 24;
+      const maxAdvanceDays = settings?.max_advance_days || 30;
+      
+      const { data: hours } = await supabase
+        .from('booking_hours')
+        .select('*')
+        .eq('location_id', toolInput.location_id);
+      
+      const openDays = new Set((hours || []).filter(h => h.is_open).map(h => h.day_of_week));
+      
+      const availableDays = [];
+      const now = new Date();
+      const minDate = new Date(now.getTime() + minAdvanceHours * 60 * 60 * 1000);
+      const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+      
+      for (let i = 0; i < maxAdvanceDays && availableDays.length < 10; i++) {
+        const date = new Date(now);
+        date.setDate(date.getDate() + i);
+        
+        if (date < minDate) continue;
+        if (!openDays.has(date.getDay())) continue;
+        
+        availableDays.push({
+          date: date.toISOString().split('T')[0],
+          day_name: dayNames[date.getDay()],
+          formatted: `${dayNames[date.getDay()]} ${date.getDate()}.${date.getMonth() + 1}.`
+        });
+      }
+      
+      if (availableDays.length === 0) {
+        return { message: 'V najbližšom období nie sú dostupné termíny.' };
+      }
+      return { available_days: availableDays };
+    }
+    
+    case 'get_available_slots': {
+      const dateObj = new Date(toolInput.date);
+      const dayOfWeek = dateObj.getDay();
+      
+      const { data: hours } = await supabase
+        .from('booking_hours')
+        .select('*')
+        .eq('location_id', toolInput.location_id)
+        .eq('day_of_week', dayOfWeek)
+        .maybeSingle();
+      
+      if (!hours || !hours.is_open) {
+        return { message: 'V tento deň je prevádzka zatvorená.' };
+      }
+      
+      const { data: settings } = await supabase
+        .from('booking_settings')
+        .select('slot_duration')
+        .eq('client_id', clientId)
+        .maybeSingle();
+      
+      const slotDuration = settings?.slot_duration || 60;
+      
+      const { data: existingBookings } = await supabase
+        .from('bookings')
+        .select('time')
+        .eq('location_id', toolInput.location_id)
+        .eq('date', toolInput.date)
+        .in('status', ['pending', 'confirmed']);
+      
+      const bookedTimes = new Set((existingBookings || []).map(b => b.time));
+      
+      const slots = [];
+      const [openH, openM] = hours.open_time.split(':').map(Number);
+      const [closeH, closeM] = hours.close_time.split(':').map(Number);
+      
+      let currentMinutes = openH * 60 + openM;
+      const closeMinutes = closeH * 60 + closeM;
+      
+      const now = new Date();
+      const isToday = toolInput.date === now.toISOString().split('T')[0];
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      
+      while (currentMinutes + slotDuration <= closeMinutes) {
+        const h = Math.floor(currentMinutes / 60);
+        const m = currentMinutes % 60;
+        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        
+        if ((!isToday || currentMinutes > currentTimeMinutes + 60) && !bookedTimes.has(timeStr)) {
+          slots.push({ time: timeStr });
+        }
+        currentMinutes += slotDuration;
+      }
+      
+      if (slots.length === 0) {
+        return { message: 'Pre tento deň nie sú voľné termíny.' };
+      }
+      return { available_slots: slots };
+    }
+    
+    case 'create_booking': {
+      const { location_id, service_id, date, time, customer_name, customer_email, customer_phone, note } = toolInput;
+      
+      const { data: existing } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('location_id', location_id)
+        .eq('date', date)
+        .eq('time', time)
+        .in('status', ['pending', 'confirmed'])
+        .maybeSingle();
+      
+      if (existing) {
+        return { error: 'Tento termín je už obsadený. Vyberte iný čas.' };
+      }
+      
+      const { data: service } = await supabase
+        .from('booking_services')
+        .select('name, price')
+        .eq('id', service_id)
+        .single();
+      
+      const { data: location } = await supabase
+        .from('booking_locations')
+        .select('name, address')
+        .eq('id', location_id)
+        .single();
+      
+      const year = new Date().getFullYear();
+      const { count } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('client_id', clientId);
+      
+      const bookingNumber = `FB-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
+      
+      const { data: booking, error } = await supabase
+        .from('bookings')
+        .insert({
+          client_id: clientId,
+          location_id,
+          service_id,
+          date,
+          time,
+          customer_name,
+          customer_email,
+          customer_phone,
+          note: note || null,
+          status: 'pending',
+          booking_number: bookingNumber,
+          booking_type: 'service'
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Create booking error:', error);
+        return { error: 'Nepodarilo sa vytvoriť rezerváciu.' };
+      }
+      
+      const dateObj = new Date(date);
+      const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+      
+      return {
+        success: true,
+        booking: {
+          booking_number: bookingNumber,
+          service: service?.name,
+          price: service?.price,
+          location: location?.name,
+          address: location?.address,
+          date: `${dayNames[dateObj.getDay()]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`,
+          time,
+          customer_name,
+          customer_email
+        }
+      };
+    }
+    
+    default:
+      return { error: 'Neznámy nástroj' };
+  }
+}
+
 // Limity pre jednotlivé plány
 const PLAN_LIMITS = {
   free: { messages: 50, products: 0 },
@@ -925,114 +1206,183 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
     const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
 
     // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
-    try {
-      const response = await anthropic.messages.create({
+// === ODPOVEĎ S BOOKING TOOLS ===
+try {
+  const useBookingTools = isBookingRelated(message);
+  let fullResponse = '';
+  let inputTokens = 0;
+  let outputTokens = 0;
+  
+  if (useBookingTools) {
+    // === BOOKING FLOW S TOOLS ===
+    console.log('🔧 Booking mode - using tools');
+    
+    const bookingInstructions = `
+
+REZERVAČNÝ SYSTÉM:
+Máš nástroje pre rezerváciu servisu bicykla. Postup:
+1. get_booking_locations - zisti prevádzky
+2. get_booking_services - ponúkni služby pre vybranú prevádzku  
+3. get_available_days - ukáž dostupné dni
+4. get_available_slots - ukáž voľné časy pre vybraný deň
+5. create_booking - vytvor rezerváciu (až keď máš všetko: prevádzka, služba, dátum, čas, meno, email, telefón)
+
+DÔLEŽITÉ:
+- Ponúkaj konkrétne možnosti na výber
+- Pýtaj sa postupne, nie všetko naraz
+- Na konci potvrď rezerváciu s číslom a všetkými detailmi
+`;
+    
+    let claudeMessages = [...messages];
+    let iterations = 0;
+    const maxIterations = 6;
+    
+    while (iterations < maxIterations) {
+      iterations++;
+      console.log(`🔄 Tool iteration ${iterations}`);
+      
+      const claudeResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
-        system: systemPrompt,
-        messages: messages
+        system: systemPrompt + bookingInstructions,
+        tools: BOOKING_TOOLS,
+        messages: claudeMessages
       });
-
-      let fullResponse = response.content[0].text;
-      const inputTokens = response.usage?.input_tokens || 0;
-      const outputTokens = response.usage?.output_tokens || 0;
-
-      // === VALIDÁCIA LINKOV - ODSTRÁŇ FALOŠNÉ ===
-      const validUrls = products.map(p => p.url).filter(Boolean);
-      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
-      let match;
-      const originalResponse = fullResponse;
-
-      while ((match = linkRegex.exec(originalResponse)) !== null) {
-        const linkText = match[1];
-        const linkUrl = match[2];
-        
-        // Ak URL nie je v databáze produktov, odstráň link (nechaj len text)
-        if (validUrls.length > 0 && !validUrls.includes(linkUrl)) {
-          console.log('⚠️ Odstránený falošný link:', linkUrl);
-          fullResponse = fullResponse.replace(match[0], linkText);
-        }
-      }
-
-      // Ulož assistant odpoveď
-      await supabase.from('messages').insert({
-        conversation_id: conversationId,
-        role: 'assistant',
-        content: fullResponse
-      });
-
-      // Vypočítaj cenu (Claude Sonnet: $3/1M input, $15/1M output)
-      const costEur = ((inputTokens * 3 / 1000000) + (outputTokens * 15 / 1000000)) * 0.92;
-
-      // Ulož spotrebu tokenov
-      await supabase.from('token_usage').insert({
-        client_id: client.id,
-        conversation_id: conversationId,
-        input_tokens: inputTokens,
-        output_tokens: outputTokens,
-        cost_eur: costEur,
-        model: 'claude-sonnet-4-20250514'
-      });
-
-      // Aktualizuj conversation updated_at
-      await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId);
-
-      // Skontroluj či správa obsahuje kontakt
-      const contactInfo = checkForContact(message);
-      if (contactInfo.hasContact) {
-        const updates = { has_contact: true };
-        if (contactInfo.email) updates.visitor_email = contactInfo.email;
-        if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
-        
-        await supabase
-          .from('conversations')
-          .update(updates)
-          .eq('id', conversationId);
-        
-        // Pošli email notifikáciu
-        const { data: clientEmailData } = await supabase
-          .from('clients')
-          .select('email')
-          .eq('id', client.id)
-          .single();
-        
-        if (clientEmailData?.email) {
-          sendLeadNotification(clientEmailData.email, contactInfo, conversationId);
-        }
-      }
-
-      // Pripočítaj správu k mesačnému limitu
-      await supabase
-        .from('clients')
-        .update({ messages_this_month: clientData.messages_this_month + 1 })
-        .eq('id', client.id);
-
-      // === SIMULOVANÝ STREAMING - pošli validovanú odpoveď po častiach ===
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      // Rozdeľ odpoveď na slová
-      const words = fullResponse.split(/(\s+)/);
       
-      // Pošli po skupinách slov (3-5 slov naraz pre plynulejší efekt)
-      const chunkSize = 4;
-      for (let i = 0; i < words.length; i += chunkSize) {
-        const chunk = words.slice(i, i + chunkSize).join('');
-        res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-        
-        // Krátka pauza medzi chunkmi (30-50ms)
-        await new Promise(resolve => setTimeout(resolve, 35));
-      }
+      inputTokens += claudeResponse.usage?.input_tokens || 0;
+      outputTokens += claudeResponse.usage?.output_tokens || 0;
       
-      // Označ koniec
-      res.write('data: [DONE]\n\n');
-      res.end();
+      if (claudeResponse.stop_reason === 'tool_use') {
+        const toolUseBlocks = claudeResponse.content.filter(b => b.type === 'tool_use');
+        const textBlocks = claudeResponse.content.filter(b => b.type === 'text');
+        
+        if (textBlocks.length > 0) {
+          fullResponse += textBlocks.map(b => b.text).join('\n');
+        }
+        
+        claudeMessages.push({ role: 'assistant', content: claudeResponse.content });
+        
+        const toolResults = [];
+        for (const toolUse of toolUseBlocks) {
+          const result = await handleBookingTool(toolUse.name, toolUse.input, client.id);
+          console.log(`📥 ${toolUse.name} result:`, JSON.stringify(result).substring(0, 100));
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: toolUse.id,
+            content: JSON.stringify(result)
+          });
+        }
+        
+        claudeMessages.push({ role: 'user', content: toolResults });
+      } else {
+        const textBlocks = claudeResponse.content.filter(b => b.type === 'text');
+        fullResponse = textBlocks.map(b => b.text).join('\n');
+        break;
+      }
+    }
+    
+  } else {
+    // === ŠTANDARDNÝ FLOW (produkty) ===
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: messages
+    });
+    
+    fullResponse = response.content[0].text;
+    inputTokens = response.usage?.input_tokens || 0;
+    outputTokens = response.usage?.output_tokens || 0;
+    
+    // Validácia linkov
+    const validUrls = products.map(p => p.url).filter(Boolean);
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+    let match;
+    const originalResponse = fullResponse;
+    
+    while ((match = linkRegex.exec(originalResponse)) !== null) {
+      const linkText = match[1];
+      const linkUrl = match[2];
+      if (validUrls.length > 0 && !validUrls.includes(linkUrl)) {
+        console.log('⚠️ Odstránený falošný link:', linkUrl);
+        fullResponse = fullResponse.replace(match[0], linkText);
+      }
+    }
+  }
 
-    } catch (aiError) {
+  // Ulož odpoveď
+  await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    role: 'assistant',
+    content: fullResponse
+  });
+
+  // Vypočítaj cenu
+  const costEur = ((inputTokens * 3 / 1000000) + (outputTokens * 15 / 1000000)) * 0.92;
+
+  // Ulož spotrebu tokenov
+  await supabase.from('token_usage').insert({
+    client_id: client.id,
+    conversation_id: conversationId,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
+    cost_eur: costEur,
+    model: 'claude-sonnet-4-20250514'
+  });
+
+  // Aktualizuj conversation
+  await supabase
+    .from('conversations')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', conversationId);
+
+  // Check kontakt
+  const contactInfo = checkForContact(message);
+  if (contactInfo.hasContact) {
+    const updates = { has_contact: true };
+    if (contactInfo.email) updates.visitor_email = contactInfo.email;
+    if (contactInfo.phone) updates.visitor_phone = contactInfo.phone;
+    
+    await supabase
+      .from('conversations')
+      .update(updates)
+      .eq('id', conversationId);
+    
+    const { data: clientEmailData } = await supabase
+      .from('clients')
+      .select('email')
+      .eq('id', client.id)
+      .single();
+    
+    if (clientEmailData?.email) {
+      sendLeadNotification(clientEmailData.email, contactInfo, conversationId);
+    }
+  }
+
+  // Počítadlo správ
+  await supabase
+    .from('clients')
+    .update({ messages_this_month: clientData.messages_this_month + 1 })
+    .eq('id', client.id);
+
+  // Simulovaný streaming
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const words = fullResponse.split(/(\s+)/);
+  const chunkSize = 4;
+  
+  for (let i = 0; i < words.length; i += chunkSize) {
+    const chunk = words.slice(i, i + chunkSize).join('');
+    res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+    await new Promise(resolve => setTimeout(resolve, 35));
+  }
+  
+  res.write('data: [DONE]\n\n');
+  res.end();
+
+} catch (aiError) {
       console.error('AI Error:', aiError);
       res.status(500).json({ error: 'Chyba pri generovaní odpovede' });
     }
