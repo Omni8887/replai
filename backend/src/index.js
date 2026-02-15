@@ -364,6 +364,17 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       const dateObj = new Date(date);
       const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
       
+// Pošli potvrdzujúci email
+try {
+  await sendBookingCreatedEmail({
+    ...booking,
+    booking_locations: { name: location.name, address: location.address },
+    booking_services: { name: serviceData.name, price: serviceData.price }
+  });
+} catch (emailErr) {
+  console.error('Email error:', emailErr);
+}
+
       return {
         success: true,
         booking: {
