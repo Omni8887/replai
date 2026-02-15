@@ -181,11 +181,11 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       const maxAdvanceDays = settings?.max_advance_days || 30;
       
       const { data: hours } = await supabase
-        .from('booking_hours')
+        .from('booking_working_hours')
         .select('*')
         .eq('location_id', toolInput.location_id);
       
-      const openDays = new Set((hours || []).filter(h => h.is_open).map(h => h.day_of_week));
+      const openDays = new Set((hours || []).filter(h => !h.is_closed).map(h => h.day_of_week));
       
       const availableDays = [];
       const now = new Date();
@@ -217,13 +217,13 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       const dayOfWeek = dateObj.getDay();
       
       const { data: hours } = await supabase
-        .from('booking_hours')
+        .from('booking_working_hours')
         .select('*')
         .eq('location_id', toolInput.location_id)
         .eq('day_of_week', dayOfWeek)
         .maybeSingle();
       
-      if (!hours || !hours.is_open) {
+      if (!hours || hours.is_closed) {
         return { message: 'V tento deň je prevádzka zatvorená.' };
       }
       
@@ -237,12 +237,12 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       const { data: existingBookings } = await supabase
         .from('bookings')
-        .select('time')
+        .select('booking_time')
         .eq('location_id', toolInput.location_id)
-        .eq('date', toolInput.date)
+        .eq('booking_date', toolInput.date)
         .in('status', ['pending', 'confirmed']);
       
-      const bookedTimes = new Set((existingBookings || []).map(b => b.time));
+      const bookedTimes = new Set((existingBookings || []).map(b => b.booking_time));
       
       const slots = [];
       const [openH, openM] = hours.open_time.split(':').map(Number);
