@@ -289,10 +289,8 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         return { error: 'Tento termín je už obsadený. Vyberte iný čas.' };
       }
       
-      // Nájdi service - môže byť ID alebo názov
+      // Nájdi service
       let serviceData = null;
-      
-      // Skús najprv ako UUID
       const { data: serviceById } = await supabase
         .from('booking_services')
         .select('id, name, price')
@@ -302,7 +300,6 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       if (serviceById) {
         serviceData = serviceById;
       } else {
-        // Skús hľadať podľa názvu
         const { data: serviceByName } = await supabase
           .from('booking_services')
           .select('id, name, price')
@@ -336,7 +333,7 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       const bookingNumber = `FB-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
       
-      // Vytvor rezerváciu - LEN stĺpce ktoré existujú
+      // Vytvor rezerváciu
       const { data: booking, error } = await supabase
         .from('bookings')
         .insert({
@@ -361,20 +358,27 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         return { error: 'Nepodarilo sa vytvoriť rezerváciu: ' + error.message };
       }
       
+      // Priprav dáta pre response a email
       const dateObj = new Date(date);
       const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+      const formattedDate = `${dayNames[dateObj.getDay()]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
       
-// Pošli potvrdzujúci email
-try {
-  await sendBookingCreatedEmail({
-    ...booking,
-    booking_locations: { name: location.name, address: location.address },
-    booking_services: { name: serviceData.name, price: serviceData.price }
-  });
-} catch (emailErr) {
-  console.error('Email error:', emailErr);
-}
-
+      // Pošli potvrdzujúci email
+      try {
+        await sendBookingCreatedEmail({
+          booking_number: bookingNumber,
+          customer_name: customer_name,
+          customer_email: customer_email,
+          booking_date: date,
+          booking_time: time,
+          booking_locations: { name: location.name, address: location.address },
+          booking_services: { name: serviceData.name, price: serviceData.price }
+        });
+        console.log('📧 Booking email sent to:', customer_email);
+      } catch (emailErr) {
+        console.error('Email error:', emailErr);
+      }
+      
       return {
         success: true,
         booking: {
@@ -383,7 +387,7 @@ try {
           price: serviceData.price,
           location: location.name,
           address: location.address,
-          date: `${dayNames[dateObj.getDay()]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`,
+          date: formattedDate,
           time: time,
           customer_name: customer_name,
           customer_email: customer_email
