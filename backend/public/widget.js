@@ -345,19 +345,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 20px 16px;
+  padding: 12px 20px;
+  max-height: 120px;
+  overflow-y: auto;
 }
 .replai-quick-reply {
   background: white;
   border: 2px solid #7c3aed;
   color: #7c3aed;
-  padding: 10px 16px;
-  border-radius: 20px;
-  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .replai-quick-reply:hover {
   background: #7c3aed;

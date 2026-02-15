@@ -1386,28 +1386,41 @@ KRITICKÉ PRAVIDLÁ:
       }
     }
     
-    // === GENERUJ QUICK REPLIES ===
-    let quickReplies = [];
+ // === GENERUJ QUICK REPLIES ===
+ let quickReplies = [];
     
-    if (lastToolResult) {
-      const { name, data } = lastToolResult;
-      
-      if (name === 'get_booking_locations' && data.locations) {
-        quickReplies = data.locations.map(l => l.name.replace('CUBE Store - ', ''));
-      }
-      else if (name === 'get_booking_services' && data.services) {
-        quickReplies = data.services.slice(0, 4).map(s => s.name);
-      }
-      else if (name === 'get_available_days' && data.available_days) {
-        quickReplies = data.available_days.slice(0, 4).map(d => d.formatted);
-      }
-      else if (name === 'get_available_slots' && data.available_slots) {
-        quickReplies = data.available_slots.slice(0, 6).map(s => s.time);
-      }
-    }
-    
-    // Ulož quick replies pre response
-    res.quickReplies = quickReplies;
+ if (lastToolResult) {
+   const { name, data } = lastToolResult;
+   
+   if (name === 'get_booking_locations' && data.locations) {
+     // Prevádzky - krátke názvy
+     quickReplies = data.locations.map(l => l.name.replace('CUBE Store - ', ''));
+   }
+   else if (name === 'get_booking_services' && data.services) {
+     // Služby - názov + cena (max 4)
+     quickReplies = data.services.slice(0, 4).map(s => `${s.name} (${s.price}€)`);
+   }
+   else if (name === 'get_available_days' && data.available_days) {
+     // Dni - max 5
+     quickReplies = data.available_days.slice(0, 5).map(d => d.formatted);
+   }
+   else if (name === 'get_available_slots' && data.available_slots) {
+     // Časy - max 6
+     quickReplies = data.available_slots.slice(0, 6).map(s => s.time);
+   }
+   else if (name === 'create_booking' && data.success) {
+     // Po úspešnej rezervácii
+     quickReplies = [];
+   }
+ }
+ 
+ // Ak nie sú quick replies z posledného toolu, pridaj poznámkové možnosti
+ if (quickReplies.length === 0 && fullResponse.toLowerCase().includes('poznámk')) {
+   quickReplies = ['Nie, nemám poznámku', 'Áno, mám poznámku'];
+ }
+ 
+ // Ulož quick replies pre response
+ res.quickReplies = quickReplies;
     
   } else {
     // === ŠTANDARDNÝ FLOW (produkty) ===
