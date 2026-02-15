@@ -1316,18 +1316,22 @@ PREVÁDZKY:
 - "Tri Veže" / "Bajkalská" = location_id: 703f75e8-6aea-4588-86a4-139f6b9f2ca2
 - "Sport Mall" / "Vajnorská" = location_id: ded49cea-1957-48e6-b946-4932780dbe0f
 
-POSTUP:
-1. Zákazník chce servis → get_booking_locations (ak ešte nevieš prevádzku)
-2. Vie prevádzku → get_booking_services + get_available_days
-3. Vie deň → get_available_slots (POVINNÉ! nikdy nehádaj!)
-4. Vie čas → opýtaj sa na meno, email, telefón
-5. Má kontakt → create_booking
+POSTUP (dodržuj presne!):
+1. Zákazník chce servis → get_booking_locations
+2. Vyberie prevádzku → get_booking_services + get_available_days
+3. Vyberie službu a deň → get_available_slots
+4. Vyberie čas → opýtaj sa: "Máte nejakú poznámku k servisu? (napr. čo treba skontrolovať, aký máte problém)"
+5. Odpovie na poznámku (alebo povie "nie") → opýtaj sa na VŠETKY kontaktné údaje: "Pre dokončenie rezervácie potrebujem vaše meno, email a telefónne číslo."
+6. Dá kontakt → SKONTROLUJ či máš všetky 3 údaje (meno, email, telefón). Ak chýba email alebo telefón, DOPÝTAJ SA!
+7. Máš všetko → create_booking (nezabudni poslať note ak zákazník niečo napísal)
 
-KRITICKÉ:
-- Keď zákazník povie DEŇ alebo DÁTUM, IHNEĎ zavolaj get_available_slots!
+KRITICKÉ PRAVIDLÁ:
+- VŽDY sa opýtaj na poznámku pred kontaktnými údajmi
+- VŽDY vyžaduj VŠETKY 3: meno, email, telefón - ak niečo chýba, dopýtaj sa!
+- Keď zákazník povie DEŇ alebo DÁTUM, IHNEĎ zavolaj get_available_slots
 - Dátum VŽDY preveď na formát YYYY-MM-DD (napr. "18.2." = "2026-02-18")
-- NIKDY nehovor že termín je/nie je voľný bez zavolania get_available_slots!
-- Ponúkaj IBA možnosti ktoré ti vrátil tool
+- NIKDY nehovor že termín je/nie je voľný bez zavolania get_available_slots
+- Pri create_booking použi parameter "note" pre poznámku zákazníka
 `;
     
     let claudeMessages = [...messages];
