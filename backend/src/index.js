@@ -1306,7 +1306,6 @@ try {
     console.log('🔧 Booking mode - using tools');
     
     const bookingInstructions = `
-
 REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
 
 DNEŠNÝ DÁTUM: ${now.toISOString().split('T')[0]} (${days[now.getDay()]})
@@ -1337,6 +1336,7 @@ KRITICKÉ PRAVIDLÁ:
     let claudeMessages = [...messages];
     let iterations = 0;
     const maxIterations = 6;
+    let lastToolResult = null; // Pre quick replies
     
     while (iterations < maxIterations) {
       iterations++;
@@ -1367,6 +1367,10 @@ KRITICKÉ PRAVIDLÁ:
         for (const toolUse of toolUseBlocks) {
           const result = await handleBookingTool(toolUse.name, toolUse.input, client.id);
           console.log(`📥 ${toolUse.name} result:`, JSON.stringify(result).substring(0, 100));
+          
+          // Ulož posledný výsledok pre quick replies
+          lastToolResult = { name: toolUse.name, data: result };
+          
           toolResults.push({
             type: 'tool_result',
             tool_use_id: toolUse.id,
@@ -1381,6 +1385,29 @@ KRITICKÉ PRAVIDLÁ:
         break;
       }
     }
+    
+    // === GENERUJ QUICK REPLIES ===
+    let quickReplies = [];
+    
+    if (lastToolResult) {
+      const { name, data } = lastToolResult;
+      
+      if (name === 'get_booking_locations' && data.locations) {
+        quickReplies = data.locations.map(l => l.name.replace('CUBE Store - ', ''));
+      }
+      else if (name === 'get_booking_services' && data.services) {
+        quickReplies = data.services.slice(0, 4).map(s => s.name);
+      }
+      else if (name === 'get_available_days' && data.available_days) {
+        quickReplies = data.available_days.slice(0, 4).map(d => d.formatted);
+      }
+      else if (name === 'get_available_slots' && data.available_slots) {
+        quickReplies = data.available_slots.slice(0, 6).map(s => s.time);
+      }
+    }
+    
+    // Ulož quick replies pre response
+    res.quickReplies = quickReplies;
     
   } else {
     // === ŠTANDARDNÝ FLOW (produkty) ===
@@ -1466,22 +1493,27 @@ KRITICKÉ PRAVIDLÁ:
     .update({ messages_this_month: clientData.messages_this_month + 1 })
     .eq('id', client.id);
 
-  // Simulovaný streaming
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+// Simulovaný streaming
+res.setHeader('Content-Type', 'text/event-stream');
+res.setHeader('Cache-Control', 'no-cache');
+res.setHeader('Connection', 'keep-alive');
 
-  const words = fullResponse.split(/(\s+)/);
-  const chunkSize = 4;
-  
-  for (let i = 0; i < words.length; i += chunkSize) {
-    const chunk = words.slice(i, i + chunkSize).join('');
-    res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-    await new Promise(resolve => setTimeout(resolve, 35));
-  }
-  
-  res.write('data: [DONE]\n\n');
-  res.end();
+// Pošli quick replies na začiatku ak existujú
+if (res.quickReplies && res.quickReplies.length > 0) {
+  res.write(`data: ${JSON.stringify({ quickReplies: res.quickReplies })}\n\n`);
+}
+
+const words = fullResponse.split(/(\s+)/);
+const chunkSize = 4;
+
+for (let i = 0; i < words.length; i += chunkSize) {
+  const chunk = words.slice(i, i + chunkSize).join('');
+  res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+  await new Promise(resolve => setTimeout(resolve, 35));
+}
+
+res.write('data: [DONE]\n\n');
+res.end();
 
 } catch (aiError) {
       console.error('AI Error:', aiError);
