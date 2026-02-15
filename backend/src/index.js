@@ -88,9 +88,39 @@ const BOOKING_TOOLS = [
   }
 ];
 
-function isBookingRelated(message) {
-  const kw = ['servis', 'objedna', 'rezerv', 'termin', 'oprav', 'prevadzk'];
-  return kw.some(k => message.toLowerCase().includes(k));
+// Detekcia či správa súvisí s bookingom
+function isBookingRelated(message, context = []) {
+  const bookingKeywords = [
+    'servis', 'objedna', 'rezerv', 'termin', 'oprav', 
+    'prehliadka', 'udrzba', 'kontrola', 'nastavenie',
+    'prevadzk', 'otvarac', 'kedy', 'volny', 'cas',
+    'hodina', 'prines', 'donies', 'bicykel',
+    'pondelok', 'utorok', 'streda', 'stvrtok', 'piatok', 'sobota', 'nedela',
+    'zajtra', 'dnes', 'buduci', 'tento tyzden', 'rano', 'poobede',
+    'ano', 'hej', 'jasne', 'ok', 'dobre', 'super', 'fajn',
+    'tri veze', 'sport mall', 'bajkalska', 'vajnorska'
+  ];
+  
+  const msgLower = message.toLowerCase();
+  
+  // Kontroluj aktuálnu správu
+  if (bookingKeywords.some(kw => msgLower.includes(kw))) {
+    return true;
+  }
+  
+  // Kontroluj či predchádzajúca ASSISTANT správa bola o bookingu
+  if (context.length > 0) {
+    const lastAssistant = [...context].reverse().find(m => m.role === 'assistant');
+    if (lastAssistant) {
+      const assistantMsg = lastAssistant.content.toLowerCase();
+      const bookingIndicators = ['prevádzk', 'servis', 'termín', 'rezerv', 'ktorá', 'kedy', 'vyhovoval'];
+      if (bookingIndicators.some(kw => assistantMsg.includes(kw))) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
 }
 
 // BOOKING TOOL HANDLER
@@ -1208,7 +1238,7 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
     // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
 // === ODPOVEĎ S BOOKING TOOLS ===
 try {
-  const useBookingTools = isBookingRelated(message);
+  const useBookingTools = isBookingRelated(message, context);
   let fullResponse = '';
   let inputTokens = 0;
   let outputTokens = 0;
