@@ -192,7 +192,7 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       const minDate = new Date(now.getTime() + minAdvanceHours * 60 * 60 * 1000);
       const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
       
-      for (let i = 0; i < maxAdvanceDays && availableDays.length < 10; i++) {
+      for (let i = 0; i < maxAdvanceDays && availableDays.length < 7; i++) {
         const date = new Date(now);
         date.setDate(date.getDate() + i);
         
@@ -1387,32 +1387,35 @@ KRITICKÉ PRAVIDLÁ:
     }
     
  // === GENERUJ QUICK REPLIES ===
- let quickReplies = [];
+    let quickReplies = [];
     
- if (lastToolResult) {
-   const { name, data } = lastToolResult;
-   
-   if (name === 'get_booking_locations' && data.locations) {
-     // Prevádzky - krátke názvy
-     quickReplies = data.locations.map(l => l.name.replace('CUBE Store - ', ''));
-   }
-   else if (name === 'get_booking_services' && data.services) {
-     // Služby - názov + cena (max 4)
-     quickReplies = data.services.slice(0, 4).map(s => `${s.name} (${s.price}€)`);
-   }
-   else if (name === 'get_available_days' && data.available_days) {
-     // Dni - max 5
-     quickReplies = data.available_days.slice(0, 5).map(d => d.formatted);
-   }
-   else if (name === 'get_available_slots' && data.available_slots) {
-     // Časy - max 6
-     quickReplies = data.available_slots.slice(0, 6).map(s => s.time);
-   }
-   else if (name === 'create_booking' && data.success) {
-     // Po úspešnej rezervácii
-     quickReplies = [];
-   }
- }
+    if (lastToolResult) {
+      const { name, data } = lastToolResult;
+      
+      if (name === 'get_booking_locations' && data.locations) {
+        quickReplies = data.locations.map(l => l.name.replace('CUBE Store - ', ''));
+      }
+      else if (name === 'get_booking_services' && data.services) {
+        quickReplies = data.services.slice(0, 4).map(s => `${s.name} (${s.price}€)`);
+      }
+      else if (name === 'get_available_days' && data.available_days) {
+        // Max 5 dní (cca týždeň pracovných)
+        quickReplies = data.available_days.slice(0, 5).map(d => d.formatted);
+      }
+      else if (name === 'get_available_slots' && data.available_slots) {
+        // Všetky časy (max 10)
+        quickReplies = data.available_slots.slice(0, 10).map(s => s.time);
+      }
+      else if (name === 'create_booking' && data.success) {
+        quickReplies = [];
+      }
+    }
+    
+    if (quickReplies.length === 0 && fullResponse.toLowerCase().includes('poznámk')) {
+      quickReplies = ['Nie, nemám poznámku', 'Áno, mám poznámku'];
+    }
+    
+    res.quickReplies = quickReplies;
  
  // Ak nie sú quick replies z posledného toolu, pridaj poznámkové možnosti
  if (quickReplies.length === 0 && fullResponse.toLowerCase().includes('poznámk')) {
