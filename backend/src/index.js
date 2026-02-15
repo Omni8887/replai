@@ -1412,18 +1412,12 @@ KRITICKÉ PRAVIDLÁ:
     }
     
     if (quickReplies.length === 0 && fullResponse.toLowerCase().includes('poznámk')) {
-      quickReplies = ['Nie, nemám poznámku', 'Áno, mám poznámku'];
+      quickReplies = ['Nemám', 'Áno, napíšem'];
     }
     
     res.quickReplies = quickReplies;
  
- // Ak nie sú quick replies z posledného toolu, pridaj poznámkové možnosti
- if (quickReplies.length === 0 && fullResponse.toLowerCase().includes('poznámk')) {
-   quickReplies = ['Nie, nemám poznámku', 'Áno, mám poznámku'];
- }
  
- // Ulož quick replies pre response
- res.quickReplies = quickReplies;
     
   } else {
     // === ŠTANDARDNÝ FLOW (produkty) ===
