@@ -35,59 +35,62 @@ const anthropic = new Anthropic({
 const BOOKING_TOOLS = [
   {
     name: "get_booking_locations",
-    description: "Získa zoznam prevádzok kde je možné objednať servis bicykla.",
+    description: "Získa zoznam prevádzok s ich ID. VŽDY zavolaj ako prvé keď zákazník chce servis. Vráti location_id ktoré potrebuješ pre ďalšie nástroje.",
     input_schema: { type: "object", properties: {}, required: [] }
   },
   {
     name: "get_booking_services", 
-    description: "Získa služby pre prevádzku.",
+    description: "Získa zoznam servisných služieb s cenami pre danú prevádzku. Zavolaj po tom čo zákazník vyberie prevádzku.",
     input_schema: { 
       type: "object", 
-      properties: { location_id: { type: "string" } }, 
+      properties: { 
+        location_id: { type: "string", description: "UUID prevádzky z get_booking_locations" } 
+      }, 
       required: ["location_id"] 
     }
   },
   {
     name: "get_available_days",
-    description: "Získa dostupné dni pre rezerváciu.",
+    description: "Získa zoznam dostupných dní pre rezerváciu. Vráti dátumy vo formáte YYYY-MM-DD.",
     input_schema: { 
       type: "object", 
-      properties: { location_id: { type: "string" } }, 
+      properties: { 
+        location_id: { type: "string", description: "UUID prevádzky" } 
+      }, 
       required: ["location_id"] 
     }
   },
   {
     name: "get_available_slots",
-    description: "Získa voľné časy pre deň.",
+    description: "KRITICKÉ: Získa voľné časové sloty pre konkrétny deň. VŽDY zavolaj tento nástroj keď zákazník spomenie konkrétny dátum alebo deň (napr. 'zajtra', 'utorok', '18.2.'). Parameter date MUSÍ byť vo formáte YYYY-MM-DD.",
     input_schema: { 
       type: "object", 
       properties: { 
-        location_id: { type: "string" }, 
-        date: { type: "string" } 
+        location_id: { type: "string", description: "UUID prevádzky" },
+        date: { type: "string", description: "Dátum vo formáte YYYY-MM-DD (napr. 2026-02-18)" }
       }, 
       required: ["location_id", "date"] 
     }
   },
   {
     name: "create_booking",
-    description: "Vytvorí rezerváciu.",
+    description: "Vytvorí rezerváciu servisu. Zavolaj AŽ keď máš všetky údaje: location_id, service_id, date, time a kontaktné údaje zákazníka.",
     input_schema: { 
       type: "object", 
       properties: { 
-        location_id: { type: "string" },
-        service_id: { type: "string" },
-        date: { type: "string" },
-        time: { type: "string" },
-        customer_name: { type: "string" },
-        customer_email: { type: "string" },
-        customer_phone: { type: "string" },
-        note: { type: "string" }
+        location_id: { type: "string", description: "UUID prevádzky" },
+        service_id: { type: "string", description: "UUID služby z get_booking_services" },
+        date: { type: "string", description: "Dátum vo formáte YYYY-MM-DD" },
+        time: { type: "string", description: "Čas vo formáte HH:MM (napr. 10:00)" },
+        customer_name: { type: "string", description: "Meno zákazníka" },
+        customer_email: { type: "string", description: "Email zákazníka" },
+        customer_phone: { type: "string", description: "Telefón zákazníka" },
+        note: { type: "string", description: "Poznámka (voliteľné)" }
       }, 
       required: ["location_id", "service_id", "date", "time", "customer_name", "customer_email", "customer_phone"] 
     }
   }
 ];
-
 // Detekcia či správa súvisí s bookingom
 function isBookingRelated(message, context = []) {
   const bookingKeywords = [
@@ -1261,30 +1264,26 @@ try {
     const bookingInstructions = `
 
 REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
-DNEŠNÝ DÁTUM: ${new Date().toISOString().split('T')[0]} (${days[now.getDay()]})
 
-Máš nástroje pre rezerváciu servisu. VŽDY ich používaj!
+DNEŠNÝ DÁTUM: ${now.toISOString().split('T')[0]} (${days[now.getDay()]})
+Zajtra: ${new Date(now.getTime() + 24*60*60*1000).toISOString().split('T')[0]}
 
-NÁSTROJE:
-- get_booking_locations: Získa prevádzky (volaj ako prvé)
-- get_booking_services: Získa služby pre prevádzku (potrebuješ location_id)
-- get_available_days: Získa dostupné dni (potrebuješ location_id)
-- get_available_slots: Získa voľné časy pre DEŇ (potrebuješ location_id a date vo formáte YYYY-MM-DD)
-- create_booking: Vytvorí rezerváciu (až keď máš VŠETKO)
+PREVÁDZKY:
+- "Tri Veže" / "Bajkalská" = location_id: 703f75e8-6aea-4588-86a4-139f6b9f2ca2
+- "Sport Mall" / "Vajnorská" = location_id: ded49cea-1957-48e6-b946-4932780dbe0f
 
 POSTUP:
-1. Zákazník chce servis → zavolaj get_booking_locations
-2. Vyberie prevádzku → zavolaj get_booking_services a get_available_days
-3. Vyberie službu a deň → zavolaj get_available_slots s dátumom vo formáte YYYY-MM-DD
-4. Vyberie čas → opýtaj sa na meno, email a telefón
-5. Dá kontakt → zavolaj create_booking
+1. Zákazník chce servis → get_booking_locations (ak ešte nevieš prevádzku)
+2. Vie prevádzku → get_booking_services + get_available_days
+3. Vie deň → get_available_slots (POVINNÉ! nikdy nehádaj!)
+4. Vie čas → opýtaj sa na meno, email, telefón
+5. Má kontakt → create_booking
 
-KRITICKÉ PRAVIDLÁ:
-- Keď zákazník povie dátum (napr. "17.2", "zajtra", "utorok"), VŽDY ho preveď na YYYY-MM-DD formát a zavolaj get_available_slots
-- NIKDY nehádaj či je termín voľný - VŽDY použi tool!
-- Ponúkaj konkrétne možnosti zo zoznamu ktorý ti vráti tool
-- location_id pre "Tri Veže" je "703f75e8-6aea-4588-86a4-139f6b9f2ca2"
-- location_id pre "Sport Mall" je "ded49cea-1957-48e6-b946-4932780dbe0f"
+KRITICKÉ:
+- Keď zákazník povie DEŇ alebo DÁTUM, IHNEĎ zavolaj get_available_slots!
+- Dátum VŽDY preveď na formát YYYY-MM-DD (napr. "18.2." = "2026-02-18")
+- NIKDY nehovor že termín je/nie je voľný bez zavolania get_available_slots!
+- Ponúkaj IBA možnosti ktoré ti vrátil tool
 `;
     
     let claudeMessages = [...messages];
