@@ -1302,9 +1302,9 @@
     if (!state.selectedLocation) return;
     try {
       const year = state.currentMonth.getFullYear();
-      const month = state.currentMonth.getMonth() + 1;
+      const month = String(state.currentMonth.getMonth() + 1).padStart(2, "0");
       const res = await fetch(
-        `${API_URL}/public/booking/availability/days?client_id=${CLIENT_ID}&location=${state.selectedLocation.code}&year=${year}&month=${month}`
+        `${API_URL}/public/booking/availability/days?client_id=${CLIENT_ID}&location=${state.selectedLocation.code}&month=${year}-${month}`
       );
       const data = await res.json();
       state.availableDays = Array.isArray(data) ? data : (data.days || []);

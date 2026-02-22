@@ -156,7 +156,7 @@
 
   <p>Toto je testovacia landing page pre booking widget.<br>Kliknite na tlačidlo nižšie a widget sa otvorí.</p>
 
-  <button class="btn" id="openWidget">
+  <button class="btn" data-fenix-booking>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2"/>
       <line x1="16" y1="2" x2="16" y2="6"/>
@@ -169,26 +169,16 @@
   <div class="note">Powered by Replai · booking-widget.js</div>
 </div>
 
+<script
+  src="https://replai-backend.onrender.com/static/booking-widget.js"
+  data-client-id="fa961f37-48c7-40a5-95d5-0bd8cdbbe5d4"
+  data-backend-url="https://replai-backend.onrender.com">
+</script>
+
 <!-- Booking widget container – widget si ho vyžaduje -->
 <div id="fenix-booking-widget"></div>
 
 <script>
-  let widgetLoaded = false;
-
-  document.getElementById('openWidget').addEventListener('click', function () {
-    if (!widgetLoaded) {
-      // Prvé kliknutie – načítaj script
-      widgetLoaded = true;
-      const script = document.createElement('script');
-      script.src = 'https://replai-backend.onrender.com/static/booking-widget.js';
-      script.setAttribute('data-client-id', 'fa961f37-48c7-40a5-95d5-0bd8cdbbe5d4');
-      script.setAttribute('data-backend-url', 'https://replai-backend.onrender.com');
-      document.body.appendChild(script);
-    } else {
-      // Ďalšie kliknutia – widget už existuje, otvor ho
-      if (typeof window.openBookingWidget === 'function') window.openBookingWidget();
-    }
-  });
 </script>
 
 </body>
