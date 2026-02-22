@@ -1674,7 +1674,7 @@
         body: JSON.stringify({
           client_id: CLIENT_ID,
           location_code: state.selectedLocation.code,
-          service_id: state.selectedService.id,
+          service_code: state.selectedService.code,
           booking_date: state.selectedDate,
           booking_time: state.selectedTime,
           customer_name: q('#fbw-name').value.trim(),
