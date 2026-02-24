@@ -1107,6 +1107,10 @@
       rentalMonth: new Date()
     };
 
+    // Skryť content počas načítania settings
+    const content = shadowRoot.querySelector('.fbw-content');
+    if (content) content.style.visibility = 'hidden';
+
     showSection(0);
     loadSettings();
 
@@ -1119,15 +1123,6 @@
     });
 
     document.body.style.overflow = 'hidden';
-  }
-
-  function closeWidget() {
-    if (!overlayEl) return;
-    overlayEl.classList.remove('visible');
-    setTimeout(() => {
-      overlayEl.style.display = 'none';
-      document.body.style.overflow = '';
-    }, 200);
   }
 
   // ─── Steps ─────────────────────────────────────────────
@@ -1248,6 +1243,7 @@
 
   // ─── API calls ─────────────────────────────────────────
   async function loadSettings() {
+    const content = shadowRoot.querySelector('.fbw-content');
     try {
       const res = await fetch(`${API_URL}/public/booking/settings?client_id=${CLIENT_ID}`);
       const data = await res.json();
@@ -1262,6 +1258,8 @@
       state.mode = 'service';
       loadLocations();
       showSection('s1');
+    } finally {
+      if (content) content.style.visibility = 'visible';
     }
   }
 
