@@ -1107,8 +1107,11 @@
       rentalMonth: new Date()
     };
 
-    showSection(0);
-    loadSettings();
+    // Skryť content - shadowRoot už existuje
+    const content = shadowRoot.querySelector('.fbw-content');
+    if (content) content.style.visibility = 'hidden';
+
+    loadSettings(); // showSection(0) zavolá loadSettings interně
 
     // Show overlay with animation
     overlayEl.style.display = 'flex';
@@ -1248,6 +1251,7 @@
 
   // ─── API calls ─────────────────────────────────────────
   async function loadSettings() {
+    const content = shadowRoot.querySelector('.fbw-content');
     try {
       const res = await fetch(`${API_URL}/public/booking/settings?client_id=${CLIENT_ID}`);
       const data = await res.json();
@@ -1256,12 +1260,16 @@
         state.mode = 'service';
         loadLocations();
         showSection('s1');
+      } else {
+        showSection(0);
       }
     } catch (err) {
       state.rental_enabled = false;
       state.mode = 'service';
       loadLocations();
       showSection('s1');
+    } finally {
+      if (content) content.style.visibility = 'visible';
     }
   }
 
