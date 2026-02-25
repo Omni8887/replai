@@ -17,6 +17,7 @@ import VerifyEmail from './pages/VerifyEmail.jsx'
 import SuperAdmin from './pages/SuperAdmin.jsx'
 import Bookings from './pages/Bookings.jsx'
 import RentalBookings from './pages/RentalBookings.jsx'
+import Services from './pages/Services.jsx'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -51,6 +52,7 @@ function App() {
           <Route path="superadmin" element={<SuperAdmin />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="rental" element={<RentalBookings />} />
+          <Route path="services" element={<Services />} />
         </Route>
       </Routes>
     </AuthProvider>

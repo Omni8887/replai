@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
@@ -42,6 +42,7 @@ export default function Layout() {
     { to: '/usage', label: 'Spotreba', icon: Coins, adminOnly: true },
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
+    { to: '/services', label: 'Cenník', icon: Wrench },
   ]
 
   return (
