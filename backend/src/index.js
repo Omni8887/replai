@@ -4073,11 +4073,11 @@ app.post('/bookings/services', authMiddleware, async (req, res) => {
 app.put('/bookings/services/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, price_type, duration_minutes, sort_order, is_active } = req.body;
-    
-    const { data, error } = await supabase
+    const { code, name, description, price, price_type, duration_minutes, sort_order, is_active } = req.body;
+
+const { data, error } = await supabase
       .from('booking_services')
-      .update({ name, description, price, price_type, duration_minutes, sort_order, is_active })
+      .update({ code, name, description, price, price_type, duration_minutes, sort_order, is_active })
       .eq('id', id)
       .eq('client_id', req.clientId)
       .select()
