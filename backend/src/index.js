@@ -4092,6 +4092,26 @@ app.put('/bookings/services/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// DELETE /bookings/services/:id - Zmazať službu
+app.delete('/bookings/services/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { error } = await supabase
+      .from('booking_services')
+      .delete()
+      .eq('id', id)
+      .eq('client_id', req.clientId);
+    
+    if (error) throw error;
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete service error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ============================================
 // WORKING HOURS
 // ============================================
