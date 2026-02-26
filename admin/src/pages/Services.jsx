@@ -505,7 +505,7 @@ export default function Services() {
 
       {/* Add/Edit Modal */}
       {modal && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-overlay" onMouseDown={e => { if (e.target === e.currentTarget) closeModal() }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <span className="modal-title">{modal === 'add' ? 'Pridať službu' : 'Upraviť službu'}</span>
