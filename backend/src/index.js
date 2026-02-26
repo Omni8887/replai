@@ -4092,11 +4092,18 @@ app.put('/bookings/services/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /bookings/services/:id - Zmazať službu
 app.delete('/bookings/services/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     
+    // Najskôr odstráň prepojenie v bookings
+    await supabase
+      .from('bookings')
+      .update({ service_id: null })
+      .eq('service_id', id)
+      .eq('client_id', req.clientId);
+    
+    // Potom vymaž službu
     const { error } = await supabase
       .from('booking_services')
       .delete()
