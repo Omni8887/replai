@@ -798,12 +798,9 @@ export default function Bookings() {
               <div className="form-field">
                 <label>Stav</label>
                 <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                  <option value="pending">Čakajúce</option>
-                  <option value="confirmed">Potvrdené</option>
-                  <option value="in_progress">Prebieha</option>
-                  <option value="completed">Dokončené</option>
-                  <option value="cancelled">Zrušené</option>
-                </select>
+  <option value="pending">Čakajúce</option>
+  <option value="completed">Dokončené</option>
+</select>
               </div>
               <div className="form-field">
                 <label>Finálna cena (€)</label>
