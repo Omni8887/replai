@@ -9,6 +9,7 @@ const emptyForm = {
   name: '',
   description: '',
   price: '',
+  price_type: 'fixed',
   duration_minutes: 60,
   sort_order: 0
 }
@@ -104,6 +105,7 @@ export default function Services() {
       name: svc.name || '',
       description: svc.description || '',
       price: svc.price ?? '',
+      price_type: svc.price_type || 'fixed',
       duration_minutes: svc.duration_minutes || 60,
       sort_order: svc.sort_order || 0
     })
@@ -130,6 +132,7 @@ export default function Services() {
         await axios.post(`${API_URL}/bookings/services`, {
           ...form,
           price: parseFloat(form.price),
+          price_type: form.price_type || 'fixed',
           duration_minutes: parseInt(form.duration_minutes),
           sort_order: parseInt(form.sort_order)
         }, { headers: { Authorization: `Bearer ${token}` } })
@@ -137,6 +140,7 @@ export default function Services() {
         await axios.put(`${API_URL}/bookings/services/${editId}`, {
           ...form,
           price: parseFloat(form.price),
+          price_type: form.price_type || 'fixed',
           duration_minutes: parseInt(form.duration_minutes),
           sort_order: parseInt(form.sort_order)
         }, { headers: { Authorization: `Bearer ${token}` } })
@@ -915,7 +919,7 @@ export default function Services() {
                       {svc.description && <div className="svc-desc">{svc.description}</div>}
                     </td>
                     <td><span className="svc-code">{svc.code}</span></td>
-                    <td><span className="price">{svc.price} €</span></td>
+                    <td><span className="price">{svc.price} €{svc.price_type === 'hourly' ? '/hod' : ''}</span></td>
                     <td><span className="duration">{svc.duration_minutes} min</span></td>
                     <td>
                       <span
@@ -1118,6 +1122,18 @@ export default function Services() {
                   />
                 </div>
                 <div className="form-field">
+                  <label>Typ ceny</label>
+                  <select
+                    value={form.price_type || 'fixed'}
+                    onChange={e => setForm({...form, price_type: e.target.value})}
+                  >
+                    <option value="fixed">Fixná</option>
+                    <option value="hourly">Za hodinu</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-field">
                   <label>Trvanie (min)</label>
                   <input
                     type="number"
@@ -1127,16 +1143,16 @@ export default function Services() {
                     placeholder="60"
                   />
                 </div>
-              </div>
-              <div className="form-field">
-                <label>Poradie zoradenia</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.sort_order}
-                  onChange={e => setForm({...form, sort_order: e.target.value})}
-                  placeholder="0"
-                />
+                <div className="form-field">
+                  <label>Poradie zoradenia</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.sort_order}
+                    onChange={e => setForm({...form, sort_order: e.target.value})}
+                    placeholder="0"
+                  />
+                </div>
               </div>
             </div>
             <div className="modal-footer">
