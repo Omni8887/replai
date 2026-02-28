@@ -1658,15 +1658,13 @@
         <div class="fbw-times">
           <div class="fbw-availability-info">
             <div class="fbw-info-card">
-              <div class="fbw-info-icon">🕐</div>
-              <div class="fbw-info-text">
+            <div class="fbw-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>              <div class="fbw-info-text">
                 <strong>Otváracie hodiny</strong>
                 <span>${openTime} – ${closeTime}</span>
               </div>
             </div>
             <div class="fbw-info-card">
-              <div class="fbw-info-icon">🔧</div>
-              <div class="fbw-info-text">
+            <div class="fbw-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div>              <div class="fbw-info-text">
                 <strong>Voľná kapacita</strong>
                 <span>${spotsLeft > 1 ? 'Dostupný' : 'Posledné voľné miesto!'}</span>              </div>
             </div>
