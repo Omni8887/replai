@@ -769,17 +769,7 @@ export default function Bookings() {
               <div className="detail-item"><span className="detail-label">Poznámky</span><span className="detail-value">{detailModal.admin_notes || '–'}</span></div>
             </div>
             <div className="modal-footer">
-              <div className="contact-actions">
-                <select className="filter-select" value={contactTemplate} onChange={e => setContactTemplate(e.target.value)}>
-                  <option value="ready">Servis hotový</option>
-                  <option value="approval">Potrebujeme schválenie</option>
-                  <option value="reminder">Pripomienka termínu</option>
-                  <option value="parts">Čakáme na diely</option>
-                  <option value="custom">Vlastná správa</option>
-                </select>
-                <button className="btn btn-primary" onClick={contactCustomer}>Poslať email</button>
-                <button className="btn btn-ghost" onClick={callCustomer}>Zavolať</button>
-              </div>
+              <div></div>
               <button className="btn btn-ghost" onClick={() => setDetailModal(null)}>Zavrieť</button>
             </div>
           </div>
