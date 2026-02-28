@@ -1363,7 +1363,7 @@
            data-svc-id="${svc.id}">
         <div class="fbw-list-item-info">
           <div class="fbw-list-item-name">${svc.name}</div>
-          <div class="fbw-list-item-meta">${svc.duration || 60} min</div>
+          <div class="fbw-list-item-meta">${svc.description || ''}</div>
         </div>
         <div class="fbw-list-item-price">${svc.price}€${svc.price_type === 'hourly' ? '/hod' : ''}</div>
       </div>
