@@ -3443,7 +3443,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-          <div style="background: #111111; padding: 30px; text-align: center;">
+        <div style="background: #1a1a1a; padding: 30px; text-align: center;">
             <img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height: 80px;" />
           </div>
           
@@ -3972,7 +3972,7 @@ async function sendBookingCreatedEmail(booking) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-          <div style="background: #111111; padding: 30px; text-align: center;">
+        <div style="background: #1a1a1a; padding: 30px; text-align: center;">
             <img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height: 80px;" />
           </div>
           
@@ -4422,7 +4422,7 @@ async function sendRentalBookingEmail(booking) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
           <!-- Header -->
-          <div style="background: #111111; padding: 30px; text-align: center;">
+          <div style="background: #1a1a1a; padding: 30px; text-align: center;">
             <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
               <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
             </div>
