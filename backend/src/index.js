@@ -345,7 +345,7 @@ async function handleBookingTool(toolName, toolInput, clientId) {
           customer_email: customer_email,
           customer_phone: customer_phone,
           booking_date: date,
-          booking_time: time,
+          booking_time: booking_time || '00:00',
           problem_description: note || null,
           estimated_price: serviceData.price,
           status: 'pending'
@@ -3581,10 +3581,10 @@ app.get('/public/booking/availability/days', async (req, res) => {
       return res.status(400).json({ error: 'client_id, location and month required' });
     }
     
-    // Získaj location
+    // Získaj location vrátane daily_capacity
     const { data: loc } = await supabase
       .from('booking_locations')
-      .select('id')
+      .select('id, daily_capacity')
       .eq('client_id', client_id)
       .eq('code', location)
       .single();
@@ -3593,24 +3593,25 @@ app.get('/public/booking/availability/days', async (req, res) => {
       return res.status(400).json({ error: 'Invalid location' });
     }
     
-    // Získaj settings (max per day)
-    const { data: settings } = await supabase
-      .from('booking_settings')
-      .select('max_bookings_per_day')
-      .eq('client_id', client_id)
-      .single();
-    
-    const maxPerDay = settings?.max_bookings_per_day || 2;
+    const maxPerDay = loc.daily_capacity || 2;
     
     // Získaj working hours
     const { data: workingHours } = await supabase
       .from('booking_working_hours')
-      .select('day_of_week, is_closed')
+      .select('day_of_week, is_closed, open_time, close_time')
       .eq('location_id', loc.id);
     
     const closedDays = (workingHours || [])
       .filter(w => w.is_closed)
       .map(w => w.day_of_week);
+    
+    // Mapa otváracích hodín podľa dňa
+    const hoursMap = {};
+    (workingHours || []).forEach(w => {
+      if (!w.is_closed) {
+        hoursMap[w.day_of_week] = { open: w.open_time?.substring(0, 5), close: w.close_time?.substring(0, 5) };
+      }
+    });
     
     // Získaj blokované dni
     const { data: blocked } = await supabase
@@ -3653,14 +3654,24 @@ app.get('/public/booking/availability/days', async (req, res) => {
       const date = new Date(dateStr);
       const dayOfWeek = date.getDay();
       const dayBookings = bookingsPerDay[dateStr] || 0;
+      const spotsLeft = maxPerDay - dayBookings;
+      const hours = hoursMap[dayOfWeek] || null;
       
       const available = 
         dateStr >= today &&
         !closedDays.includes(dayOfWeek) &&
         !blockedDates.includes(dateStr) &&
-        dayBookings < maxPerDay;  // Max 2 na deň
+        dayBookings < maxPerDay;
       
-      days.push({ date: dateStr, available, bookings: dayBookings });
+      days.push({ 
+        date: dateStr, 
+        available, 
+        bookings: dayBookings,
+        spots_left: available ? spotsLeft : 0,
+        max_capacity: maxPerDay,
+        open_time: hours?.open || null,
+        close_time: hours?.close || null
+      });
     }
     
     res.json({ days });
@@ -3778,7 +3789,7 @@ app.post('/public/booking', async (req, res) => {
       conversation_id
     } = req.body;
     
-    if (!client_id || !location_code || !service_code || !customer_name || !customer_email || !customer_phone || !booking_date || !booking_time) {
+    if (!client_id || !location_code || !service_code || !customer_name || !customer_email || !customer_phone || !booking_date) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
@@ -3807,13 +3818,14 @@ app.post('/public/booking', async (req, res) => {
     }
     
     // Skontroluj max rezervácií na deň pre danú prevádzku
-    const { data: settings } = await supabase
-      .from('booking_settings')
-      .select('max_bookings_per_day')
-      .eq('client_id', client_id)
-      .single();
-    
-    const maxPerDay = settings?.max_bookings_per_day || 2;
+  // Získaj kapacitu z location
+  const { data: locData } = await supabase
+  .from('booking_locations')
+  .select('daily_capacity')
+  .eq('id', loc.id)
+  .single();
+
+const maxPerDay = locData?.daily_capacity || 2;
     
     const { data: existingBookings } = await supabase
       .from('bookings')

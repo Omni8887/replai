@@ -803,6 +803,66 @@
       animation: fbwSpin 0.8s linear infinite;
       margin: 0 auto 12px;
     }
+    .fbw-availability-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .fbw-info-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #f8f8f8;
+      border-radius: 10px;
+    }
+    
+    .fbw-info-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    
+    .fbw-info-text {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .fbw-info-text strong {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+    
+    .fbw-info-text span {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+    }
+    
+    .fbw-info-note {
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      margin: 4px 0 0;
+      padding: 8px;
+      background: #f0fdf4;
+      border-radius: 8px;
+      border: 1px solid #dcfce7;
+    }
+    
+    .fbw-last-spot {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 9px;
+      color: #f59e0b;
+      font-weight: 700;
+    }
+    
+    .fbw-calendar-day {
+      position: relative;
+    }
   `;
 
   // ─── HTML Template ─────────────────────────────────────
@@ -1201,7 +1261,7 @@
       switch (state.step) {
         case 's1': return !!state.selectedLocation;
         case 's2': return !!state.selectedService;
-        case 's3': return !!state.selectedDate && !!state.selectedTime;
+        case 's3': return !!state.selectedDate;
         case 's4': return validateServiceForm();
         case 's5': return true;
       }
@@ -1434,12 +1494,14 @@
       const isPast = new Date(dateStr) < new Date(today.toDateString());
       const isToday = new Date(dateStr).toDateString() === today.toDateString();
       const isSelected = state.selectedDate === dateStr;
+      const spotsLeft = dayData?.spots_left || 0;
+      const maxCap = dayData?.max_capacity || 2;
       const classes = ['fbw-calendar-day',
         isToday ? 'today' : '',
         isSelected ? 'selected' : '',
         (!isAvailable || isPast) ? 'disabled' : ''
       ].filter(Boolean).join(' ');
-      html += `<div class="${classes}" data-date="${dateStr}" data-available="${isAvailable && !isPast}">${day}</div>`;
+      html += `<div class="${classes}" data-date="${dateStr}" data-available="${isAvailable && !isPast}" data-spots="${spotsLeft}" data-max="${maxCap}" data-open="${dayData?.open_time || ''}" data-close="${dayData?.close_time || ''}">${day}${(isAvailable && !isPast && spotsLeft <= 1 && spotsLeft > 0) ? '<span class="fbw-last-spot">!</span>' : ''}</div>`;
     }
 
     container.innerHTML = html;
@@ -1524,8 +1586,7 @@
     container.innerHTML = `
       <div class="fbw-summary-item"><span class="fbw-summary-label">Prevádzka</span><span class="fbw-summary-value">${loc?.name||''}</span></div>
       <div class="fbw-summary-item"><span class="fbw-summary-label">Služba</span><span class="fbw-summary-value">${svc?.name||''}</span></div>
-      <div class="fbw-summary-item"><span class="fbw-summary-label">Termín</span><span class="fbw-summary-value">${formatDate(state.selectedDate)}, ${state.selectedTime}</span></div>
-      <div class="fbw-summary-item"><span class="fbw-summary-label">Meno</span><span class="fbw-summary-value">${q('#fbw-name').value}</span></div>
+      <div class="fbw-summary-item"><span class="fbw-summary-label">Termín</span><span class="fbw-summary-value">${formatDate(state.selectedDate)}</span></div>      <div class="fbw-summary-item"><span class="fbw-summary-label">Meno</span><span class="fbw-summary-value">${q('#fbw-name').value}</span></div>
       <div class="fbw-summary-item"><span class="fbw-summary-label">Email</span><span class="fbw-summary-value">${q('#fbw-email').value}</span></div>
       <div class="fbw-summary-item"><span class="fbw-summary-label">Telefón</span><span class="fbw-summary-value">${q('#fbw-phone').value}</span></div>
       <div class="fbw-summary-item total"><span class="fbw-summary-label">Odhadovaná cena</span><span class="fbw-summary-value">${svc?.price||0}€</span></div>
@@ -1583,40 +1644,39 @@
     state.selectedDate = date;
     state.selectedTime = null;
     renderCalendar();
-    loadAvailableSlots(date);
-    updateButtons();
-  }
-
-  function selectTime(time, available) {
-    if (!available) return;
-    state.selectedTime = time;
-    renderTimes();
-    updateButtons();
-  }
-
-  function setDateMode(mode) {
-    state.selectingDate = mode;
-    q('#fbw-pickup-box').classList.toggle('active', mode === 'pickup');
-    q('#fbw-return-box').classList.toggle('active', mode === 'return');
-  }
-
-  function selectRentalDate(date, available) {
-    if (!available) return;
-    if (state.selectingDate === 'pickup') {
-      state.pickupDate = date;
-      if (state.returnDate && state.returnDate < date) state.returnDate = null;
-      state.selectingDate = 'return';
-      setDateMode('return');
-    } else {
-      if (state.pickupDate && date >= state.pickupDate) {
-        state.returnDate = date;
-      } else if (!state.pickupDate) {
-        state.pickupDate = date;
-        state.selectingDate = 'return';
-        setDateMode('return');
-      }
+    
+    // Zobraz info o otváracích hodinách namiesto time slotov
+    const dayData = state.availableDays.find(d => d.date === date);
+    const wrap = q('#fbw-times-wrap');
+    if (wrap && dayData) {
+      const spotsLeft = dayData.spots_left || 0;
+      const openTime = dayData.open_time || '';
+      const closeTime = dayData.close_time || '';
+      
+      wrap.style.display = 'block';
+      wrap.innerHTML = `
+        <div class="fbw-times">
+          <div class="fbw-availability-info">
+            <div class="fbw-info-card">
+              <div class="fbw-info-icon">🕐</div>
+              <div class="fbw-info-text">
+                <strong>Otváracie hodiny</strong>
+                <span>${openTime} – ${closeTime}</span>
+              </div>
+            </div>
+            <div class="fbw-info-card">
+              <div class="fbw-info-icon">🔧</div>
+              <div class="fbw-info-text">
+                <strong>Voľná kapacita</strong>
+                <span>${spotsLeft > 1 ? spotsLeft + ' voľné miesta' : 'Posledné voľné miesto!'}</span>
+              </div>
+            </div>
+            <p class="fbw-info-note">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
+          </div>
+        </div>
+      `;
     }
-    renderRentalCalendar();
+    
     updateButtons();
   }
 
@@ -1684,8 +1744,7 @@
           location_code: state.selectedLocation.code,
           service_code: state.selectedService.code,
           booking_date: state.selectedDate,
-          booking_time: state.selectedTime,
-          customer_name: q('#fbw-name').value.trim(),
+          booking_time: state.selectedTime || '00:00',          customer_name: q('#fbw-name').value.trim(),
           customer_email: q('#fbw-email').value.trim(),
           customer_phone: q('#fbw-phone').value.trim(),
           bike_brand: q('#fbw-bike-brand').value.trim(),
