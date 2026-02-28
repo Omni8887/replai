@@ -4498,7 +4498,89 @@ app.put('/rental/bookings/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// ============================================
+// BLOCKED SLOTS CRUD
+// ============================================
 
+// GET /bookings/locations/:id/blocked - Zoznam blokovaných dní
+app.get('/bookings/locations/:id/blocked', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data, error } = await supabase
+      .from('booking_blocked_slots')
+      .select('*')
+      .eq('location_id', id)
+      .order('blocked_date', { ascending: true });
+    
+    if (error) throw error;
+    
+    res.json(data || []);
+  } catch (error) {
+    console.error('Blocked slots error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /bookings/locations/:id/blocked - Pridať blokovaný deň
+app.post('/bookings/locations/:id/blocked', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { blocked_date, reason } = req.body;
+    
+    if (!blocked_date) {
+      return res.status(400).json({ error: 'Dátum je povinný' });
+    }
+    
+    // Skontroluj či už nie je blokovaný
+    const { data: existing } = await supabase
+      .from('booking_blocked_slots')
+      .select('id')
+      .eq('location_id', id)
+      .eq('blocked_date', blocked_date)
+      .maybeSingle();
+    
+    if (existing) {
+      return res.status(400).json({ error: 'Tento deň je už blokovaný' });
+    }
+    
+    const { data, error } = await supabase
+      .from('booking_blocked_slots')
+      .insert({
+        location_id: id,
+        blocked_date,
+        reason: reason || null
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Block day error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /bookings/locations/:locationId/blocked/:id - Odblokovať deň
+app.delete('/bookings/locations/:locationId/blocked/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { error } = await supabase
+      .from('booking_blocked_slots')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Unblock day error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
