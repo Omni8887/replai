@@ -2,6 +2,7 @@
   const currentScript = document.currentScript || document.querySelector('script[data-client-id]');
   const API_URL = currentScript?.getAttribute('data-backend-url') || 'https://replai-backend.onrender.com';
   const CLIENT_ID = currentScript?.getAttribute('data-client-id');
+  const BRAND_COLOR = currentScript?.getAttribute('data-color') || '#111111';
 
   if (!CLIENT_ID) {
     console.error('Fenix Booking Widget: Chýba data-client-id atribút');
@@ -154,7 +155,7 @@
     }
 
     .fbw-step-indicator.done {
-      background: #111;
+      background: var(--fbw-color);
     }
 
     .fbw-content {
@@ -205,13 +206,13 @@
     }
 
     .fbw-mode-card:hover {
-      border-color: #111;
-      background: #fafafa;
+      border-color: var(--fbw-color);
     }
+    
 
     .fbw-mode-card.selected {
-      border-color: #111;
-      background: #111;
+      border-color: var(--fbw-color);
+      background: var(--fbw-color);
       color: #fff;
     }
 
@@ -268,13 +269,12 @@
     }
 
     .fbw-list-item:hover {
-      border-color: #111;
-      background: #fafafa;
+      border-color: var(--fbw-color);
     }
 
     .fbw-list-item.selected {
-      border-color: #111;
-      background: #111;
+      border-color: var(--fbw-color);
+      background: var(--fbw-color);
       color: #fff;
     }
 
@@ -322,8 +322,8 @@
     }
 
     .fbw-bike-card.selected {
-      border-color: #111;
-      box-shadow: 0 0 0 2px #111;
+      border-color: var(--fbw-color);
+      box-shadow: 0 0 0 2px var(--fbw-color);
     }
 
     .fbw-bike-img {
@@ -388,8 +388,8 @@
     }
 
     .fbw-size-btn.selected {
-      background: #111;
-      border-color: #111;
+      background: var(--fbw-color);
+      border-color: var(--fbw-color);
       color: #fff;
     }
 
@@ -460,15 +460,14 @@
     }
 
     .fbw-calendar-day:hover:not(.disabled):not(.empty) {
-      background: #f0f0f0;
+      background: color-mix(in srgb, var(--fbw-color) 10%, transparent);
     }
 
     .fbw-calendar-day.today {
-      font-weight: 600;
+      border-color: var(--fbw-color);
     }
-
     .fbw-calendar-day.selected {
-      background: #111;
+      background: var(--fbw-color);
       color: #fff;
     }
 
@@ -477,17 +476,14 @@
     }
 
     .fbw-calendar-day.pickup {
-      background: #111;
+      background: var(--fbw-color);
       color: #fff;
-      border-radius: 8px 0 0 8px;
     }
 
     .fbw-calendar-day.return {
-      background: #111;
+      background: var(--fbw-color);
       color: #fff;
-      border-radius: 0 8px 8px 0;
     }
-
     .fbw-calendar-day.pickup.return {
       border-radius: 8px;
     }
@@ -571,8 +567,8 @@
     }
 
     .fbw-time.selected {
-      background: #111;
-      border-color: #111;
+      background: var(--fbw-color);
+      border-color: var(--fbw-color);
       color: #fff;
     }
 
@@ -717,12 +713,13 @@
     }
 
     .fbw-btn-next {
-      background: #111;
+      background: var(--fbw-color);
       color: #fff;
     }
 
     .fbw-btn-next:hover {
-      background: #000;
+      background: var(--fbw-color);
+      filter: brightness(0.9);
     }
 
     .fbw-btn-next:disabled {
@@ -736,14 +733,7 @@
     }
 
     .fbw-success-icon {
-      width: 64px;
-      height: 64px;
-      background: #111;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
+      background: var(--fbw-color);
     }
 
     .fbw-success-icon svg {
@@ -862,7 +852,14 @@
 
   // ─── HTML Template ─────────────────────────────────────
   const TEMPLATE = `
-    <style>${STYLES}</style>
+  <style>
+    :host {
+      --fbw-color: ${BRAND_COLOR};
+    }
+    ${STYLES}
+  </style>
+
+  <div class="fbw-overlay"
 
     <div class="fbw-overlay" id="fbw-overlay">
       <div class="fbw-modal" id="fbw-modal">
