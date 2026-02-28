@@ -859,9 +859,7 @@
     ${STYLES}
   </style>
 
-  <div class="fbw-overlay"
-
-    <div class="fbw-overlay" id="fbw-overlay">
+  <div class="fbw-overlay" id="fbw-overlay">
       <div class="fbw-modal" id="fbw-modal">
         <button class="fbw-close" id="fbw-close-btn" aria-label="Zatvoriť">
           <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12"/></svg>
