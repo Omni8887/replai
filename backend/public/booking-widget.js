@@ -1306,6 +1306,17 @@
       const res = await fetch(`${API_URL}/public/booking/settings?client_id=${CLIENT_ID}`);
       const data = await res.json();
       state.rental_enabled = data.rental_enabled || false;
+      
+      // Ak nemá data-color, stiahni z DB
+      if (!currentScript?.getAttribute('data-color')) {
+        try {
+          const colorRes = await fetch(`${API_URL}/public/booking/widget-settings?client_id=${CLIENT_ID}`);
+          const colorData = await colorRes.json();
+          if (colorData.primaryColor && colorData.primaryColor !== '#7c3aed') {
+            shadowRoot.host.style.setProperty('--fbw-color', colorData.primaryColor);
+          }
+        } catch(e) {}
+      }
       if (!state.rental_enabled) {
         state.mode = 'service';
         loadLocations();

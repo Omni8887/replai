@@ -4593,6 +4593,26 @@ app.delete('/bookings/locations/:locationId/blocked/:id', authMiddleware, async 
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// GET /public/booking/widget-settings - Farba pre booking widget
+app.get('/public/booking/widget-settings', async (req, res) => {
+  try {
+    const { client_id } = req.query;
+    if (!client_id) return res.status(400).json({ error: 'client_id required' });
+    
+    const { data: client } = await supabase
+      .from('clients')
+      .select('widget_settings')
+      .eq('id', client_id)
+      .single();
+    
+    res.json({ 
+      primaryColor: client?.widget_settings?.primaryColor || '#111111'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
