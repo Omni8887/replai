@@ -3410,6 +3410,31 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
     const locationAddress = booking.booking_locations?.address || '';
     const locationPhone = booking.booking_locations?.phone || '';
     const price = finalPrice || booking.booking_services?.price || 0;
+
+    // Získaj otváracie hodiny
+    let openingHours = '';
+    try {
+      const { data: loc } = await supabase
+        .from('booking_locations')
+        .select('id')
+        .eq('name', locationName)
+        .maybeSingle();
+      
+      if (loc) {
+        const { data: hours } = await supabase
+          .from('booking_working_hours')
+          .select('day_of_week, open_time, close_time, is_closed')
+          .eq('location_id', loc.id)
+          .order('day_of_week');
+        
+        if (hours && hours.length > 0) {
+          const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+          openingHours = hours.map(h => 
+            `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`}</td></tr>`
+          ).join('');
+        }
+      }
+    } catch(e) { console.error('Hours fetch error:', e); }
     
     await resend.emails.send({
       from: 'CUBE Store Bratislava <noreply@replai.sk>',
@@ -3418,15 +3443,10 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-          <!-- Header -->
           <div style="background: #111111; padding: 30px; text-align: center;">
-            <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
-              <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
-            </div>
-            <div style="color: #888888; font-size: 11px; margin-top: 5px; letter-spacing: 3px;">BRATISLAVA</div>
+            <img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height: 80px;" />
           </div>
           
-          <!-- Title -->
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <div style="width: 60px; height: 60px; background: #e8f5e9; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
               <span style="font-size: 28px;">✓</span>
@@ -3435,13 +3455,10 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Váš bicykel je pripravený na vyzdvihnutie</p>
           </div>
           
-          <!-- Content -->
           <div style="padding: 30px;">
             <p style="color: #333; font-size: 15px; line-height: 1.6;">Dobrý deň <strong>${booking.customer_name}</strong>,</p>
-            
             <p style="color: #333; font-size: 15px; line-height: 1.6;">váš servis bol úspešne dokončený. Bicykel si môžete vyzdvihnúť počas otváracích hodín.</p>
             
-            <!-- Booking Details -->
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 3px solid #22c55e;">
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">Detaily zákazky</h3>
               <table style="width: 100%; font-size: 14px; color: #333;">
@@ -3452,20 +3469,24 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
               ${booking.admin_notes ? `<p style="margin: 15px 0 0; padding-top: 15px; border-top: 1px solid #ddd; font-size: 14px; color: #666;"><strong>Poznámka:</strong> ${booking.admin_notes}</p>` : ''}
             </div>
             
-            <!-- Location -->
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Vyzdvihnutie</h3>
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
             </div>
+
+            ${openingHours ? `
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">🕐 Otváracie hodiny</h3>
+              <table style="width: 100%;">${openingHours}</table>
+            </div>
+            ` : ''}
             
             <p style="color: #333; font-size: 15px; line-height: 1.6;">Tešíme sa na vás!</p>
-            
             <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
           </div>
           
-          <!-- Footer -->
           <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
             <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
           </div>
@@ -3918,7 +3939,31 @@ async function sendBookingCreatedEmail(booking) {
     const locationPhone = booking.booking_locations?.phone || '';
     
     const bookingDate = booking.booking_date ? new Date(booking.booking_date).toLocaleDateString('sk-SK') : '';
-    const bookingTime = booking.booking_time || '';
+
+    // Získaj otváracie hodiny pre location
+    let openingHours = '';
+    try {
+      const { data: loc } = await supabase
+        .from('booking_locations')
+        .select('id')
+        .eq('name', locationName)
+        .maybeSingle();
+      
+      if (loc) {
+        const { data: hours } = await supabase
+          .from('booking_working_hours')
+          .select('day_of_week, open_time, close_time, is_closed')
+          .eq('location_id', loc.id)
+          .order('day_of_week');
+        
+        if (hours && hours.length > 0) {
+          const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+          openingHours = hours.map(h => 
+            `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`}</td></tr>`
+          ).join('');
+        }
+      }
+    } catch(e) { console.error('Hours fetch error:', e); }
     
     await resend.emails.send({
       from: 'CUBE Store Bratislava <noreply@replai.sk>',
@@ -3927,27 +3972,19 @@ async function sendBookingCreatedEmail(booking) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-          <!-- Header -->
           <div style="background: #111111; padding: 30px; text-align: center;">
-            <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
-              <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
-            </div>
-            <div style="color: #888888; font-size: 11px; margin-top: 5px; letter-spacing: 3px;">BRATISLAVA</div>
+            <img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height: 80px;" />
           </div>
           
-          <!-- Title -->
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia prijatá</h1>
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Ďakujeme za vašu rezerváciu</p>
           </div>
           
-          <!-- Content -->
           <div style="padding: 30px;">
             <p style="color: #333; font-size: 15px; line-height: 1.6;">Dobrý deň <strong>${booking.customer_name}</strong>,</p>
-            
             <p style="color: #333; font-size: 15px; line-height: 1.6;">vašu rezerváciu sme úspešne prijali. Nižšie nájdete všetky detaily.</p>
             
-            <!-- Booking Details -->
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 3px solid #f26522;">
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">Detaily rezervácie</h3>
               <table style="width: 100%; font-size: 14px; color: #333;">
@@ -3955,26 +3992,29 @@ async function sendBookingCreatedEmail(booking) {
                 <tr><td style="padding: 5px 0; color: #666;">Služba:</td><td style="padding: 5px 0;">${serviceName}</td></tr>
                 <tr><td style="padding: 5px 0; color: #666;">Cena od:</td><td style="padding: 5px 0; font-weight: 600;">${servicePrice}€</td></tr>
                 <tr><td style="padding: 5px 0; color: #666;">Dátum:</td><td style="padding: 5px 0;">${bookingDate}</td></tr>
-                <tr><td style="padding: 5px 0; color: #666;">Čas:</td><td style="padding: 5px 0;">${bookingTime}</td></tr>
-                ${booking.bike_brand || booking.bike_model ? `<tr><td style="padding: 5px 0; color: #666;">Bicykel:</td><td style="padding: 5px 0;">${[booking.bike_brand, booking.bike_model].filter(Boolean).join(' ')}</td></tr>` : ''}
               </table>
               ${booking.problem_description ? `<p style="margin: 15px 0 0; padding-top: 15px; border-top: 1px solid #ddd; font-size: 14px; color: #666;"><strong>Popis:</strong> ${booking.problem_description}</p>` : ''}
             </div>
             
-            <!-- Location -->
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Prevádzka</h3>
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
             </div>
+
+            ${openingHours ? `
+            <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
+              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">🕐 Otváracie hodiny</h3>
+              <table style="width: 100%;">${openingHours}</table>
+              <p style="margin: 15px 0 0; font-size: 13px; color: #888; border-top: 1px solid #eee; padding-top: 12px;">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
+            </div>
+            ` : ''}
             
             <p style="color: #888; font-size: 13px; line-height: 1.6;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
-            
             <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
           </div>
           
-          <!-- Footer -->
           <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
             <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
           </div>
