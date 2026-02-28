@@ -1365,7 +1365,7 @@
           <div class="fbw-list-item-name">${svc.name}</div>
           <div class="fbw-list-item-meta">${svc.duration || 60} min</div>
         </div>
-        <div class="fbw-list-item-price">${svc.price}€</div>
+        <div class="fbw-list-item-price">${svc.price}€${svc.price_type === 'hourly' ? '/hod' : ''}</div>
       </div>
     `).join('');
     container.querySelectorAll('.fbw-list-item').forEach(el => {
