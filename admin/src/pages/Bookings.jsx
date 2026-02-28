@@ -711,10 +711,7 @@ export default function Bookings() {
                   </td>
                   <td>{b.location_name?.replace('CUBE Store - ', '')}</td>
                   <td>{b.service_name}</td>
-                  <td>
-                    <div>{formatDate(b.booking_date)}</div>
-                    <div className="cell-meta">{b.booking_time?.substring(0, 5)}</div>
-                  </td>
+                  <td>{formatDate(b.booking_date)}</td>
                   <td><span className={`badge badge-${b.status}`}>{statusLabels[b.status]}</span></td>
                   <td>
                     <div className="actions">
@@ -761,8 +758,7 @@ export default function Bookings() {
               <div className="detail-item"><span className="detail-label">Telefón</span><span className="detail-value">{detailModal.customer_phone}</span></div>
               <div className="detail-item"><span className="detail-label">Prevádzka</span><span className="detail-value">{detailModal.location_name}</span></div>
               <div className="detail-item"><span className="detail-label">Služba</span><span className="detail-value">{detailModal.service_name}</span></div>
-              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}, {detailModal.booking_time?.substring(0, 5)}</span></div>
-              <div className="detail-item"><span className="detail-label">Popis</span><span className="detail-value">{detailModal.problem_description || '–'}</span></div>
+              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}</span></div>              <div className="detail-item"><span className="detail-label">Popis</span><span className="detail-value">{detailModal.problem_description || '–'}</span></div>
               <div className="detail-item"><span className="detail-label">Odhad ceny</span><span className="detail-value">{detailModal.estimated_price} €</span></div>
               <div className="detail-item"><span className="detail-label">Finálna cena</span><span className="detail-value">{detailModal.final_price ? `${detailModal.final_price} €` : '–'}</span></div>
               <div className="detail-item"><span className="detail-label">Stav</span><span className="detail-value"><span className={`badge badge-${detailModal.status}`}>{statusLabels[detailModal.status]}</span></span></div>
