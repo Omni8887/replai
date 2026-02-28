@@ -1668,8 +1668,7 @@
               <div class="fbw-info-icon">🔧</div>
               <div class="fbw-info-text">
                 <strong>Voľná kapacita</strong>
-                <span>${spotsLeft > 1 ? spotsLeft + ' voľné miesta' : 'Posledné voľné miesto!'}</span>
-              </div>
+                <span>${spotsLeft > 1 ? 'Dostupný' : 'Posledné voľné miesto!'}</span>              </div>
             </div>
             <p class="fbw-info-note">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
           </div>
