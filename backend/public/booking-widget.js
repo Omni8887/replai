@@ -1743,8 +1743,7 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Chyba pri odoslaní');
-      q('#fbw-booking-number').textContent = data.booking_number;
-      showSection('success');
+      q('#fbw-booking-number').textContent = data.booking?.booking_number || data.booking_number || '';      showSection('success');
     } catch (err) {
       errorDiv.textContent = err.message;
       errorDiv.style.display = 'block';
