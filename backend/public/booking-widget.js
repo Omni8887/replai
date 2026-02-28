@@ -806,49 +806,44 @@
     .fbw-availability-info {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
-    
-    .fbw-info-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: #f8f8f8;
+      gap: 0;
+      border: 1px solid #e5e5e5;
       border-radius: 10px;
+      overflow: hidden;
     }
     
-    .fbw-info-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    
-    .fbw-info-text {
+    .fbw-info-row {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
     }
     
-    .fbw-info-text strong {
+    .fbw-info-row:last-of-type {
+      border-bottom: none;
+    }
+    
+    .fbw-info-label {
       font-size: 13px;
+      color: #888;
+    }
+    
+    .fbw-info-value {
+      font-size: 14px;
       font-weight: 600;
       color: #111;
     }
     
-    .fbw-info-text span {
-      font-size: 13px;
-      color: #666;
-      margin-top: 2px;
+    .fbw-info-value.fbw-last {
+      color: #f59e0b;
     }
     
     .fbw-info-note {
-      font-size: 13px;
+      font-size: 12px;
       color: #888;
       text-align: center;
-      margin: 4px 0 0;
-      padding: 8px;
-      background: #f0fdf4;
-      border-radius: 8px;
-      border: 1px solid #dcfce7;
+      margin: 12px 0 0;
     }
     
     .fbw-last-spot {
@@ -1655,23 +1650,20 @@
       
       wrap.style.display = 'block';
       wrap.innerHTML = `
-        <div class="fbw-times">
-          <div class="fbw-availability-info">
-            <div class="fbw-info-card">
-            <div class="fbw-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>              <div class="fbw-info-text">
-                <strong>Otváracie hodiny</strong>
-                <span>${openTime} – ${closeTime}</span>
-              </div>
-            </div>
-            <div class="fbw-info-card">
-            <div class="fbw-info-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div>              <div class="fbw-info-text">
-                <strong>Voľná kapacita</strong>
-                <span>${spotsLeft > 1 ? 'Dostupný' : 'Posledné voľné miesto!'}</span>              </div>
-            </div>
-            <p class="fbw-info-note">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
+      <div class="fbw-times">
+        <div class="fbw-availability-info">
+          <div class="fbw-info-row">
+            <span class="fbw-info-label">Otváracie hodiny</span>
+            <span class="fbw-info-value">${openTime} – ${closeTime}</span>
           </div>
+          <div class="fbw-info-row">
+            <span class="fbw-info-label">Dostupnosť</span>
+            <span class="fbw-info-value ${spotsLeft <= 1 ? 'fbw-last' : ''}">${spotsLeft > 1 ? 'Voľný termín' : 'Posledné voľné miesto'}</span>
+          </div>
+          <p class="fbw-info-note">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
         </div>
-      `;
+      </div>
+    `;
     }
     
     updateButtons();
