@@ -3485,9 +3485,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
             <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
           </div>
           
-          <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
-          </div>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:20px;text-align:center;font-size:12px;color:#888;background-color:#000000;">© 2025 CUBE Store Bratislava | fenixbike.sk</td></tr></table>
         </div>
       `
     });
@@ -3970,8 +3968,7 @@ async function sendBookingCreatedEmail(booking) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-        <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:20px;text-align:center;font-size:12px;color:#888;background-color:#000000;">© 2025 CUBE Store Bratislava | fenixbike.sk</td></tr></table>
-          
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:30px;text-align:center;background-color:#000000;"><img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia prijatá</h1>
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Ďakujeme za vašu rezerváciu</p>
@@ -4418,12 +4415,7 @@ async function sendRentalBookingEmail(booking) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
           <!-- Header -->
-          <div style="background: #000000; padding: 30px; text-align: center;">
-            <div style="font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
-              <span style="color: #f26522;">◀</span> CUBE <span style="font-size: 12px; font-weight: normal;">STORE</span>
-            </div>
-            <div style="color: #888888; font-size: 11px; margin-top: 5px; letter-spacing: 3px;">BRATISLAVA</div>
-          </div>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:30px;text-align:center;background-color:#000000;"><img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>
           
           <!-- Title -->
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
@@ -4472,9 +4464,7 @@ async function sendRentalBookingEmail(booking) {
           </div>
           
           <!-- Footer -->
-          <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">© 2025 CUBE Store Bratislava | fenixbike.sk</p>
-          </div>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:20px;text-align:center;font-size:12px;color:#888;background-color:#000000;">© 2025 CUBE Store Bratislava | fenixbike.sk</td></tr></table>
         </div>
       `
     });

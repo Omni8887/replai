@@ -512,9 +512,29 @@
 
     applySettings() {
       if (!this.settings) return;
-
       if (this.settings.title) {
         this.titleEl.textContent = this.settings.title;
+      }
+      if (this.settings.primaryColor) {
+        const c = this.settings.primaryColor;
+        const style = document.getElementById('replai-dynamic-style') || document.createElement('style');
+        style.id = 'replai-dynamic-style';
+        style.textContent = `
+          .replai-button { background: ${c} !important; box-shadow: 0 8px 24px ${c}66 !important; }
+          .replai-button:hover { box-shadow: 0 12px 32px ${c}80 !important; }
+          .replai-header { background: ${c} !important; }
+          .replai-message.user .replai-message-bubble { background: ${c} !important; }
+          .replai-send-btn { background: ${c} !important; }
+          .replai-send-btn:hover { box-shadow: 0 4px 12px ${c}66 !important; }
+          .replai-input:focus { border-color: ${c} !important; box-shadow: 0 0 0 4px ${c}1a !important; }
+          .replai-link { color: ${c} !important; }
+          .replai-link:hover { color: ${c} !important; filter: brightness(0.8); }
+          .replai-message.user .replai-link { color: #e9d5ff !important; }
+          .replai-powered a { color: ${c} !important; }
+          .replai-quick-reply { border-color: ${c} !important; color: ${c} !important; }
+          .replai-quick-reply:hover { background: ${c} !important; color: white !important; box-shadow: 0 4px 12px ${c}4d !important; }
+        `;
+        document.head.appendChild(style);
       }
     }
 
