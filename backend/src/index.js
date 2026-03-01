@@ -3443,8 +3443,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-        <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:30px;text-align:center;background-color:#000000;"><img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>
-          
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:20px;text-align:center;background-color:#ffffff;"><img src="https://replai-backend.onrender.com/static/cube-light.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <div style="width: 60px; height: 60px; background: #e8f5e9; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
               <span style="font-size: 28px;">✓</span>
@@ -3968,8 +3967,7 @@ async function sendBookingCreatedEmail(booking) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
-        <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:30px;text-align:center;background-color:#000000;"><img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          
-          <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
+        <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:20px;text-align:center;background-color:#ffffff;"><img src="https://replai-backend.onrender.com/static/cube-light.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia prijatá</h1>
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Ďakujeme za vašu rezerváciu</p>
           </div>
@@ -4415,8 +4413,7 @@ async function sendRentalBookingEmail(booking) {
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
           
           <!-- Header -->
-          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:30px;text-align:center;background-color:#000000;"><img src="https://replai-backend.onrender.com/static/cube.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>
-          
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:20px;text-align:center;background-color:#ffffff;"><img src="https://replai-backend.onrender.com/static/cube-light.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          
           <!-- Title -->
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
             <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Rezervácia testovacieho bicykla</h1>
