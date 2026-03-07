@@ -1945,8 +1945,7 @@ app.get('/admin/conversations', authMiddleware, async (req, res) => {
         updated_at
       `)
       .eq('client_id', req.clientId)
-      .order('updated_at', { ascending: false });
-    
+      .order('created_at', { ascending: false });    
     res.json(conversations || []);
   } catch (error) {
     console.error('Conversations error:', error);
