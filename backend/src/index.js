@@ -733,21 +733,37 @@ app.post('/chat', async (req, res) => {
     // Detekuj či hľadá e-bike
     const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater/.test(fullContext);
     
-    // Nájdi cieľové kategórie
-    let targetCategories = [];
-    const keywordMap = wantsElektro ? ELEKTRO_KEYWORDS : CATEGORY_KEYWORDS;
-    
-    for (const [category, keywords] of Object.entries(keywordMap)) {
-      for (const keyword of keywords) {
-        // Hľadaj v celom kontexte (vrátane predchádzajúcich správ)
-        if (fullContext.includes(keyword)) {
-          if (!targetCategories.includes(category)) {
-            targetCategories.push(category);
-          }
-          break;
+// Nájdi cieľové kategórie - PRIORITA: aktuálna správa > kontext
+let targetCategories = [];
+const keywordMap = wantsElektro ? ELEKTRO_KEYWORDS : CATEGORY_KEYWORDS;
+
+// 1. Najprv hľadaj v AKTUÁLNEJ správe
+for (const [category, keywords] of Object.entries(keywordMap)) {
+  for (const keyword of keywords) {
+    if (msgNorm.includes(keyword)) {
+      if (!targetCategories.includes(category)) {
+        targetCategories.push(category);
+      }
+      break;
+    }
+  }
+}
+
+// 2. Ak sa v aktuálnej správe nič nenašlo, skús kontext
+if (targetCategories.length === 0) {
+  for (const [category, keywords] of Object.entries(keywordMap)) {
+    for (const keyword of keywords) {
+      if (fullContext.includes(keyword)) {
+        if (!targetCategories.includes(category)) {
+          targetCategories.push(category);
         }
+        break;
       }
     }
+  }
+}
+
+console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0 ? 'ÁNO' : 'NIE (fallback na kontext)');
     
     // Ak nenašiel kategóriu ale hľadá konkrétny model, urči kategóriu podľa modelu
     const MODEL_CATEGORIES = {
