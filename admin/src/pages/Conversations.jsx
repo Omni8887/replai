@@ -33,7 +33,6 @@ export default function Conversations() {
         responseType: 'blob'
       })
       
-      // Vytvor download link
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
@@ -52,6 +51,22 @@ export default function Conversations() {
     } finally {
       setExporting(false)
     }
+  }
+
+  // Vytvor mapu čísiel — najstaršia konverzácia = #001
+  const conversationNumbers = (() => {
+    const sorted = [...conversations].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    const map = {}
+    sorted.forEach((conv, i) => {
+      map[conv.id] = String(i + 1).padStart(3, '0')
+    })
+    return map
+  })()
+
+  const getConversationLabel = (conv) => {
+    if (conv.visitor_email) return conv.visitor_email
+    if (conv.visitor_name) return conv.visitor_name
+    return `Konverzácia #${conversationNumbers[conv.id] || '000'}`
   }
 
   const filteredConversations = conversations.filter(conv => {
@@ -140,7 +155,7 @@ export default function Conversations() {
                           <span className="w-2 h-2 bg-violet-500 rounded-full"></span>
                         )}
                         <span className="font-semibold text-slate-900">
-                          {conv.visitor_email || conv.visitor_name || 'Anonymný návštevník'}
+                          {getConversationLabel(conv)}
                         </span>
                         {conv.has_contact && (
                           <span className="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium">
