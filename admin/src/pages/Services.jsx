@@ -53,6 +53,8 @@ export default function Services() {
   const [blockedSlots, setBlockedSlots] = useState([])
   const [calendarLoading, setCalendarLoading] = useState(false)
 
+  const [workingHours, setWorkingHours] = useState([])
+
   // Multi-select & reason modal
   const [selectedDays, setSelectedDays] = useState([])
   const [reasonModal, setReasonModal] = useState(null)
@@ -69,6 +71,7 @@ export default function Services() {
   useEffect(() => {
     if (selectedLocation) {
       loadBlockedSlots()
+      loadWorkingHours()
     }
   }, [selectedLocation, currentMonth])
 
@@ -110,6 +113,18 @@ export default function Services() {
       console.error('Error loading blocked slots:', err)
     }
     setCalendarLoading(false)
+  }
+
+  const loadWorkingHours = async () => {
+    if (!selectedLocation) return
+    try {
+      const res = await axios.get(`${API_URL}/bookings/locations/${selectedLocation}/hours`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setWorkingHours(res.data || [])
+    } catch (err) {
+      console.error('Error loading working hours:', err)
+    }
   }
 
   // ============ SERVICES HANDLERS ============
@@ -213,6 +228,12 @@ export default function Services() {
       days.push(null)
     }
     
+    // Zisti zatvorené dni v týždni (z working hours)
+    const closedDaysOfWeek = new Set()
+    workingHours.forEach(wh => {
+      if (wh.is_closed) closedDaysOfWeek.add(wh.day_of_week)
+    })
+
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       const blocked = blockedSlots.find(b => {
@@ -221,15 +242,17 @@ export default function Services() {
       })
       const today = new Date().toISOString().split('T')[0]
       const isPast = dateStr < today
+      const dateObj = new Date(year, month, d)
+      const isClosed = closedDaysOfWeek.has(dateObj.getDay())
       
-      days.push({ day: d, date: dateStr, blocked: blocked || null, isPast })
+      days.push({ day: d, date: dateStr, blocked: blocked || null, isPast, isClosed })
     }
     
     return days
   }
 
   const handleDayClick = (dayInfo) => {
-    if (!dayInfo || dayInfo.isPast) return
+    if (!dayInfo || dayInfo.isPast || dayInfo.isClosed) return
     
     if (dayInfo.blocked) {
       if (window.confirm(`Odblokovať ${dayInfo.day}. ${MONTH_NAMES[currentMonth.getMonth()]}?\n\nDôvod: ${dayInfo.blocked.reason || '(bez dôvodu)'}`)) {
@@ -407,6 +430,8 @@ export default function Services() {
         .calendar-day.past:hover { background: none; border-color: #eaeaea; }
         .calendar-day.blocked { background: #fef2f2; border-color: #fecaca; }
         .calendar-day.blocked:hover { background: #fee2e2; }
+        .calendar-day.closed { background: #f5f5f5; border-color: #e5e5e5; opacity: 0.6; cursor: not-allowed; }
+        .calendar-day.closed:hover { background: #f5f5f5; border-color: #e5e5e5; }
         .calendar-day.today { border-color: #111; border-width: 2px; }
         .calendar-day.selected { background: #eff6ff; border-color: #3b82f6; border-width: 2px; }
         .calendar-day.selected:hover { background: #dbeafe; }
@@ -414,9 +439,11 @@ export default function Services() {
         .day-number { font-size: 15px; font-weight: 500; color: #111; }
         .calendar-day.blocked .day-number { color: #dc2626; }
         .calendar-day.past .day-number { color: #aaa; }
+        .calendar-day.closed .day-number { color: #999; }
         .calendar-day.selected .day-number { color: #2563eb; }
 
         .day-reason { font-size: 9px; color: #dc2626; margin-top: 2px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+        .calendar-day.closed .day-reason { color: #999; }
         .blocked-icon { position: absolute; top: 4px; right: 4px; color: #dc2626; display: flex; }
         .selected-check { position: absolute; top: 4px; right: 4px; color: #3b82f6; display: flex; }
 
@@ -425,6 +452,7 @@ export default function Services() {
         .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; }
         .legend-dot.available { background: #fff; border-color: #ddd; }
         .legend-dot.blocked { background: #fef2f2; border-color: #fecaca; }
+        .legend-dot.closed-legend { background: #f5f5f5; border-color: #e5e5e5; }
         .legend-dot.today { background: #fff; border-color: #111; border-width: 2px; }
         .legend-dot.selected-legend { background: #eff6ff; border-color: #3b82f6; border-width: 2px; }
 
@@ -585,15 +613,16 @@ export default function Services() {
                     const today = new Date().toISOString().split('T')[0]
                     const isToday = day.date === today
                     const isSelected = selectedDays.some(d => d.date === day.date)
-                    const classes = ['calendar-day', day.blocked ? 'blocked' : '', day.isPast ? 'past' : '', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ')
+                    const classes = ['calendar-day', day.blocked ? 'blocked' : '', day.isPast ? 'past' : '', day.isClosed ? 'closed' : '', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ')
 
                     return (
                       <div key={day.date} className={classes} onClick={() => handleDayClick(day)}
-                        title={day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : isSelected ? 'Klikni pre zrušenie výberu' : 'Klikni pre výber'}>
-                        {day.blocked && <span className="blocked-icon"><IconLock /></span>}
-                        {isSelected && !day.blocked && <span className="selected-check"><IconCheck /></span>}
+                        title={day.isClosed ? 'Zatvorené' : day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : isSelected ? 'Klikni pre zrušenie výberu' : 'Klikni pre výber'}>
+                        {day.blocked && !day.isClosed && <span className="blocked-icon"><IconLock /></span>}
+                        {isSelected && !day.blocked && !day.isClosed && <span className="selected-check"><IconCheck /></span>}
                         <span className="day-number">{day.day}</span>
-                        {day.blocked?.reason && <span className="day-reason">{day.blocked.reason}</span>}
+                        {day.isClosed && <span className="day-reason">Zatvorené</span>}
+                        {day.blocked?.reason && !day.isClosed && <span className="day-reason">{day.blocked.reason}</span>}
                       </div>
                     )
                   })}
@@ -602,6 +631,7 @@ export default function Services() {
                 <div className="calendar-legend">
                   <div className="legend-item"><div className="legend-dot available" /><span>Dostupný</span></div>
                   <div className="legend-item"><div className="legend-dot blocked" /><span>Blokovaný</span></div>
+                  <div className="legend-item"><div className="legend-dot closed-legend" /><span>Zatvorené</span></div>
                   <div className="legend-item"><div className="legend-dot today" /><span>Dnes</span></div>
                   <div className="legend-item"><div className="legend-dot selected-legend" /><span>Vybraný</span></div>
                 </div>
