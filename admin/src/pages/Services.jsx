@@ -17,11 +17,20 @@ const emptyForm = {
 const DAY_NAMES = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 const MONTH_NAMES = ['Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 'Júl', 'August', 'September', 'Október', 'November', 'December']
 
+// SVG icon components
+const IconBuilding = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+const IconBook = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+const IconSun = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+const IconHeart = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+const IconPen = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+const IconLock = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+const IconCheck = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+
 const BLOCK_REASONS = [
-  { label: 'Štátny sviatok', icon: '🏛️', value: 'Štátny sviatok' },
-  { label: 'Školenie', icon: '📚', value: 'Školenie' },
-  { label: 'Dovolenka', icon: '🏖️', value: 'Dovolenka' },
-  { label: 'Choroba', icon: '🤒', value: 'Choroba' },
+  { label: 'Štátny sviatok', icon: <IconBuilding />, value: 'Štátny sviatok' },
+  { label: 'Školenie', icon: <IconBook />, value: 'Školenie' },
+  { label: 'Dovolenka', icon: <IconSun />, value: 'Dovolenka' },
+  { label: 'Choroba', icon: <IconHeart />, value: 'Choroba' },
 ]
 
 export default function Services() {
@@ -408,8 +417,8 @@ export default function Services() {
         .calendar-day.selected .day-number { color: #2563eb; }
 
         .day-reason { font-size: 9px; color: #dc2626; margin-top: 2px; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
-        .blocked-icon { position: absolute; top: 4px; right: 4px; font-size: 10px; }
-        .selected-check { position: absolute; top: 4px; right: 4px; font-size: 11px; color: #3b82f6; }
+        .blocked-icon { position: absolute; top: 4px; right: 4px; color: #dc2626; display: flex; }
+        .selected-check { position: absolute; top: 4px; right: 4px; color: #3b82f6; display: flex; }
 
         .calendar-legend { display: flex; gap: 20px; margin-top: 16px; padding: 12px 16px; background: #fafafa; border-radius: 8px; font-size: 13px; color: #666; flex-wrap: wrap; }
         .legend-item { display: flex; align-items: center; gap: 6px; }
@@ -426,7 +435,7 @@ export default function Services() {
         .selection-count { background: #3b82f6; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
         .selection-actions { display: flex; gap: 8px; }
 
-        .btn-block { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: #dc2626; color: #fff; transition: all 0.15s; }
+        .btn-block { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: #dc2626; color: #fff; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
         .btn-block:hover { background: #b91c1c; }
         .btn-clear { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; border: 1px solid #bfdbfe; color: #1e40af; transition: all 0.15s; }
         .btn-clear:hover { background: #f0f7ff; }
@@ -448,7 +457,7 @@ export default function Services() {
         .reason-btn { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border: 2px solid #eaeaea; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; font-family: inherit; transition: all 0.15s; color: #333; }
         .reason-btn:hover { border-color: #bbb; background: #fafafa; }
         .reason-btn.active { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
-        .reason-btn-icon { font-size: 18px; }
+        .reason-btn-icon { font-size: 18px; display: flex; align-items: center; color: inherit; }
         .reason-btn-custom { grid-column: 1 / -1; }
         .custom-input-wrapper { margin-top: -8px; margin-bottom: 16px; animation: slideDown 0.2s ease; }
       `}</style>
@@ -557,7 +566,7 @@ export default function Services() {
               </div>
               <div className="selection-actions">
                 <button className="btn-clear" onClick={clearSelection}>Zrušiť výber</button>
-                <button className="btn-block" onClick={openBlockModal}>🔒 Zablokovať vybrané</button>
+                <button className="btn-block" onClick={openBlockModal}><IconLock /> Zablokovať vybrané</button>
               </div>
             </div>
           )}
@@ -581,8 +590,8 @@ export default function Services() {
                     return (
                       <div key={day.date} className={classes} onClick={() => handleDayClick(day)}
                         title={day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : isSelected ? 'Klikni pre zrušenie výberu' : 'Klikni pre výber'}>
-                        {day.blocked && <span className="blocked-icon">🔒</span>}
-                        {isSelected && !day.blocked && <span className="selected-check">✓</span>}
+                        {day.blocked && <span className="blocked-icon"><IconLock /></span>}
+                        {isSelected && !day.blocked && <span className="selected-check"><IconCheck /></span>}
                         <span className="day-number">{day.day}</span>
                         {day.blocked?.reason && <span className="day-reason">{day.blocked.reason}</span>}
                       </div>
@@ -706,7 +715,7 @@ export default function Services() {
                 ))}
                 <button className={`reason-btn reason-btn-custom ${selectedReason === '__custom__' ? 'active' : ''}`}
                   onClick={() => setSelectedReason('__custom__')}>
-                  <span className="reason-btn-icon">✏️</span>
+                  <span className="reason-btn-icon"><IconPen /></span>
                   Vlastný dôvod
                 </button>
               </div>
@@ -724,7 +733,7 @@ export default function Services() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => { setReasonModal(null); setSelectedReason(null); setCustomReason(''); }} disabled={blocking}>Zrušiť</button>
               <button className="btn btn-danger" onClick={blockSelectedDays} disabled={blocking}>
-                {blocking ? 'Blokujem...' : `🔒 Zablokovať ${reasonModal.dates.length === 1 ? '1 deň' : `${reasonModal.dates.length} dní`}`}
+                {blocking ? 'Blokujem...' : `Zablokovať ${reasonModal.dates.length === 1 ? '1 deň' : `${reasonModal.dates.length} dní`}`}
               </button>
             </div>
           </div>
