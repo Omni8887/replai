@@ -1109,8 +1109,19 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     
     // 2. Ak máme kategórie a (nenašli sme model ALEBO chce alternatívy) - hľadaj podľa kategórií
     if ((products.length === 0 || wantsAlternatives) && targetCategories.length > 0) {
+      // === FIX: Ak chce PRILBU, odstráň bicyklové kategórie ===
+    const wantsHelmet = /prilb|helmet|helma|ochran.*hlav/.test(fullContext);
+    const wantsBike = /bicyk|bike|kolo|koleso|ebike|e-bike/.test(msgNorm);
+    
+    if (wantsHelmet && !wantsBike) {
+      // Zákazník chce prilbu, nie bicykel
+      targetCategories = targetCategories.filter(c => c.includes('Prilby'));
+      console.log('🪖 Len prilby (odstránené bicyklové kategórie)');
+    }
       console.log(`📁 Hľadám podľa kategórií: ${targetCategories.join(', ')}`);
       let categoryProducts = [];
+      
+
       
       for (const category of targetCategories.slice(0, 4)) {
         let query = supabase
@@ -1294,93 +1305,81 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       console.log(`📊 Vyvážené: ${Object.keys(productsByCategory).length} kategórií, ${products.length} produktov`);
     }
     
-    products.sort((a, b) => (b.price || 0) - (a.price || 0));
-    products = products.slice(0, 10);
-    
-    console.log(`✅ Finálne: ${products.length} produktov`);
-    if (products.length > 0) {
-      console.log('   Top 3:', products.slice(0, 3).map(p => `${p.name.substring(0, 35)}... (${p.price}€)`).join(', '));
-    }
+
+
 
     
-    // === ROZDELENIE PRILBY PODĽA TYPU ===
-    if (targetCategories.includes('Oblečenie > Prilby') && products.length > 0) {
-      
-      // CUBE prilby - mapovanie modelov na typy
-      const HELMET_TYPES = {
-        child: ['fink', 'talok', 'ant', 'linok'],
-        road: ['road race', 'heron'],
-        mtb: ['trooper', 'strover', 'stray', 'steep', 'offpath', 'fleet', 'pathos', 'badger', 'frisk', 'rook', 'quest', 'cinity', 'evoy'],
-        dirt: ['dirt'],
-        universal: ['evoy', 'pathos', 'steep', 'offpath', 'cinity', 'fleet', 'quest']
-      };
-      
-      // Roztrieď produkty podľa typu
-      const categorizeHelmet = (name) => {
-        const n = name.toLowerCase();
-        const types = [];
-        if (HELMET_TYPES.child.some(m => n.includes(m))) types.push('child');
-        if (HELMET_TYPES.road.some(m => n.includes(m))) types.push('road');
-        if (HELMET_TYPES.mtb.some(m => n.includes(m))) types.push('mtb');
-        if (HELMET_TYPES.dirt.some(m => n.includes(m))) types.push('dirt');
-        if (HELMET_TYPES.universal.some(m => n.includes(m))) types.push('universal');
-        return types.length > 0 ? types : ['unknown'];
-      };
-      
-      // Detekuj čo zákazník chce
-      const wantsChild = /detsk|dieta|deti|syn|dcer|junior|kid|malo/.test(fullContext);
-      const wantsRoad = /cestn|cestny|cestak|silnic|road|asfalt|zavod/.test(fullContext);
-      const wantsMTB = /horsk|mtb|mountain|teren|les|enduro|trail/.test(fullContext);
-      const wantsDirt = /dirt|jump|skakan|park/.test(fullContext);
-      const wantsAdult = /dospel|pre mna|pre seba|na seba/.test(fullContext);
-      
-      let filteredHelmets = products;
-      let helmetFilterApplied = false;
-      
-      if (wantsChild && !wantsAdult) {
-        filteredHelmets = products.filter(p => categorizeHelmet(p.name).includes('child'));
-        helmetFilterApplied = true;
-        console.log(`🪖 Detské prilby: ${filteredHelmets.length}`);
-      } else if (wantsRoad) {
-        filteredHelmets = products.filter(p => {
-          const types = categorizeHelmet(p.name);
-          return types.includes('road') || types.includes('universal');
-        });
-        helmetFilterApplied = true;
-        console.log(`🪖 Cestné/univerzálne prilby: ${filteredHelmets.length}`);
-      } else if (wantsMTB) {
-        filteredHelmets = products.filter(p => {
-          const types = categorizeHelmet(p.name);
-          return types.includes('mtb') || types.includes('universal');
-        });
-        helmetFilterApplied = true;
-        console.log(`🪖 MTB/univerzálne prilby: ${filteredHelmets.length}`);
-      } else if (wantsDirt) {
-        filteredHelmets = products.filter(p => categorizeHelmet(p.name).includes('dirt'));
-        helmetFilterApplied = true;
-        console.log(`🪖 Dirt prilby: ${filteredHelmets.length}`);
-      } else if (wantsAdult) {
-        // Dospelý ale nepovedal typ - vylúč detské
-        filteredHelmets = products.filter(p => !categorizeHelmet(p.name).includes('child'));
-        helmetFilterApplied = true;
-        console.log(`🪖 Dospelé prilby (všetky typy): ${filteredHelmets.length}`);
-      }
-      
-      // Ak filter našiel výsledky, použi ich
-      if (helmetFilterApplied && filteredHelmets.length > 0) {
-        products = filteredHelmets;
-      } else if (helmetFilterApplied && filteredHelmets.length === 0) {
-        console.log(`⚠️ Filter prilbiek nenašiel výsledky, ponechávam všetky`);
-      }
-      // Ak žiadny filter nebol aplikovaný = zákazník nepovedal pre koho
-      // AI sa opýta vďaka system promptu
+  // === ROZDELENIE PRILBY PODĽA TYPU ===
+  if (targetCategories.includes('Oblečenie > Prilby') && products.length > 0) {
+    const HELMET_TYPES = {
+      child: ['fink', 'talok', 'ant', 'linok'],
+      road: ['road race', 'heron'],
+      mtb: ['trooper', 'strover', 'stray', 'steep', 'offpath', 'fleet', 'pathos', 'badger', 'frisk', 'rook', 'quest', 'cinity', 'evoy'],
+      dirt: ['dirt'],
+      universal: ['evoy', 'pathos', 'steep', 'offpath', 'cinity', 'fleet', 'quest']
+    };
+    const categorizeHelmet = (name) => {
+      const n = name.toLowerCase();
+      const types = [];
+      if (HELMET_TYPES.child.some(m => n.includes(m))) types.push('child');
+      if (HELMET_TYPES.road.some(m => n.includes(m))) types.push('road');
+      if (HELMET_TYPES.mtb.some(m => n.includes(m))) types.push('mtb');
+      if (HELMET_TYPES.dirt.some(m => n.includes(m))) types.push('dirt');
+      if (HELMET_TYPES.universal.some(m => n.includes(m))) types.push('universal');
+      return types.length > 0 ? types : ['unknown'];
+    };
+    const wantsChild = /detsk|dieta|deti|syn|dcer|junior|kid|malo/.test(fullContext);
+    const wantsRoad = /cestn|cestny|cestak|silnic|road|asfalt|zavod/.test(fullContext);
+    const wantsMTB = /horsk|mtb|mountain|teren|les|enduro|trail/.test(fullContext);
+    const wantsDirt = /dirt|jump|skakan|park/.test(fullContext);
+    const wantsAdult = /dospel|pre mna|pre seba|na seba/.test(fullContext);
+    let filteredHelmets = products;
+    let helmetFilterApplied = false;
+    if (wantsChild && !wantsAdult) {
+      filteredHelmets = products.filter(p => categorizeHelmet(p.name).includes('child'));
+      helmetFilterApplied = true;
+      console.log(`🪖 Detské prilby: ${filteredHelmets.length}`);
+    } else if (wantsRoad) {
+      filteredHelmets = products.filter(p => {
+        const types = categorizeHelmet(p.name);
+        return types.includes('road') || types.includes('universal');
+      });
+      helmetFilterApplied = true;
+      console.log(`🪖 Cestné/univerzálne prilby: ${filteredHelmets.length}`);
+    } else if (wantsMTB) {
+      filteredHelmets = products.filter(p => {
+        const types = categorizeHelmet(p.name);
+        return types.includes('mtb') || types.includes('universal');
+      });
+      helmetFilterApplied = true;
+      console.log(`🪖 MTB/univerzálne prilby: ${filteredHelmets.length}`);
+    } else if (wantsDirt) {
+      filteredHelmets = products.filter(p => categorizeHelmet(p.name).includes('dirt'));
+      helmetFilterApplied = true;
+      console.log(`🪖 Dirt prilby: ${filteredHelmets.length}`);
+    } else if (wantsAdult) {
+      filteredHelmets = products.filter(p => !categorizeHelmet(p.name).includes('child'));
+      helmetFilterApplied = true;
+      console.log(`🪖 Dospelé prilby (všetky typy): ${filteredHelmets.length}`);
     }
-    
-    // === VYTVOR KONTEXT PRE AI ===
-    let productsContext = '';
+    if (helmetFilterApplied && filteredHelmets.length > 0) {
+      products = filteredHelmets;
+    } else if (helmetFilterApplied && filteredHelmets.length === 0) {
+      console.log(`⚠️ Filter prilbiek nenašiel výsledky, ponechávam všetky`);
+    }
+  }
 
-    if (products.length > 0) {
-      productsContext = `
+  products.sort((a, b) => (b.price || 0) - (a.price || 0));
+  products = products.slice(0, 10);
+  console.log(`✅ Finálne: ${products.length} produktov`);
+  if (products.length > 0) {
+    console.log('   Top 3:', products.slice(0, 3).map(p => `${p.name.substring(0, 35)}... (${p.price}€)`).join(', '));
+  }
+
+  // === VYTVOR KONTEXT PRE AI ===
+  let productsContext = '';
+  if (products.length > 0) {
+    productsContext = `
 
 DOSTUPNÉ PRODUKTY (použi IBA tieto):
 `;
