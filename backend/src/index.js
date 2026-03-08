@@ -1373,7 +1373,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
   products = products.slice(0, 10);
   console.log(`✅ Finálne: ${products.length} produktov`);
   if (products.length > 0) {
-    console.log('   Top 3:', products.slice(0, 3).map(p => `${p.name.substring(0, 35)}... (${p.price}€)`).join(', '));
+    products.forEach((p, i) => console.log(`   ${i+1}. ${p.name.substring(0, 45)} | ${p.price}€`));
   }
 
   // === VYTVOR KONTEXT PRE AI ===
