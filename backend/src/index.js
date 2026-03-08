@@ -1356,6 +1356,11 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       helmetFilterApplied = true;
       console.log(`🪖 Detské prilby: ${filteredHelmets.length}`);
     } else if (wantsRoad) {
+      // Debug: ukáž aj road typy
+      products.forEach(p => {
+        const types = categorizeHelmet(p.name);
+        if (types.includes('road')) console.log(`🏁 ROAD: ${p.name}`);
+      });
       filteredHelmets = products.filter(p => {
         const types = categorizeHelmet(p.name);
         return types.includes('road') || types.includes('universal');
