@@ -1259,11 +1259,27 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
 
     // === POST-PROCESSING ===
     
-    // Odstráň duplikáty
+    // Odstráň duplikáty podľa URL
     const seen = new Set();
     products = products.filter(p => {
       if (seen.has(p.url)) return false;
       seen.add(p.url);
+      return true;
+    });
+    
+    // Odstráň duplikáty podľa modelu (nechaj len 1 farebnú variantu)
+    const seenModels = new Set();
+    products = products.filter(p => {
+      // Extrahuj model z názvu - odstráň farbu a rok
+      const modelName = p.name
+        .replace(/\d{4}$/, '')
+        .replace(/(black|white|grey|blue|red|green|orange|yellow|pink|olive|darkblue|lightblue|flashwhite|ružová|čierna|biela|šedá|modrá|červená|zelená|teal|mint|coral|berry|lime|amber|violet|sage|petrol|polarblue|frostwhite|metallicteal|smaragd|xenon|golddust|prism|cyclamen|carbon|glossy|matte|matt|shiny|n\'|´n´)/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+      
+      if (seenModels.has(modelName)) return false;
+      seenModels.add(modelName);
       return true;
     });
 
