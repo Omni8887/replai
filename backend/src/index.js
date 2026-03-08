@@ -2629,7 +2629,7 @@ messages.forEach(m => {
 
 function checkForContact(text) {
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-  const phoneRegex = /(\+421|0)[0-9\s\-]{8,14}/g;
+  const phoneRegex = /(\+421|0)[0-9\s\-\/]{8,14}/g;
   
   const emails = text.match(emailRegex) || [];
   const phones = text.match(phoneRegex) || [];
