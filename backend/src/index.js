@@ -1134,7 +1134,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
         
         // Ak je maxPrice, zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte)
         const sortAsc = !maxPrice;
-        const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
+        const { data } = await query.order('price', { ascending: sortAsc }).limit(200);
         if (data) categoryProducts.push(...data);
       }
       
@@ -1152,7 +1152,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
           if (minPrice) query = query.gte('price', minPrice);
           
           const sortAsc = !maxPrice;
-          const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
+          const { data } = await query.order('price', { ascending: sortAsc }).limit(200);
           if (data) categoryProducts.push(...data);
         }
       }
@@ -1171,7 +1171,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
           if (minPrice) query = query.gte('price', minPrice);
           
           const sortAsc = !maxPrice;
-          const { data } = await query.order('price', { ascending: sortAsc }).limit(20);
+          const { data } = await query.order('price', { ascending: sortAsc }).limit(200);
           if (data) categoryProducts.push(...data);
         }
       }
