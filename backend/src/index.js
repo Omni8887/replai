@@ -1273,6 +1273,27 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     }
 
     // Zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte) a limituj
+    // Ak máme produkty z viacerých kategórií, rozdeľ limit spravodlivo
+    if (targetCategories.length > 1) {
+      const perCategory = Math.max(3, Math.floor(10 / targetCategories.length));
+      const balancedProducts = [];
+      const productsByCategory = {};
+      
+      products.forEach(p => {
+        const cat = p.category || 'other';
+        if (!productsByCategory[cat]) productsByCategory[cat] = [];
+        productsByCategory[cat].push(p);
+      });
+      
+      for (const [cat, catProducts] of Object.entries(productsByCategory)) {
+        catProducts.sort((a, b) => (b.price || 0) - (a.price || 0));
+        balancedProducts.push(...catProducts.slice(0, perCategory));
+      }
+      
+      products = balancedProducts;
+      console.log(`📊 Vyvážené: ${Object.keys(productsByCategory).length} kategórií, ${products.length} produktov`);
+    }
+    
     products.sort((a, b) => (b.price || 0) - (a.price || 0));
     products = products.slice(0, 10);
     
