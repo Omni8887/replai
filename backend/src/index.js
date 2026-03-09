@@ -1061,11 +1061,20 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
     if (searchModel) {
+      // Ak je v správe aj číslo (napr. "ACID 240"), hľadaj model + číslo
+      const numberMatch = msgNorm.match(new RegExp(searchModel + '\\s*(\\d{2,4})'));
+      const searchTerm = numberMatch ? `${searchModel} ${numberMatch[1]}` : searchModel;
+      
+      // Ak hľadáme s číslom, nehľadaj v kategórii ale priamo v názve
+      const isSpecificModel = !!numberMatch;
+      
+      console.log(`🔍 Hľadám model: "${searchTerm}"${isSpecificModel ? ' (presný model s číslom)' : ''}`);
+      
       let query = supabase
         .from('products')
         .select('name, description, price, category, url')
         .eq('client_id', client.id)
-        .ilike('name', `%${searchModel}%`);
+        .ilike('name', `%${searchTerm}%`);
       
       if (maxPrice) query = query.lte('price', maxPrice);
       if (minPrice) query = query.gte('price', minPrice);
