@@ -2478,15 +2478,28 @@ const products = items.map(item => {
   };
 }).filter(p => p.name);
     
-    // Vlož produkty
-    const { data, error } = await supabase
-      .from('products')
-      .insert(products)
-      .select();
-    
-    if (error) throw error;
-    
-    res.json({ success: true, count: data.length });
+   // Upsert - vlož nové, aktualizuj existujúce (podľa URL)
+   let totalProcessed = 0;
+   const batchSize = 500;
+   
+   for (let i = 0; i < products.length; i += batchSize) {
+     const batch = products.slice(i, i + batchSize);
+     
+     const { data, error } = await supabase
+       .from('products')
+       .upsert(batch, { 
+         onConflict: 'client_id,url',
+         ignoreDuplicates: false 
+       })
+       .select();
+     
+     if (error) throw error;
+     totalProcessed += data?.length || 0;
+   }
+   
+   console.log(`📦 XML upsert: ${totalProcessed} produktov spracovaných`);
+   
+   res.json({ success: true, count: totalProcessed });
   } catch (error) {
     console.error('XML Upload error:', error);
     res.status(500).json({ error: 'Failed to parse XML: ' + error.message });
