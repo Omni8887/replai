@@ -942,6 +942,7 @@
           <div class="fbw-section" data-step="s4">
             <h2 class="fbw-section-title">Vaše údaje</h2>
             <p class="fbw-section-desc">Kontaktné informácie pre rezerváciu</p>
+            <p class="fbw-info-note" style="margin-bottom:16px;">Výsledná cena práce závisí od vykonanej práce. Približná sa stanoví pri obhliadke bicykla.</p>
             <div id="fbw-form-error" class="fbw-error" style="display:none;"></div>
             <div class="fbw-field">
               <label>Meno a priezvisko</label>
