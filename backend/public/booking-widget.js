@@ -1655,18 +1655,22 @@
       const closeTime = dayData.close_time || '';
       
       wrap.style.display = 'block';
+      const serviceTime = (state.selectedLocation?.name || '').toLowerCase().includes('tri') 
+        ? '10:00 – 18:00' 
+        : '11:00 – 18:00';
+      
       wrap.innerHTML = `
       <div class="fbw-times">
         <div class="fbw-availability-info">
           <div class="fbw-info-row">
-            <span class="fbw-info-label">Otváracie hodiny</span>
-            <span class="fbw-info-value">${openTime} – ${closeTime}</span>
+            <span class="fbw-info-label">Servis preberáme</span>
+            <span class="fbw-info-value">${serviceTime}</span>
           </div>
           <div class="fbw-info-row">
             <span class="fbw-info-label">Dostupnosť</span>
             <span class="fbw-info-value ${spotsLeft <= 1 ? 'fbw-last' : ''}">${spotsLeft > 1 ? 'Voľný termín' : 'Posledné voľné miesto'}</span>
           </div>
-          <p class="fbw-info-note">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
+          <p class="fbw-info-note">Výsledná cena práce závisí od vykonanej práce. Približná sa stanoví pri obhliadke bicykla.</p>
         </div>
       </div>
     `;
