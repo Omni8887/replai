@@ -3941,6 +3941,38 @@ app.get('/public/booking/availability', async (req, res) => {
   }
 });
 
+// POST /public/booking/upload-photo - Upload fotky pre rezerváciu
+app.post('/public/booking/upload-photo', express.raw({ type: 'image/*', limit: '25mb' }), async (req, res) => {
+  try {
+    const clientId = req.headers['x-client-id'];
+    if (!clientId) {
+      return res.status(400).json({ error: 'client_id required' });
+    }
+
+    const contentType = req.headers['content-type'];
+    const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const fileName = `${clientId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from('booking-photos')
+      .upload(fileName, req.body, {
+        contentType: contentType,
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('booking-photos')
+      .getPublicUrl(fileName);
+
+    res.json({ url: urlData.publicUrl });
+  } catch (error) {
+    console.error('Photo upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 // POST /public/booking - Vytvorenie rezervácie
 app.post('/public/booking', async (req, res) => {
   try {
@@ -3956,7 +3988,8 @@ app.post('/public/booking', async (req, res) => {
       bike_brand,
       bike_model,
       problem_description,
-      conversation_id
+      conversation_id,
+      photos
     } = req.body;
     
     if (!client_id || !location_code || !service_code || !customer_name || !customer_email || !customer_phone || !booking_date) {
@@ -4043,6 +4076,7 @@ const maxPerDay = locData?.daily_capacity || 2;
         bike_brand,
         bike_model,
         problem_description,
+        photos: photos || [],
         estimated_price: svc.price,
         conversation_id,
         status: 'pending'

@@ -31,6 +31,10 @@
     rentalMonth: new Date()
   };
 
+  uploadedPhotos = [];
+
+  // Skryť content - shadowRoot už existuje
+
   // ─── DOM References (set after Shadow DOM creation) ───
   let shadowRoot = null;
   let overlayEl = null;
@@ -848,6 +852,49 @@
     .fbw-calendar-day {
       position: relative;
     }
+    .fbw-photo-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #e5e5e5;
+      position: relative;
+    }
+    
+    .fbw-photo-item {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+    
+    .fbw-photo-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    
+    .fbw-photo-uploading {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e5e5;
+    }
   `;
 
   // ─── HTML Template ─────────────────────────────────────
@@ -972,6 +1019,16 @@
             <div class="fbw-field">
               <label>Popis problému <span>(voliteľné)</span></label>
               <textarea id="fbw-problem" placeholder="Popíšte problém alebo čo potrebujete..."></textarea>
+            </div>
+            <div class="fbw-field">
+              <label>Fotky problému <span>(voliteľné, max 3)</span></label>
+              <div id="fbw-photos-wrap" style="display:flex;gap:8px;flex-wrap:wrap;">
+                <label id="fbw-photo-add" style="width:80px;height:80px;border:2px dashed #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  <input type="file" accept="image/*" multiple style="display:none;" id="fbw-photo-input">
+                </label>
+              </div>
+              <div id="fbw-photo-error" style="display:none;color:#dc2626;font-size:12px;margin-top:4px;"></div>
             </div>
           </div>
 
@@ -1125,6 +1182,9 @@
         el.addEventListener('change', updateButtons);
       }
     });
+
+    // Photo upload
+    q('#fbw-photo-input')?.addEventListener('change', handlePhotoUpload);
 
     // Close on Escape
     document.addEventListener('keydown', (e) => {
@@ -1680,6 +1740,77 @@
     updateButtons();
   }
 
+
+// ─── Photo Upload ──────────────────────────────────────
+let uploadedPhotos = []; // Array of URLs
+
+async function handlePhotoUpload(e) {
+  const files = Array.from(e.target.files);
+  const errorEl = q('#fbw-photo-error');
+  const wrap = q('#fbw-photos-wrap');
+  const addBtn = q('#fbw-photo-add');
+  errorEl.style.display = 'none';
+
+  if (uploadedPhotos.length + files.length > 3) {
+    errorEl.textContent = 'Maximálne 3 fotky';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  for (const file of files) {
+    if (file.size > 25 * 1024 * 1024) {
+      errorEl.textContent = 'Súbor je príliš veľký (max 25 MB)';
+      errorEl.style.display = 'block';
+      continue;
+    }
+
+    // Zobraz loading
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'fbw-photo-uploading';
+    loadingEl.innerHTML = '<div class="fbw-spinner"></div>';
+    wrap.insertBefore(loadingEl, addBtn);
+
+    try {
+      const response = await fetch(`${API_URL}/public/booking/upload-photo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+          'x-client-id': CLIENT_ID
+        },
+        body: file
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      uploadedPhotos.push(data.url);
+
+      // Nahraď loading za thumbnail
+      const item = document.createElement('div');
+      item.className = 'fbw-photo-item';
+      item.innerHTML = `
+        <img src="${data.url}" class="fbw-photo-thumb">
+        <button class="fbw-photo-remove" data-url="${data.url}">×</button>
+      `;
+      item.querySelector('.fbw-photo-remove').addEventListener('click', (ev) => {
+        const url = ev.target.dataset.url;
+        uploadedPhotos = uploadedPhotos.filter(u => u !== url);
+        item.remove();
+        if (uploadedPhotos.length < 3) addBtn.style.display = 'flex';
+      });
+      wrap.replaceChild(item, loadingEl);
+    } catch (err) {
+      loadingEl.remove();
+      errorEl.textContent = 'Nepodarilo sa nahrať fotku';
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // Skry tlačidlo ak je 3 fotiek
+  if (uploadedPhotos.length >= 3) addBtn.style.display = 'none';
+  e.target.value = '';
+}
+
   // ─── Navigation ────────────────────────────────────────
   function next() {
     if (state.mode === 'service') {
@@ -1749,7 +1880,8 @@
           customer_phone: q('#fbw-phone').value.trim(),
           bike_brand: q('#fbw-bike-brand').value.trim(),
           bike_model: q('#fbw-bike-model').value.trim(),
-          problem_description: q('#fbw-problem').value.trim()
+          problem_description: q('#fbw-problem').value.trim(),
+          photos: uploadedPhotos
         })
       });
       const data = await res.json();
