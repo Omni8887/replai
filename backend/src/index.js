@@ -3597,9 +3597,9 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
           
         <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:20px;text-align:center;background-color:#ffffff;"><img src="https://replai-backend.onrender.com/static/cube-light.png" alt="CUBE Store Bratislava" style="max-height:80px;display:block;margin:0 auto;" /></td></tr></table>          
           <div style="padding: 30px 30px 20px; text-align: center; border-bottom: 1px solid #eee;">
-            <div style="width: 60px; height: 60px; background: #e8f5e9; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 28px;">✓</span>
-            </div>
+          <div style="text-align: center; margin: 0 auto 15px;">
+          <span style="font-size: 48px;">✅</span>
+        </div>
             <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: #111;">Servis dokončený</h1>
             <p style="margin: 10px 0 0; color: #666; font-size: 14px;">Váš bicykel je pripravený na vyzdvihnutie</p>
           </div>
