@@ -3623,6 +3623,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
+              <p style="margin: 10px 0 0; font-size: 14px; color: #333;">📧 ${locationName.toLowerCase().includes('tri') ? 'servis.triveze@fenixbike.sk' : 'servis@fenixbike.sk'}</p>
             </div>
 
             ${openingHours ? `
@@ -4154,8 +4155,10 @@ async function sendBookingCreatedEmail(booking) {
             </div>
             ` : ''}
             
-            <p style="color: #888; font-size: 13px; line-height: 1.6;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky.</p>
-            <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
+            <div style="background: #fff8e6; border-radius: 8px; padding: 12px 16px; margin: 20px 0; border-left: 3px solid #ffc107;">
+            <p style="margin: 0; font-size: 13px; color: #8a6d00;">Výsledná cena práce závisí od vykonanej práce. Približná sa stanoví pri obhliadke bicykla.</p>
+          </div>
+          <p style="color: #888; font-size: 13px; line-height: 1.6;">Ak potrebujete zmeniť alebo zrušiť rezerváciu, kontaktujte nás telefonicky alebo emailom.</p>            <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
           </div>
           
           <div style="background: #111111; color: #888; padding: 20px; text-align: center; font-size: 12px;">
