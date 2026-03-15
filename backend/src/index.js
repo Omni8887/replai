@@ -4145,6 +4145,7 @@ async function sendBookingCreatedEmail(booking) {
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
+              <p style="margin: 10px 0 0; font-size: 14px; color: #333;">📧 ${locationName.toLowerCase().includes('tri') ? 'servis.triveze@fenixbike.sk' : 'servis@fenixbike.sk'}</p>
             </div>
 
             ${openingHours ? `
