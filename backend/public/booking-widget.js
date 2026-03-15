@@ -1018,8 +1018,7 @@
               <textarea id="fbw-problem" placeholder="Popíšte problém alebo čo potrebujete..."></textarea>
             </div>
             <div class="fbw-field">
-              <label>Fotky problému <span>(voliteľné, max 3)</span></label>
-              <div id="fbw-photos-wrap" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label>Fotky problému <span>(voliteľné, max 3, do 25 MB)</span></label>              <div id="fbw-photos-wrap" style="display:flex;gap:8px;flex-wrap:wrap;">
                 <label id="fbw-photo-add" style="width:80px;height:80px;border:2px dashed #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s;">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                   <input type="file" accept="image/*" multiple style="display:none;" id="fbw-photo-input">
