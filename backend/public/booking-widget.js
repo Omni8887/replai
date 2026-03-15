@@ -31,9 +31,7 @@
     rentalMonth: new Date()
   };
 
-  uploadedPhotos = [];
-
-  // Skryť content - shadowRoot už existuje
+  let uploadedPhotos = [];
 
   // ─── DOM References (set after Shadow DOM creation) ───
   let shadowRoot = null;
@@ -990,7 +988,6 @@
             <h2 class="fbw-section-title">Vaše údaje</h2>
             <p class="fbw-section-desc">Kontaktné informácie pre rezerváciu</p>
             <div style="background:#fff8e6;border:1px solid #ffd666;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#8a6d00;">Výsledná cena práce závisí od vykonanej práce. Približná sa stanoví pri obhliadke bicykla.</div>
-            <p class="fbw-info-note" style="margin-bottom:16px;">Výsledná cena práce závisí od vykonanej práce. Približná sa stanoví pri obhliadke bicykla.</p>
             <div id="fbw-form-error" class="fbw-error" style="display:none;"></div>
             <div class="fbw-field">
               <label>Meno a priezvisko</label>
@@ -1742,7 +1739,7 @@
 
 
 // ─── Photo Upload ──────────────────────────────────────
-let uploadedPhotos = []; // Array of URLs
+
 
 async function handlePhotoUpload(e) {
   const files = Array.from(e.target.files);
