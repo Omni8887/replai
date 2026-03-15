@@ -758,7 +758,20 @@ export default function Bookings() {
               <div className="detail-item"><span className="detail-label">Telefón</span><span className="detail-value">{detailModal.customer_phone}</span></div>
               <div className="detail-item"><span className="detail-label">Prevádzka</span><span className="detail-value">{detailModal.location_name}</span></div>
               <div className="detail-item"><span className="detail-label">Služba</span><span className="detail-value">{detailModal.service_name}</span></div>
-              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}</span></div>              <div className="detail-item"><span className="detail-label">Popis</span><span className="detail-value">{detailModal.problem_description || '–'}</span></div>
+              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}</span></div>              
+              <div className="detail-item"><span className="detail-label">Popis</span><span className="detail-value">{detailModal.problem_description || '–'}</span></div>
+              {detailModal.photos && detailModal.photos.length > 0 && (
+                <div style={{padding: '10px 0', borderBottom: '1px solid #f0f0f0'}}>
+                  <div className="detail-label" style={{marginBottom: 8}}>Fotky od zákazníka</div>
+                  <div style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
+                    {detailModal.photos.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                        <img src={url} style={{width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e5e5', cursor: 'pointer'}} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="detail-item"><span className="detail-label">Odhad ceny</span><span className="detail-value">{detailModal.estimated_price} €</span></div>
               <div className="detail-item"><span className="detail-label">Finálna cena</span><span className="detail-value">{detailModal.final_price ? `${detailModal.final_price} €` : '–'}</span></div>
               <div className="detail-item"><span className="detail-label">Stav</span><span className="detail-value"><span className={`badge badge-${detailModal.status}`}>{statusLabels[detailModal.status]}</span></span></div>
