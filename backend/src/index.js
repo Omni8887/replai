@@ -3622,6 +3622,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Vyzdvihnutie</h3>
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
+              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName + ' ' + locationAddress)}" style="display: inline-block; margin: 8px 0 0; font-size: 13px; color: #f26522; text-decoration: none;">📍 Navigovať na Google Maps →</a>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
               <p style="margin: 10px 0 0; font-size: 14px; color: #333;">📧 ${locationName.toLowerCase().includes('tri') ? 'servis.triveze@fenixbike.sk' : 'servis@fenixbike.sk'}</p>
             </div>
@@ -4144,6 +4145,7 @@ async function sendBookingCreatedEmail(booking) {
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">📍 Prevádzka</h3>
               <p style="margin: 0; font-size: 15px; font-weight: 600; color: #111;">${locationName}</p>
               <p style="margin: 5px 0 0; font-size: 14px; color: #666;">${locationAddress}</p>
+              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName + ' ' + locationAddress)}" style="display: inline-block; margin: 8px 0 0; font-size: 13px; color: #f26522; text-decoration: none;">📍 Navigovať na Google Maps →</a>
               ${locationPhone ? `<p style="margin: 10px 0 0; font-size: 14px; color: #333;">📞 ${locationPhone}</p>` : ''}
               <p style="margin: 10px 0 0; font-size: 14px; color: #333;">📧 ${locationName.toLowerCase().includes('tri') ? 'servis.triveze@fenixbike.sk' : 'servis@fenixbike.sk'}</p>
             </div>
