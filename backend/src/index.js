@@ -3628,7 +3628,7 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
 
             ${openingHours ? `
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
-              <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">🕐 Otváracie hodiny</h3>
+            <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">🕐 Otváracie hodiny</h3>
               <table style="width: 100%;">${openingHours}</table>
             </div>
             ` : ''}
@@ -4151,7 +4151,9 @@ async function sendBookingCreatedEmail(booking) {
             <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin: 25px 0;">
               <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111; text-transform: uppercase; letter-spacing: 1px;">🕐 Otváracie hodiny</h3>
               <table style="width: 100%;">${openingHours}</table>
-              <p style="margin: 15px 0 0; font-size: 13px; color: #888; border-top: 1px solid #eee; padding-top: 12px;">Bicykel môžete priniesť kedykoľvek počas otváracích hodín.</p>
+              <p style="margin: 15px 0 0; font-size: 13px; color: #888; border-top: 1px solid #eee; padding-top: 12px;">
+                <strong style="color:#333;">Servis preberáme:</strong> ${locationName.toLowerCase().includes('tri') ? 'Utorok – Piatok 10:00 – 18:00' : 'Pondelok – Piatok 11:00 – 18:00'}
+              </p>
             </div>
             ` : ''}
             
