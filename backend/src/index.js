@@ -1758,77 +1758,7 @@ app.post('/auth/register', async (req, res) => {
       throw error;
     }
     
-// GET /admin/notification-emails
-app.get('/admin/notification-emails', authMiddleware, async (req, res) => {
-  try {
-    const { data } = await supabase
-      .from('clients')
-      .select('notification_emails')
-      .eq('id', req.clientId)
-      .single();
-    
-    res.json({ emails: data?.notification_emails || [] });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
-// POST /admin/notification-emails
-app.post('/admin/notification-emails', authMiddleware, async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Neplatný email' });
-    }
-
-    const { data: client } = await supabase
-      .from('clients')
-      .select('notification_emails')
-      .eq('id', req.clientId)
-      .single();
-
-    const emails = client?.notification_emails || [];
-    if (emails.includes(email)) {
-      return res.status(400).json({ error: 'Email už existuje' });
-    }
-    if (emails.length >= 10) {
-      return res.status(400).json({ error: 'Maximum 10 emailov' });
-    }
-
-    await supabase
-      .from('clients')
-      .update({ notification_emails: [...emails, email] })
-      .eq('id', req.clientId);
-
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// DELETE /admin/notification-emails
-app.delete('/admin/notification-emails', authMiddleware, async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const { data: client } = await supabase
-      .from('clients')
-      .select('notification_emails')
-      .eq('id', req.clientId)
-      .single();
-
-    const emails = (client?.notification_emails || []).filter(e => e !== email);
-
-    await supabase
-      .from('clients')
-      .update({ notification_emails: emails })
-      .eq('id', req.clientId);
-
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
     // Vygeneruj verifikačný token
     const token = crypto.randomBytes(32).toString('hex');
@@ -2143,6 +2073,79 @@ app.put('/admin/settings', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// GET /admin/notification-emails
+app.get('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+    
+    res.json({ emails: data?.notification_emails || [] });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /admin/notification-emails
+app.post('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Neplatný email' });
+    }
+
+    const { data: client } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+
+    const emails = client?.notification_emails || [];
+    if (emails.includes(email)) {
+      return res.status(400).json({ error: 'Email už existuje' });
+    }
+    if (emails.length >= 10) {
+      return res.status(400).json({ error: 'Maximum 10 emailov' });
+    }
+
+    await supabase
+      .from('clients')
+      .update({ notification_emails: [...emails, email] })
+      .eq('id', req.clientId);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /admin/notification-emails
+app.delete('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const { data: client } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+
+    const emails = (client?.notification_emails || []).filter(e => e !== email);
+
+    await supabase
+      .from('clients')
+      .update({ notification_emails: emails })
+      .eq('id', req.clientId);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // GET /admin/conversations - Zoznam konverzácií
 app.get('/admin/conversations', authMiddleware, async (req, res) => {
