@@ -1724,6 +1724,80 @@ app.get('/messages/:threadId', async (req, res) => {
 // ADMIN AUTH ENDPOINTS
 // ============================================
 
+
+// GET /admin/notification-emails
+app.get('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { data } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+    
+    res.json({ emails: data?.notification_emails || [] });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /admin/notification-emails
+app.post('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Neplatný email' });
+    }
+
+    const { data: client } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+
+    const emails = client?.notification_emails || [];
+    if (emails.includes(email)) {
+      return res.status(400).json({ error: 'Email už existuje' });
+    }
+    if (emails.length >= 10) {
+      return res.status(400).json({ error: 'Maximum 10 emailov' });
+    }
+
+    await supabase
+      .from('clients')
+      .update({ notification_emails: [...emails, email] })
+      .eq('id', req.clientId);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /admin/notification-emails
+app.delete('/admin/notification-emails', authMiddleware, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const { data: client } = await supabase
+      .from('clients')
+      .select('notification_emails')
+      .eq('id', req.clientId)
+      .single();
+
+    const emails = (client?.notification_emails || []).filter(e => e !== email);
+
+    await supabase
+      .from('clients')
+      .update({ notification_emails: emails })
+      .eq('id', req.clientId);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // POST /auth/register - Registrácia klienta
 app.post('/auth/register', async (req, res) => {
   try {
@@ -2519,11 +2593,24 @@ const products = items.map(item => {
 // EMAIL NOTIFICATIONS
 // ============================================
 
-async function sendLeadNotification(clientEmail, leadInfo, conversationId) {
+async function sendLeadNotification(clientEmail, leadInfo, conversationId, clientId) {
   try {
+    // Získaj notifikačné emaily
+    let recipients = [clientEmail];
+    if (clientId) {
+      const { data } = await supabase
+        .from('clients')
+        .select('notification_emails')
+        .eq('id', clientId)
+        .single();
+      if (data?.notification_emails?.length > 0) {
+        recipients = [...new Set([...recipients, ...data.notification_emails])];
+      }
+    }
+
     await resend.emails.send({
       from: 'Replai <noreply@replai.sk>',
-      to: clientEmail,
+      to: recipients,
       subject: '🎯 Nový lead z chatu!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
@@ -2539,7 +2626,7 @@ async function sendLeadNotification(clientEmail, leadInfo, conversationId) {
         </div>
       `
     });
-    console.log('Lead notification sent to:', clientEmail);
+    console.log('Lead notification sent to:', recipients);
   } catch (error) {
     console.error('Failed to send lead notification:', error);
   }

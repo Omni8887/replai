@@ -238,6 +238,22 @@ export default function Settings() {
           </div>
         </div>
 
+{/* Notifikačné emaily */}
+<div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <Bot size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Notifikačné emaily</h2>
+              <p className="text-sm text-slate-500">Emaily na ktoré budú chodiť notifikácie o leadoch a rezerváciách</p>
+            </div>
+          </div>
+
+          <NotificationEmails apiUrl={API_URL} />
+        </div>
+
+
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
@@ -291,4 +307,99 @@ export default function Settings() {
       </div>
     </div>
   )
+  function NotificationEmails({ apiUrl }) {
+    const { token } = useAuth()
+    const [emails, setEmails] = useState([])
+    const [newEmail, setNewEmail] = useState('')
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+  
+    useEffect(() => {
+      loadEmails()
+    }, [])
+  
+    const loadEmails = async () => {
+      try {
+        const res = await axios.get(`${apiUrl}/admin/notification-emails`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setEmails(res.data.emails || [])
+      } catch (err) {
+        console.error(err)
+      }
+      setLoading(false)
+    }
+  
+    const addEmail = async () => {
+      if (!newEmail.trim() || !newEmail.includes('@')) return
+      setSaving(true)
+      try {
+        await axios.post(`${apiUrl}/admin/notification-emails`, 
+          { email: newEmail.trim() },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        setNewEmail('')
+        loadEmails()
+      } catch (err) {
+        alert(err.response?.data?.error || 'Chyba')
+      }
+      setSaving(false)
+    }
+  
+    const removeEmail = async (email) => {
+      if (!window.confirm(`Odstrániť ${email}?`)) return
+      try {
+        await axios.delete(`${apiUrl}/admin/notification-emails`, {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { email }
+        })
+        loadEmails()
+      } catch (err) {
+        console.error(err)
+      }
+    }
+  
+    if (loading) return <p style={{color:'#888',fontSize:13}}>Načítavam...</p>
+  
+    return (
+      <div>
+        <div style={{display:'flex',gap:8,marginBottom:16}}>
+          <input
+            type="email"
+            value={newEmail}
+            onChange={e => setNewEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addEmail()}
+            placeholder="novyemail@firma.sk"
+            className="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+          />
+          <button
+            onClick={addEmail}
+            disabled={saving || !newEmail.includes('@')}
+            className="px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            {saving ? '...' : 'Pridať'}
+          </button>
+        </div>
+  
+        {emails.length === 0 ? (
+          <p style={{color:'#888',fontSize:13}}>Žiadne notifikačné emaily. Notifikácie chodia na váš registračný email.</p>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {emails.map(email => (
+              <div key={email} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:'#f8f8f8',borderRadius:10,border:'1px solid #eaeaea'}}>
+                <span style={{fontSize:14}}>{email}</span>
+                <button
+                  onClick={() => removeEmail(email)}
+                  style={{background:'none',border:'none',color:'#dc2626',cursor:'pointer',fontSize:18,padding:'0 4px'}}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+
+
 }
