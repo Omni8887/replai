@@ -4294,6 +4294,70 @@ async function sendBookingCreatedEmail(booking) {
       `
     });
     console.log(`📧 Email "rezervácia vytvorená" odoslaný na ${booking.customer_email}`);
+
+    // Pošli notifikáciu prevádzke
+    try {
+      const { data: locNotif } = await supabase
+        .from('booking_locations')
+        .select('notification_email')
+        .eq('name', locationName)
+        .maybeSingle();
+      
+      if (locNotif?.notification_email) {
+        await resend.emails.send({
+          from: 'Replai <noreply@replai.sk>',
+          to: locNotif.notification_email,
+          subject: `🔧 Nová rezervácia servisu - ${booking.booking_number}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+              <div style="padding: 24px; border-bottom: 2px solid #f26522;">
+                <h1 style="margin: 0; font-size: 20px; color: #111;">🔧 Nová rezervácia servisu</h1>
+                <p style="margin: 6px 0 0; color: #666; font-size: 14px;">${booking.booking_number} | ${locationName}</p>
+              </div>
+              
+              <div style="padding: 24px;">
+                <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 12px; font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase;">Zákazník</h3>
+                  <p style="margin: 0; font-size: 16px; font-weight: 600; color: #111;">${booking.customer_name}</p>
+                  <p style="margin: 6px 0 0; font-size: 14px;">📞 <a href="tel:${booking.customer_phone}" style="color: #111; text-decoration: none;">${booking.customer_phone}</a></p>
+                  <p style="margin: 4px 0 0; font-size: 14px;">📧 <a href="mailto:${booking.customer_email}" style="color: #111; text-decoration: none;">${booking.customer_email}</a></p>
+                </div>
+
+                <div style="background: #f8f8f8; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 12px; font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase;">Detaily</h3>
+                  <table style="width: 100%; font-size: 14px; color: #333;">
+                    <tr><td style="padding: 4px 0; color: #666;">Služba:</td><td style="padding: 4px 0; font-weight: 600;">${serviceName}</td></tr>
+                    <tr><td style="padding: 4px 0; color: #666;">Cena od:</td><td style="padding: 4px 0; font-weight: 600;">${servicePrice}€</td></tr>
+                    <tr><td style="padding: 4px 0; color: #666;">Dátum:</td><td style="padding: 4px 0; font-weight: 600;">${bookingDate}</td></tr>
+                    ${booking.bike_brand ? `<tr><td style="padding: 4px 0; color: #666;">Bicykel:</td><td style="padding: 4px 0;">${booking.bike_brand} ${booking.bike_model || ''}</td></tr>` : ''}
+                  </table>
+                </div>
+
+                ${booking.problem_description ? `
+                <div style="background: #fff8e6; border-radius: 8px; padding: 16px; margin-bottom: 20px; border-left: 3px solid #ffc107;">
+                  <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #8a6d00;">Popis problému</h3>
+                  <p style="margin: 0; font-size: 14px; color: #333;">${booking.problem_description}</p>
+                </div>
+                ` : ''}
+
+                ${booking.photos && booking.photos.length > 0 ? `
+                <div style="margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 12px; font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase;">Fotky od zákazníka</h3>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${booking.photos.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e5e5;" /></a>`).join('')}
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Notifikácia prevádzke odoslaná na ${locNotif.notification_email}`);
+      }
+    } catch (notifErr) {
+      console.error('Location notification error:', notifErr);
+    }
+
   } catch (error) {
     console.error('Failed to send booking created email:', error);
   }
