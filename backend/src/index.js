@@ -1633,7 +1633,7 @@ KRITICKÉ PRAVIDLÁ:
       .single();
     
     if (clientEmailData?.email) {
-      sendLeadNotification(clientEmailData.email, contactInfo, conversationId);
+      sendLeadNotification(clientEmailData.email, contactInfo, conversationId, client.id);
     }
   }
 
