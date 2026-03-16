@@ -1725,6 +1725,39 @@ app.get('/messages/:threadId', async (req, res) => {
 // ============================================
 
 
+
+
+
+// POST /auth/register - Registrácia klienta
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { name, email, password, websiteUrl } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password required' });
+    }
+    
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    const { data: client, error } = await supabase
+      .from('clients')
+      .insert({
+        name,
+        email,
+        password_hash: passwordHash,
+        website_url: websiteUrl,
+        email_verified: false
+      })
+      .select('id, name, email')
+      .single();
+    
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      throw error;
+    }
+    
 // GET /admin/notification-emails
 app.get('/admin/notification-emails', authMiddleware, async (req, res) => {
   try {
@@ -1797,37 +1830,6 @@ app.delete('/admin/notification-emails', authMiddleware, async (req, res) => {
   }
 });
 
-
-// POST /auth/register - Registrácia klienta
-app.post('/auth/register', async (req, res) => {
-  try {
-    const { name, email, password, websiteUrl } = req.body;
-    
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email and password required' });
-    }
-    
-    const passwordHash = await bcrypt.hash(password, 10);
-    
-    const { data: client, error } = await supabase
-      .from('clients')
-      .insert({
-        name,
-        email,
-        password_hash: passwordHash,
-        website_url: websiteUrl,
-        email_verified: false
-      })
-      .select('id, name, email')
-      .single();
-    
-    if (error) {
-      if (error.code === '23505') {
-        return res.status(400).json({ error: 'Email already exists' });
-      }
-      throw error;
-    }
-    
     // Vygeneruj verifikačný token
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hodín
