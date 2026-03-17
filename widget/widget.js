@@ -668,7 +668,7 @@
           body: JSON.stringify({
             message: userInput,
             threadId: this.currentThreadId,
-            context: this.messages.slice(-10)
+            context: this.messages.slice(-30)
           }),
         });
 
