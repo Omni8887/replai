@@ -1413,22 +1413,11 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
 
 DOSTUPNÉ PRODUKTY (použi IBA tieto):
 `;
-products.forEach((p, i) => {
-  // Skráť názov: odstráň "CUBE " zo začiatku a rok na konci
-  const shortName = p.name
-    .replace(/^CUBE\s+/i, '')
-    .replace(/\s*20\d{2}\s*$/, '')
-    .trim();
-  productsContext += `${i + 1}. ${shortName} | ${p.price}€ | ${p.url}\n`;
-});
-```
-
-A do system promptu pridaj pravidlo (v dashboarde Settings):
-```
-NÁZVY PRODUKTOV:
-- Nepoužívaj "CUBE" v názve - zákazník vie že sme CUBE predajňa
-- Nepoužívaj rok (2026) v názve
-- Príklad: namiesto "CUBE Nature ONE 2026 black" povedz "Nature ONE black"
+const shortName = p.name
+.replace(/^CUBE\s+/i, '')
+.replace(/\s*20\d{2}\s*$/, '')
+.trim();
+productsContext += `${i + 1}. ${shortName} | ${p.price}€ | ${p.url}\n`;
       productsContext += `
 PRAVIDLÁ:
 - Odporúčaj IBA produkty zo zoznamu vyššie
