@@ -1406,19 +1406,20 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     products.forEach((p, i) => console.log(`   ${i+1}. ${p.name.substring(0, 45)} | ${p.price}€`));
   }
 
-  // === VYTVOR KONTEXT PRE AI ===
-  let productsContext = '';
-  if (products.length > 0) {
-    productsContext = `
-
+// === VYTVOR KONTEXT PRE AI ===
+let productsContext = '';
+if (products.length > 0) {
+productsContext = `
 DOSTUPNÉ PRODUKTY (použi IBA tieto):
 `;
-const shortName = p.name
-.replace(/^CUBE\s+/i, '')
-.replace(/\s*20\d{2}\s*$/, '')
-.trim();
-productsContext += `${i + 1}. ${shortName} | ${p.price}€ | ${p.url}\n`;
-      productsContext += `
+products.forEach((p, i) => {
+    const shortName = p.name
+      .replace(/^CUBE\s+/i, '')
+      .replace(/\s*20\d{2}\s*$/, '')
+      .trim();
+    productsContext += `${i + 1}. ${shortName} | ${p.price}€ | ${p.url}\n`;
+  });
+productsContext += `
 PRAVIDLÁ:
 - Odporúčaj IBA produkty zo zoznamu vyššie
 - Používaj PRESNÉ názvy a ceny
