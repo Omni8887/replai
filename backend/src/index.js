@@ -1849,29 +1849,61 @@ app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    // 1. Skús hlavný účet (clients tabuľka)
     const { data: client, error } = await supabase
-    .from('clients')
-    .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified')
-    .eq('email', email)
-    .single();
+      .from('clients')
+      .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified')
+      .eq('email', email)
+      .single();
     
-    if (error || !client) {
+    if (client) {
+      const validPassword = await bcrypt.compare(password, client.password_hash);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      if (!client.email_verified) {
+        return res.status(401).json({ error: 'Please verify your email first' });
+      }
+      const token = jwt.sign({ clientId: client.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      delete client.password_hash;
+      return res.json({ client, token });
+    }
+    
+    // 2. Skús client_users tabuľku
+    const { data: clientUser } = await supabase
+      .from('client_users')
+      .select('id, client_id, email, password_hash, name, role')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+    
+    if (!clientUser) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    const validPassword = await bcrypt.compare(password, client.password_hash);
+    const validPassword = await bcrypt.compare(password, clientUser.password_hash);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    // Skontroluj či je email overený
-if (!client.email_verified) {
-  return res.status(401).json({ error: 'Please verify your email first' });
-}
-
-    const token = jwt.sign({ clientId: client.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
-    delete client.password_hash;
-    res.json({ client, token });
+    // Načítaj klientský účet
+    const { data: parentClient } = await supabase
+      .from('clients')
+      .select('id, name, email, api_key, system_prompt, widget_settings, website_url, email_verified')
+      .eq('id', clientUser.client_id)
+      .single();
+    
+    if (!parentClient) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign({ clientId: parentClient.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    
+    // Vráť klientské dáta ale s menom prihláseného používateľa
+    res.json({ 
+      client: { ...parentClient, user_name: clientUser.name, user_role: clientUser.role },
+      token 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
