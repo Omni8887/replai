@@ -712,23 +712,23 @@ app.post('/chat', async (req, res) => {
       'Elektrobicykle > Transportné': ['cargo', 'naklad', 'transport', 'preprav', 'rodinn']
     };
 
-    // CUBE modely - pre priame vyhľadávanie
-    const CUBE_MODELS = [
-      // Cestné
-      'agree', 'attain', 'litening', 'aerium',
-      // Gravel
-      'nuroad', 'cross race',
-      // Horské
-      'reaction', 'aim', 'attention', 'acid', 'analog',
-      // Celoodpružené
-      'stereo', 'ams', 'hanzz', 'fritzz',
-      // Trekingové
-      'kathmandu', 'touring', 'nature', 'nuride', 'travel',
-      // Mestské
-      'hyde', 'ella', 'supreme', 'nulane', 'town',
-      // Detské
-      'cubie', 'kid', 'race kid'
-    ];
+// CUBE modely - pre priame vyhľadávanie
+const CUBE_MODELS = [
+  // Cestné
+  'agree', 'attain', 'litening', 'aerium',
+  // Gravel
+  'nuroad', 'cross race',
+  // Horské
+  'reaction', 'aim', 'attention', 'acid', 'analog',
+  // Celoodpružené
+  'stereo', 'ams', 'hanzz', 'fritzz', 'one44', 'one22', 'one77', 'one55',
+  // Trekingové
+  'kathmandu', 'touring', 'nature', 'nuride', 'travel',
+  // Mestské
+  'hyde', 'ella', 'supreme', 'nulane', 'town',
+  // Detské
+  'cubie', 'kid', 'race kid'
+      ];
 
     // Detekuj či hľadá e-bike
     const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(fullContext);
@@ -786,6 +786,10 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       'ams': 'Bicykle > Celoodpružené bicykle',
       'hanzz': 'Bicykle > Celoodpružené bicykle',
       'fritzz': 'Bicykle > Celoodpružené bicykle',
+      'one44': 'Bicykle > Celoodpružené bicykle',
+      'one22': 'Bicykle > Celoodpružené bicykle',
+      'one77': 'Bicykle > Celoodpružené bicykle',
+      'one55': 'Bicykle > Celoodpružené bicykle',
       // Trekingové
       'kathmandu': 'Bicykle > Trekingové',
       'touring': 'Bicykle > Trekingové',
@@ -807,6 +811,10 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     const MODEL_CATEGORIES_ELEKTRO = {
       'stereo': 'Elektrobicykle > Celoodpružené elektro',
       'ams': 'Elektrobicykle > Celoodpružené elektro',
+      'one44': 'Elektrobicykle > Celoodpružené elektro',
+      'one22': 'Elektrobicykle > Celoodpružené elektro',
+      'one77': 'Elektrobicykle > Celoodpružené elektro',
+      'one55': 'Elektrobicykle > Celoodpružené elektro',
       'reaction': 'Elektrobicykle > Horské - Pevné elektro',
       'kathmandu': 'Elektrobicykle > Trekingové elektro',
       'touring': 'Elektrobicykle > Trekingové elektro',
@@ -817,7 +825,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       'town': 'Elektrobicykle > Mestské elektro',
       'nuroad': 'Elektrobicykle > Gravel elektro',
       'cargo': 'Elektrobicykle > Transportné'
-    };
+          };
     
     // Ak nemáme kategóriu, skús ju odvodiť z modelu v kontexte
     const modelCatMap = wantsElektro ? MODEL_CATEGORIES_ELEKTRO : MODEL_CATEGORIES;
