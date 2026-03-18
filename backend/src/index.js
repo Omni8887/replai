@@ -258,9 +258,34 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         .eq('blocked_date', toolInput.date)
         .maybeSingle();
       
-      if (blockedSlot) {
-        return { message: `Tento deň je obsadený${blockedSlot.reason ? ' (' + blockedSlot.reason + ')' : ''}. Vyberte prosím iný termín.` };
-      }
+        if (blockedSlot) {
+          // Nájdi najbližší voľný deň
+          const { data: allBlocked } = await supabase
+            .from('booking_blocked_slots')
+            .select('blocked_date')
+            .eq('location_id', toolInput.location_id);
+          const blockedSet = new Set((allBlocked || []).map(b => new Date(b.blocked_date).toISOString().split('T')[0]));
+          
+          const { data: wh } = await supabase
+            .from('booking_working_hours')
+            .select('day_of_week, is_closed')
+            .eq('location_id', toolInput.location_id);
+          const closedDays = new Set((wh || []).filter(h => h.is_closed).map(h => h.day_of_week));
+          
+          let nextFree = null;
+          const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+          for (let i = 1; i <= 30; i++) {
+            const d = new Date(toolInput.date);
+            d.setDate(d.getDate() + i);
+            const ds = d.toISOString().split('T')[0];
+            if (!closedDays.has(d.getDay()) && !blockedSet.has(ds)) {
+              nextFree = `${dayNames[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
+              break;
+            }
+          }
+          
+          return { message: `Tento deň je obsadený. Najbližší voľný termín je ${nextFree || 'nedostupný'}. Ak by sa skôr uvoľnil termín, radi vás kontaktujeme — stačí zanechať meno, email a telefón.` };
+        }
 
       // Skontroluj kapacitu
       const { data: locCap } = await supabase
@@ -277,9 +302,33 @@ async function handleBookingTool(toolName, toolInput, clientId) {
         .eq('booking_date', toolInput.date)
         .neq('status', 'cancelled');
 
-      if ((dayBookings || []).length >= maxPerDay) {
-        return { message: 'Tento deň je už plne obsadený. Vyberte prosím iný termín.' };
-      }
+        if ((dayBookings || []).length >= maxPerDay) {
+          const { data: allBlocked } = await supabase
+            .from('booking_blocked_slots')
+            .select('blocked_date')
+            .eq('location_id', toolInput.location_id);
+          const blockedSet = new Set((allBlocked || []).map(b => new Date(b.blocked_date).toISOString().split('T')[0]));
+          
+          const { data: wh } = await supabase
+            .from('booking_working_hours')
+            .select('day_of_week, is_closed')
+            .eq('location_id', toolInput.location_id);
+          const closedDays = new Set((wh || []).filter(h => h.is_closed).map(h => h.day_of_week));
+          
+          let nextFree = null;
+          const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+          for (let i = 1; i <= 30; i++) {
+            const d = new Date(toolInput.date);
+            d.setDate(d.getDate() + i);
+            const ds = d.toISOString().split('T')[0];
+            if (!closedDays.has(d.getDay()) && !blockedSet.has(ds)) {
+              nextFree = `${dayNames[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
+              break;
+            }
+          }
+          
+          return { message: `Tento deň je už plne obsadený. Najbližší voľný termín je ${nextFree || 'nedostupný'}. Ak by sa skôr uvoľnil termín, radi vás kontaktujeme — stačí zanechať meno, email a telefón.` };
+        }
 
       const dateObj = new Date(toolInput.date);
       const dayOfWeek = dateObj.getDay();
