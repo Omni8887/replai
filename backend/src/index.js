@@ -838,7 +838,8 @@ const CUBE_MODELS = [
   // Horské
   'reaction', 'aim', 'attention', 'acid', 'analog',
   // Celoodpružené
-  'stereo', 'ams', 'hanzz', 'fritzz', 'one44', 'one22', 'one77', 'one55',
+  // Celoodpružené
+   'one44', 'one22', 'one77', 'one55', 'stereo', 'ams', 'hanzz', 'fritzz',
   // Trekingové
   'kathmandu', 'touring', 'nature', 'nuride', 'travel',
   // Mestské
