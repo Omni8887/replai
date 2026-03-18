@@ -731,7 +731,7 @@ app.post('/chat', async (req, res) => {
     ];
 
     // Detekuj či hľadá e-bike
-    const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater/.test(fullContext);
+    const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(fullContext);
     
 // Nájdi cieľové kategórie - PRIORITA: aktuálna správa > kontext
 let targetCategories = [];
