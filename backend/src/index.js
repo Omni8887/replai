@@ -187,20 +187,57 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       
       const openDays = new Set((hours || []).filter(h => !h.is_closed).map(h => h.day_of_week));
       
-      const availableDays = [];
+      // Získaj kapacitu prevádzky
+      const { data: locData } = await supabase
+        .from('booking_locations')
+        .select('daily_capacity')
+        .eq('id', toolInput.location_id)
+        .single();
+      const maxPerDay = locData?.daily_capacity || 2;
+
+      // Získaj blokované dni
+      const { data: blocked } = await supabase
+        .from('booking_blocked_slots')
+        .select('blocked_date')
+        .eq('location_id', toolInput.location_id);
+      const blockedDates = new Set((blocked || []).map(b => new Date(b.blocked_date).toISOString().split('T')[0]));
+
+      // Získaj existujúce rezervácie na najbližších 30 dní
       const now = new Date();
+      const endDate = new Date(now);
+      endDate.setDate(endDate.getDate() + maxAdvanceDays);
+      
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('booking_date')
+        .eq('location_id', toolInput.location_id)
+        .gte('booking_date', now.toISOString().split('T')[0])
+        .lte('booking_date', endDate.toISOString().split('T')[0])
+        .neq('status', 'cancelled');
+      
+      // Spočítaj rezervácie na deň
+      const bookingsPerDay = {};
+      (bookings || []).forEach(b => {
+        const dateStr = new Date(b.booking_date).toISOString().split('T')[0];
+        bookingsPerDay[dateStr] = (bookingsPerDay[dateStr] || 0) + 1;
+      });
+
+      const availableDays = [];
       const minDate = new Date(now.getTime() + minAdvanceHours * 60 * 60 * 1000);
       const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
       
       for (let i = 0; i < maxAdvanceDays && availableDays.length < 7; i++) {
         const date = new Date(now);
         date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
         
         if (date < minDate) continue;
         if (!openDays.has(date.getDay())) continue;
+        if (blockedDates.has(dateStr)) continue;
+        if ((bookingsPerDay[dateStr] || 0) >= maxPerDay) continue;
         
         availableDays.push({
-          date: date.toISOString().split('T')[0],
+          date: dateStr,
           day_name: dayNames[date.getDay()],
           formatted: `${dayNames[date.getDay()]} ${date.getDate()}.${date.getMonth() + 1}.`
         });
