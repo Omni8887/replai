@@ -250,6 +250,37 @@ async function handleBookingTool(toolName, toolInput, clientId) {
     }
     
     case 'get_available_slots': {
+      // Skontroluj blokované dni
+      const { data: blockedSlot } = await supabase
+        .from('booking_blocked_slots')
+        .select('id, reason')
+        .eq('location_id', toolInput.location_id)
+        .eq('blocked_date', toolInput.date)
+        .maybeSingle();
+      
+      if (blockedSlot) {
+        return { message: `Tento deň je obsadený${blockedSlot.reason ? ' (' + blockedSlot.reason + ')' : ''}. Vyberte prosím iný termín.` };
+      }
+
+      // Skontroluj kapacitu
+      const { data: locCap } = await supabase
+        .from('booking_locations')
+        .select('daily_capacity')
+        .eq('id', toolInput.location_id)
+        .single();
+      const maxPerDay = locCap?.daily_capacity || 2;
+
+      const { data: dayBookings } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('location_id', toolInput.location_id)
+        .eq('booking_date', toolInput.date)
+        .neq('status', 'cancelled');
+
+      if ((dayBookings || []).length >= maxPerDay) {
+        return { message: 'Tento deň je už plne obsadený. Vyberte prosím iný termín.' };
+      }
+
       const dateObj = new Date(toolInput.date);
       const dayOfWeek = dateObj.getDay();
       
