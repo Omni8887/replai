@@ -1182,11 +1182,37 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       }
     }
 
+// === PRIAME HĽADANIE CELÉHO NÁZVU ===
+    // Ak zákazník vložil dlhý text (>30 znakov) s modelom, hľadaj priamo
+    if (msgNorm.length > 30 && searchModel) {
+      // Extrahuj kľúčové slová z správy (bez CUBE a roku)
+      const directSearch = message
+        .replace(/^CUBE\s+/i, '')
+        .replace(/\s*20\d{2}\s*$/i, '')
+        .trim();
+      
+      if (directSearch.length > 20) {
+        const { data: directProducts } = await supabase
+          .from('products')
+          .select('name, description, price, category, url')
+          .eq('client_id', client.id)
+          .ilike('name', `%${directSearch}%`)
+          .limit(5);
+        
+        if (directProducts && directProducts.length > 0) {
+          products = directProducts;
+          console.log(`🎯 Priamy match: "${directSearch}" → ${products.length} produktov`);
+        }
+      }
+    }
+
+    
+
     // === HĽADANIE PRODUKTOV ===
     let products = [];
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
-    if (searchModel) {
+    if (searchModel && products.length === 0) {
       // Ak je v správe aj číslo (napr. "ACID 240"), hľadaj model + číslo
       const numberMatch = msgNorm.match(new RegExp(searchModel + '\\s*(\\d{2,4})'));
       const searchTerm = numberMatch ? `${searchModel} ${numberMatch[1]}` : searchModel;
