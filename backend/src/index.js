@@ -1182,14 +1182,18 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       }
     }
 
+  // === HĽADANIE PRODUKTOV ===
+  let products = [];
+
 // === PRIAME HĽADANIE CELÉHO NÁZVU ===
     // Ak zákazník vložil dlhý text (>30 znakov) s modelom, hľadaj priamo
     if (msgNorm.length > 30 && searchModel) {
       // Extrahuj kľúčové slová z správy (bez CUBE a roku)
       const directSearch = message
-        .replace(/^CUBE\s+/i, '')
-        .replace(/\s*20\d{2}\s*$/i, '')
-        .trim();
+      .replace(/^CUBE\s+/i, '')
+      .replace(/\s*20\d{2}\s*$/i, '')
+      .replace(/[´`'']/g, '%')
+      .trim();
       
       if (directSearch.length > 20) {
         const { data: directProducts } = await supabase
@@ -1208,8 +1212,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
 
     
 
-    // === HĽADANIE PRODUKTOV ===
-    let products = [];
+   
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
     if (searchModel && products.length === 0) {
