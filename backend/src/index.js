@@ -4600,12 +4600,11 @@ app.post('/bookings/locations', authMiddleware, async (req, res) => {
 app.put('/bookings/locations/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, address, city, phone, email, is_active } = req.body;
+    const { name, address, city, phone, email, is_active, daily_capacity } = req.body;
     
     const { data, error } = await supabase
       .from('booking_locations')
-      .update({ name, address, city, phone, email, is_active, updated_at: new Date().toISOString() })
-      .eq('id', id)
+      .update({ name, address, city, phone, email, is_active, daily_capacity, updated_at: new Date().toISOString() })      .eq('id', id)
       .eq('client_id', req.clientId)
       .select()
       .single();

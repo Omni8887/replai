@@ -641,6 +641,57 @@ export default function Bookings() {
         </div>
       </div>
 
+{/* Kapacita prevádzok */}
+<div className="card" style={{marginBottom: 24}}>
+        <div className="card-header">
+          <span className="card-title">Denná kapacita prevádzok</span>
+        </div>
+        <div style={{padding: 18}}>
+          <p style={{fontSize: 13, color: '#888', margin: '0 0 14px'}}>Maximálny počet servisných rezervácií na deň pre každú prevádzku</p>
+          {locations.map(loc => (
+            <div key={loc.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f0f0f0'}}>
+              <div>
+                <div style={{fontWeight: 500, fontSize: 14}}>{loc.name?.replace('CUBE Store - ', '')}</div>
+                <div style={{fontSize: 12, color: '#888'}}>{loc.address}</div>
+              </div>
+              <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+                <button 
+                  className="btn btn-ghost" 
+                  style={{width: 32, height: 32, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                  onClick={async () => {
+                    const newCap = Math.max(1, (loc.daily_capacity || 2) - 1);
+                    try {
+                      await axios.put(`${API_URL}/bookings/locations/${loc.id}`, 
+                        { daily_capacity: newCap },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      loadLocations();
+                    } catch(e) { console.error(e); }
+                  }}
+                >−</button>
+                <span style={{fontSize: 20, fontWeight: 600, minWidth: 32, textAlign: 'center'}}>{loc.daily_capacity || 2}</span>
+                <button 
+                  className="btn btn-ghost"
+                  style={{width: 32, height: 32, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                  onClick={async () => {
+                    const newCap = (loc.daily_capacity || 2) + 1;
+                    try {
+                      await axios.put(`${API_URL}/bookings/locations/${loc.id}`, 
+                        { daily_capacity: newCap },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      loadLocations();
+                    } catch(e) { console.error(e); }
+                  }}
+                >+</button>
+                <span style={{fontSize: 12, color: '#888', marginLeft: 4}}>/ deň</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
       <div className="card">
         <div className="card-header">
           <span className="card-title">Zoznam rezervácií</span>
