@@ -1715,6 +1715,29 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
     }
 
 
+// Ak máme kompatibilné produkty s URL, pridaj ich do productsContext
+if (compatContext && compatContext.includes('](')) {
+  const compatLines = compatContext.split('\n').filter(l => l.includes(']('));
+  if (compatLines.length > 0) {
+    let compatProducts = '\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO:\n';
+    compatLines.forEach((line, i) => {
+      const nameMatch = line.match(/\[([^\]]+)\]/);
+      const urlMatch = line.match(/\((https?:\/\/[^)]+)\)/);
+      const priceMatch = line.match(/(\d+\.?\d*)\s*€/);
+      const statusMatch = line.match(/(✅|📦|⚠️)[^]*$/);
+      if (nameMatch && urlMatch) {
+        compatProducts += `${i + 1}. ${nameMatch[1]} | ${priceMatch ? priceMatch[1] + '€' : ''} | ${urlMatch[1]} ${statusMatch ? statusMatch[0] : ''}\n`;
+      }
+    });
+    compatProducts += `\nToto sú kompatibilné produkty pre konkrétny bicykel. Odporúčaj IBA tieto.\n`;
+    productsContext += compatProducts;
+    // Vyčisti compatContext aby sa neduplikoval
+    compatContext = '';
+  }
+}
+
+
+
     const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext + compatContext;
 
     // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
