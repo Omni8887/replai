@@ -1561,6 +1561,75 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     products.forEach((p, i) => console.log(`   ${i+1}. ${p.name.substring(0, 45)} | ${p.price}€`));
   }
 
+// === KOMPATIBILITA PRÍSLUŠENSTVA ===
+let compatContext = '';
+const wantsAccessory = /stojan|blatnik|blatniky|nosic|carrier|mudguard|kickstand|doplnok|prislusen|pasuje|kompatibil|hodí sa|vhodný/.test(msgNorm);
+
+if (wantsAccessory && searchModel) {
+  // Nájdi frame_description pre model
+  const { data: bikeWithFrame } = await supabase
+    .from('products')
+    .select('name, frame_description')
+    .eq('client_id', client.id)
+    .ilike('name', `%${searchModel}%`)
+    .not('frame_description', 'is', null)
+    .limit(1)
+    .maybeSingle();
+  
+  if (bikeWithFrame?.frame_description) {
+    console.log(`🔧 Kompatibilita pre: ${bikeWithFrame.name} (${bikeWithFrame.frame_description})`);
+    
+    // Zisti aký typ príslušenstva chce
+    let accTypes = [];
+    if (/stojan|kickstand/.test(msgNorm)) accTypes.push('kickstand');
+    if (/blatnik|blatniky|mudguard/.test(msgNorm)) accTypes.push('mudguard');
+    if (/nosic|carrier/.test(msgNorm)) accTypes.push('carrier');
+    if (accTypes.length === 0) accTypes = ['kickstand', 'mudguard', 'carrier'];
+    
+    const { data: compatible } = await supabase
+      .from('frame_compatibility')
+      .select('accessory_type, accessory_name, accessory_short_name, item_number, compatibility_type')
+      .eq('frame_description', bikeWithFrame.frame_description)
+      .in('accessory_type', accTypes);
+    
+    if (compatible && compatible.length > 0) {
+      compatContext = `\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO pre ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')} (${bikeWithFrame.frame_description}):\n`;
+      
+      const byType = { kickstand: [], mudguard: [], carrier: [] };
+      compatible.forEach(c => byType[c.accessory_type]?.push(c));
+      
+      const typeNames = { kickstand: 'STOJANY', mudguard: 'BLATNÍKY', carrier: 'NOSIČE' };
+      const typeExplanation = {
+        compatible: '✅ kompatibilný',
+        pre_installed: '📦 už namontovaný',
+        needs_other: '⚠️ vyžaduje ďalší produkt'
+      };
+      
+      for (const [type, items] of Object.entries(byType)) {
+        if (items.length > 0) {
+          compatContext += `\n${typeNames[type]}:\n`;
+          items.forEach(item => {
+            const status = typeExplanation[item.compatibility_type] || '';
+            compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
+          });
+        }
+      }
+      
+      compatContext += `\nPRAVIDLÁ KOMPATIBILITY:
+- Odporúčaj LEN produkty z tohto zoznamu
+- Ak je "už namontovaný" - informuj zákazníka že to už má
+- Ak "vyžaduje ďalší produkt" - upozorni zákazníka
+- Ak pre daný bicykel nie sú žiadne kompatibilné produkty daného typu, povedz to zákazníkovi\n`;
+      
+      console.log(`✅ Nájdených ${compatible.length} kompatibilných produktov`);
+    } else {
+      compatContext = `\n\nPre bicykel ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')} nie sú dostupné kompatibilné ${accTypes.join('/')}.`;
+      console.log(`⚠️ Žiadne kompatibilné produkty pre ${bikeWithFrame.frame_description}`);
+    }
+  }
+}
+
+
 // === VYTVOR KONTEXT PRE AI ===
 let productsContext = '';
 if (products.length > 0) {
@@ -1589,7 +1658,8 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
 `;
     }
 
-    const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext;
+
+    const systemPrompt = (client.system_prompt || 'Si priateľský zákaznícky asistent.') + currentDateTime + productsContext + compatContext;
 
     // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
 // === ODPOVEĎ S BOOKING TOOLS ===
