@@ -1608,10 +1608,23 @@ if (wantsAccessory && searchModel) {
       for (const [type, items] of Object.entries(byType)) {
         if (items.length > 0) {
           compatContext += `\n${typeNames[type]}:\n`;
-          items.forEach(item => {
+          for (const item of items) {
             const status = typeExplanation[item.compatibility_type] || '';
-            compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
-          });
+            // Skús nájsť URL produktu v products tabuľke
+            const { data: productMatch } = await supabase
+              .from('products')
+              .select('url, price')
+              .eq('client_id', client.id)
+              .ilike('name', `%${item.accessory_short_name}%`)
+              .limit(1)
+              .maybeSingle();
+            
+            if (productMatch?.url) {
+              compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | ${productMatch.url} ${status}\n`;
+            } else {
+              compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
+            }
+          }
         }
       }
       
