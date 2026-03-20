@@ -1620,7 +1620,7 @@ if (wantsAccessory && searchModel) {
           const productMatch = productMatches?.[0] || null;
             
             if (productMatch?.url) {
-              compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | ${productMatch.url} ${status}\n`;
+              compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | Link: [${item.accessory_name}](${productMatch.url}) ${status}\n`;
             } else {
               compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
             }
@@ -1629,10 +1629,11 @@ if (wantsAccessory && searchModel) {
       }
       
       compatContext += `\nPRAVIDLÁ KOMPATIBILITY:
-- Odporúčaj LEN produkty z tohto zoznamu
-- Ak je "už namontovaný" - informuj zákazníka že to už má
-- Ak "vyžaduje ďalší produkt" - upozorni zákazníka
-- Ak pre daný bicykel nie sú žiadne kompatibilné produkty daného typu, povedz to zákazníkovi\n`;
+      - Odporúčaj LEN produkty z tohto zoznamu
+      - VŽDY pridaj odkaz na produkt ak je dostupný (formát: [názov](url))
+      - Ak je "už namontovaný" - informuj zákazníka že to už má
+      - Ak "vyžaduje ďalší produkt" - upozorni zákazníka
+      - Ak pre daný bicykel nie sú žiadne kompatibilné produkty daného typu, povedz to zákazníkovi\n`;
       
       console.log(`✅ Nájdených ${compatible.length} kompatibilných produktov`);
     } else {
