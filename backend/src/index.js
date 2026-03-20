@@ -1611,13 +1611,13 @@ if (wantsAccessory && searchModel) {
           for (const item of items) {
             const status = typeExplanation[item.compatibility_type] || '';
             // Skús nájsť URL produktu v products tabuľke
-            const { data: productMatch } = await supabase
-              .from('products')
-              .select('url, price')
-              .eq('client_id', client.id)
-              .ilike('name', `%${item.accessory_short_name}%`)
-              .limit(1)
-              .maybeSingle();
+            const { data: productMatches } = await supabase
+            .from('products')
+            .select('url, price')
+            .eq('client_id', client.id)
+            .ilike('name', `%${item.accessory_short_name}%`)
+            .limit(1);
+          const productMatch = productMatches?.[0] || null;
             
             if (productMatch?.url) {
               compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | ${productMatch.url} ${status}\n`;
