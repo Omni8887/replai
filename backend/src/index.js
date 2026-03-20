@@ -1567,14 +1567,34 @@ const wantsAccessory = /stojan|blatnik|blatniky|nosic|carrier|mudguard|kickstand
 
 if (wantsAccessory && searchModel) {
   // Nájdi frame_description pre model
-  const { data: bikeFrameResults } = await supabase
-  .from('products')
-  .select('name, frame_description')
-  .eq('client_id', client.id)
-  .ilike('name', `%${searchModel}%`)
-  .not('frame_description', 'is', null)
-  .limit(1);
-const bikeWithFrame = bikeFrameResults?.[0] || null;
+ // Skús nájsť presnejší match s celou správou
+let bikeWithFrame = null;
+const bikeSearchTerms = message.toLowerCase()
+    .replace(/nosic|nosič|stojan|blatnik|blatník|blatniky|blatníky|carrier|kickstand|mudguard|aký|aky|aké|ake|na|pre|ku|k|do/gi, '')
+    .trim();
+
+// 1. Skús presný match (napr. "Nature Pro")
+const { data: exactBikeResults } = await supabase
+    .from('products')
+    .select('name, frame_description')
+    .eq('client_id', client.id)
+    .ilike('name', `%${bikeSearchTerms}%`)
+    .not('frame_description', 'is', null)
+    .limit(1);
+
+if (exactBikeResults?.length > 0) {
+    bikeWithFrame = exactBikeResults[0];
+} else {
+    // 2. Fallback na model
+    const { data: modelBikeResults } = await supabase
+        .from('products')
+        .select('name, frame_description')
+        .eq('client_id', client.id)
+        .ilike('name', `%${searchModel}%`)
+        .not('frame_description', 'is', null)
+        .limit(1);
+    bikeWithFrame = modelBikeResults?.[0] || null;
+}
   
   if (bikeWithFrame?.frame_description) {
     console.log(`🔧 Kompatibilita pre: ${bikeWithFrame.name} (${bikeWithFrame.frame_description})`);
