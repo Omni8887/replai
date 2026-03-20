@@ -1631,12 +1631,33 @@ if (exactBikeResults?.length > 0) {
           for (const item of items) {
             const status = typeExplanation[item.compatibility_type] || '';
             // Skús nájsť URL produktu v products tabuľke
-            const { data: productMatches } = await supabase
-            .from('products')
-            .select('url, price')
-            .eq('client_id', client.id)
-            .ilike('name', `%${item.accessory_short_name}%`)
-            .limit(1);
+            // Skús najprv podľa short_name, potom podľa item_number
+            let productMatches = [];
+            
+            // 1. Skús short_name
+            const { data: matches1 } = await supabase
+              .from('products')
+              .select('url, price')
+              .eq('client_id', client.id)
+              .ilike('name', `%${item.accessory_short_name.replace(/"/g, '')}%`)
+              .limit(1);
+            if (matches1?.length > 0) productMatches = matches1;
+            
+            // 2. Ak nenašiel, skús podľa kľúčových slov z názvu
+            if (productMatches.length === 0 && item.accessory_name) {
+              const keywords = item.accessory_name
+                .replace(/^(ACID|CUBE|RFR)\s+/i, '')
+                .replace(/Set\s+/i, '')
+                .replace(/"/g, '')
+                .trim();
+              const { data: matches2 } = await supabase
+                .from('products')
+                .select('url, price')
+                .eq('client_id', client.id)
+                .ilike('name', `%${keywords}%`)
+                .limit(1);
+              if (matches2?.length > 0) productMatches = matches2;
+            }
           const productMatch = productMatches?.[0] || null;
             
             if (productMatch?.url) {
