@@ -1660,8 +1660,8 @@ if (exactBikeResults?.length > 0) {
             }
           const productMatch = productMatches?.[0] || null;
             
-            if (productMatch?.url) {
-              compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | Link: [${item.accessory_name}](${productMatch.url}) ${status}\n`;
+          if (productMatch?.url) {
+            compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | ${productMatch.url} ${status}\n`;
             } else {
               compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
             }
@@ -1671,7 +1671,8 @@ if (exactBikeResults?.length > 0) {
       
       compatContext += `\nPRAVIDLÁ KOMPATIBILITY:
       - Odporúčaj LEN produkty z tohto zoznamu
-      - VŽDY pridaj odkaz na produkt ak je dostupný (formát: [názov](url))
+      - VŽDY pridaj odkaz na produkt vo formáte [názov produktu](URL) - URL je uvedený pri každom produkte
+      - Formát linku v odpovedi: [ACID Carrier SIC RAIL 29"](https://fenixbike.sk/...)
       - Ak je "už namontovaný" - informuj zákazníka že to už má
       - Ak "vyžaduje ďalší produkt" - upozorni zákazníka
       - Ak pre daný bicykel nie sú žiadne kompatibilné produkty daného typu, povedz to zákazníkovi\n`;
