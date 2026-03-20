@@ -1567,14 +1567,14 @@ const wantsAccessory = /stojan|blatnik|blatniky|nosic|carrier|mudguard|kickstand
 
 if (wantsAccessory && searchModel) {
   // Nájdi frame_description pre model
-  const { data: bikeWithFrame } = await supabase
-    .from('products')
-    .select('name, frame_description')
-    .eq('client_id', client.id)
-    .ilike('name', `%${searchModel}%`)
-    .not('frame_description', 'is', null)
-    .limit(1)
-    .maybeSingle();
+  const { data: bikeFrameResults } = await supabase
+  .from('products')
+  .select('name, frame_description')
+  .eq('client_id', client.id)
+  .ilike('name', `%${searchModel}%`)
+  .not('frame_description', 'is', null)
+  .limit(1);
+const bikeWithFrame = bikeFrameResults?.[0] || null;
   
   if (bikeWithFrame?.frame_description) {
     console.log(`🔧 Kompatibilita pre: ${bikeWithFrame.name} (${bikeWithFrame.frame_description})`);
