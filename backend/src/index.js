@@ -1612,78 +1612,78 @@ if (exactBikeResults?.length > 0) {
       .eq('frame_description', bikeWithFrame.frame_description)
       .in('accessory_type', accTypes);
     
-    if (compatible && compatible.length > 0) {
-      compatContext = `\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO pre ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')} (${bikeWithFrame.frame_description}):\n`;
-      
-      const byType = { kickstand: [], mudguard: [], carrier: [] };
-      compatible.forEach(c => byType[c.accessory_type]?.push(c));
-      
-      const typeNames = { kickstand: 'STOJANY', mudguard: 'BLATNÍKY', carrier: 'NOSIČE' };
-      const typeExplanation = {
-        compatible: '✅ kompatibilný',
-        pre_installed: '📦 už namontovaný',
-        needs_other: '⚠️ vyžaduje ďalší produkt'
-      };
-      
-      for (const [type, items] of Object.entries(byType)) {
-        if (items.length > 0) {
-          compatContext += `\n${typeNames[type]}:\n`;
-          for (const item of items) {
-            const status = typeExplanation[item.compatibility_type] || '';
-            // Skús nájsť URL produktu v products tabuľke
-            // Skús najprv podľa short_name, potom podľa item_number
-            let productMatches = [];
-            
-            // 1. Skús short_name
-            const { data: matches1 } = await supabase
-              .from('products')
-              .select('url, price')
-              .eq('client_id', client.id)
-              .ilike('name', `%${item.accessory_short_name.replace(/"/g, '')}%`)
-              .limit(1);
-            if (matches1?.length > 0) productMatches = matches1;
-            
-            // 2. Ak nenašiel, skús podľa kľúčových slov z názvu
-            if (productMatches.length === 0 && item.accessory_name) {
-              const keywords = item.accessory_name
-                .replace(/^(ACID|CUBE|RFR)\s+/i, '')
-                .replace(/Set\s+/i, '')
-                .replace(/"/g, '')
-                .trim();
-              const { data: matches2 } = await supabase
+      if (compatible && compatible.length > 0) {
+        compatContext = `\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO pre ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')}:\n`;
+        
+        const byType = { kickstand: [], mudguard: [], carrier: [] };
+        compatible.forEach(c => byType[c.accessory_type]?.push(c));
+        
+        const typeNames = { kickstand: 'STOJANY', mudguard: 'BLATNÍKY', carrier: 'NOSIČE' };
+        const typeExplanation = {
+          compatible: '✅ kompatibilný',
+          pre_installed: '📦 už namontovaný na bicykli',
+          needs_other: '⚠️ vyžaduje ďalší produkt'
+        };
+        
+        let readyText = '';
+        
+        for (const [type, items] of Object.entries(byType)) {
+          if (items.length > 0) {
+            readyText += `\n${typeNames[type]}:\n`;
+            for (const item of items) {
+              const status = typeExplanation[item.compatibility_type] || '';
+              
+              let productMatches = [];
+              const { data: matches1 } = await supabase
                 .from('products')
                 .select('url, price')
                 .eq('client_id', client.id)
-                .ilike('name', `%${keywords}%`)
+                .ilike('name', `%${item.accessory_short_name.replace(/"/g, '')}%`)
                 .limit(1);
-              if (matches2?.length > 0) productMatches = matches2;
-            }
-          const productMatch = productMatches?.[0] || null;
-            
-          if (productMatch?.url) {
-            compatContext += `- ${item.accessory_name} | ${productMatch.price || ''}€ | ${productMatch.url} ${status}\n`;
-            } else {
-              compatContext += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
+              if (matches1?.length > 0) productMatches = matches1;
+              
+              if (productMatches.length === 0 && item.accessory_name) {
+                const keywords = item.accessory_name
+                  .replace(/^(ACID|CUBE|RFR)\s+/i, '')
+                  .replace(/Set\s+/i, '')
+                  .replace(/"/g, '')
+                  .trim();
+                const { data: matches2 } = await supabase
+                  .from('products')
+                  .select('url, price')
+                  .eq('client_id', client.id)
+                  .ilike('name', `%${keywords}%`)
+                  .limit(1);
+                if (matches2?.length > 0) productMatches = matches2;
+              }
+              
+              const productMatch = productMatches?.[0] || null;
+              
+              if (productMatch?.url) {
+                readyText += `- [${item.accessory_name}](${productMatch.url}) — ${productMatch.price}€ ${status}\n`;
+              } else {
+                readyText += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
+              }
             }
           }
         }
+        
+        compatContext += readyText;
+        compatContext += `\nINŠTRUKCIE PRE ODPOVEĎ:
+  - Zobraz PRESNE tieto produkty vrátane linkov v ROVNAKOM formáte [názov](url)
+  - NEKOPÍRUJ linky do textu ako čistý text, použi VŽDY markdown formát [text](url)
+  - Ak má produkt cenu, uveď ju
+  - Ak je "už namontovaný" informuj zákazníka
+  - Nepridávaj žiadne iné produkty\n`;
+        
+        console.log(`✅ Nájdených ${compatible.length} kompatibilných produktov`);
+        console.log('📋 Kontext:', readyText.substring(0, 300));
+      } else {
+        compatContext = `\n\nPre bicykel ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')} nie sú dostupné kompatibilné ${accTypes.join('/')}.`;
+        console.log(`⚠️ Žiadne kompatibilné produkty pre ${bikeWithFrame.frame_description}`);
       }
-      
-      compatContext += `\nPRAVIDLÁ KOMPATIBILITY:
-      - Odporúčaj LEN produkty z tohto zoznamu
-      - VŽDY pridaj odkaz na produkt vo formáte [názov produktu](URL) - URL je uvedený pri každom produkte
-      - Formát linku v odpovedi: [ACID Carrier SIC RAIL 29"](https://fenixbike.sk/...)
-      - Ak je "už namontovaný" - informuj zákazníka že to už má
-      - Ak "vyžaduje ďalší produkt" - upozorni zákazníka
-      - Ak pre daný bicykel nie sú žiadne kompatibilné produkty daného typu, povedz to zákazníkovi\n`;
-      
-      console.log(`✅ Nájdených ${compatible.length} kompatibilných produktov`);
-    } else {
-      compatContext = `\n\nPre bicykel ${bikeWithFrame.name.replace(/^CUBE\s+/i, '')} nie sú dostupné kompatibilné ${accTypes.join('/')}.`;
-      console.log(`⚠️ Žiadne kompatibilné produkty pre ${bikeWithFrame.frame_description}`);
     }
   }
-}
 
 
 // === VYTVOR KONTEXT PRE AI ===
