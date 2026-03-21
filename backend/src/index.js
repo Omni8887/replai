@@ -1630,6 +1630,8 @@ if (exactBikeResults?.length > 0) {
         for (const [type, items] of Object.entries(byType)) {
           if (items.length > 0) {
             readyText += `\n${typeNames[type]}:\n`;
+            // Najprv spracuj všetky a zoraď - s URL prvé
+            const processedItems = [];
             for (const item of items) {
               const status = typeExplanation[item.compatibility_type] || '';
               
@@ -1660,11 +1662,14 @@ if (exactBikeResults?.length > 0) {
               const productMatch = productMatches?.[0] || null;
               
               if (productMatch?.url) {
-                readyText += `- [${item.accessory_name}](${productMatch.url}) — ${productMatch.price}€ ${status}\n`;
+                processedItems.push({ text: `- [${item.accessory_name}](${productMatch.url}) — ${productMatch.price}€ ${status}\n`, hasUrl: true });
               } else {
-                readyText += `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`;
+                processedItems.push({ text: `- ${item.accessory_name} (č. ${item.item_number}) ${status}\n`, hasUrl: false });
               }
             }
+            // Zoraď - s URL prvé
+            processedItems.sort((a, b) => b.hasUrl - a.hasUrl);
+            processedItems.forEach(p => readyText += p.text);
           }
         }
         
