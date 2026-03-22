@@ -31,9 +31,11 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="bg-white p-10 rounded-2xl shadow-xl shadow-slate-200 w-full max-w-md border border-slate-200">
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200">
-            <span className="text-white font-bold text-2xl">R</span>
-          </div>
+          <a href="https://replai.sk" className="inline-block">
+            <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-200 hover:scale-105 hover:shadow-xl hover:shadow-violet-300 transition-all cursor-pointer">
+              <span className="text-white font-bold text-2xl">R</span>
+            </div>
+          </a>
           <h1 className="text-2xl font-bold text-slate-900">Vitajte späť</h1>
           <p className="text-slate-500 mt-2">Prihláste sa do Replai</p>
         </div>
