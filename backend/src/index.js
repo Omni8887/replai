@@ -1634,23 +1634,39 @@ if (exactBikeResults?.length > 0) {
               const status = typeExplanation[item.compatibility_type] || '';
               
               let productMatches = [];
+            
+              // 1. Skús accessory_short_name ale presnejšie
+              const shortClean = item.accessory_short_name.replace(/"/g, '').trim();
               const { data: matches1 } = await supabase
                 .from('products')
-                .select('url, price')
+                .select('url, price, name')
                 .eq('client_id', client.id)
-                .ilike('name', `%${item.accessory_short_name.replace(/"/g, '')}%`)
-                .limit(1);
-              if (matches1?.length > 0) productMatches = matches1;
+                .ilike('name', `%${shortClean}%`)
+                .limit(5);
               
+              // Filtruj - vylúč false matche (ROOKIE, Kid)
+              if (matches1?.length > 0) {
+                const exactMatch = matches1.find(m => {
+                  const mName = m.name.toLowerCase();
+                  const sName = shortClean.toLowerCase();
+                  return mName.endsWith(sName) || 
+                         (mName.includes(` ${sName}`) && !mName.includes(`${sName} rookie`) && !mName.includes(`${sName} kid`));
+                });
+                if (exactMatch) productMatches = [exactMatch];
+                else if (shortClean.length > 5) productMatches = [matches1[0]];
+              }
+              
+              // 2. Ak nenašiel, skús kľúčové slová z accessory_name
               if (productMatches.length === 0 && item.accessory_name) {
                 const keywords = item.accessory_name
                   .replace(/^(ACID|CUBE|RFR)\s+/i, '')
                   .replace(/Set\s+/i, '')
+                  .replace(/\n/g, ' ')
                   .replace(/"/g, '')
                   .trim();
                 const { data: matches2 } = await supabase
                   .from('products')
-                  .select('url, price')
+                  .select('url, price, name')
                   .eq('client_id', client.id)
                   .ilike('name', `%${keywords}%`)
                   .limit(1);
