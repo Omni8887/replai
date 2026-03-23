@@ -758,9 +758,24 @@ app.post('/chat', async (req, res) => {
 
     const msgNorm = normalize(message);
     
-    // Spoj s kontextom z predchádzajúcich správ
+   // Spoj s kontextom z predchádzajúcich správ
+    // ALE ak aktuálna správa je o novej téme, IGNORUJ kontext
     let fullContext = msgNorm;
-    if (context.length > 0) {
+    let useContext = true;
+    
+    // Detekuj či aktuálna správa je nová téma
+    const currentTopicKeywords = /detsk|dieta|deti|cestn|cestny|horsk|gravel|trek|mest|prilb|stojan|blatnik|nosic|pedal|sedlo|svetl|zamok|pump|dres|rukav|obuv|nohav|bund|okuli|batohy|task|flasa|narad|pocitac/;
+    const hasOwnTopic = currentTopicKeywords.test(msgNorm) || 
+                        CUBE_MODELS.some(m => msgNorm.includes(m)) ||
+                        /\b(12|14|16|18|20|24|26|27|28|29)\b/.test(msgNorm);
+    
+    if (hasOwnTopic && context.length > 0) {
+      // Aktuálna správa má vlastnú tému - použi LEN aktuálnu správu
+      useContext = false;
+      console.log('🔄 Nová téma detekovaná - ignorujem kontext');
+    }
+    
+    if (useContext && context.length > 0) {
       const prevMessages = context.filter(m => m.role === 'user').map(m => normalize(m.content)).join(' ');
       fullContext = prevMessages + ' ' + msgNorm;
     }
