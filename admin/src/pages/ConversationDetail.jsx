@@ -63,31 +63,6 @@ export default function ConversationDetail() {
     )
   }
 
-
-  const renderMessage = (text) => {
-    if (!text) return null;
-    // Rozdeľ text na časti - markdown linky a zvyšok
-    const parts = text.split(/(\[[^\]]+\]\(https?:\/\/[^)]+\))/g);
-    return parts.map((part, i) => {
-      const linkMatch = part.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
-      if (linkMatch) {
-        return (
-          <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" 
-             className="text-violet-600 underline hover:text-violet-800">
-            {linkMatch[1]}
-          </a>
-        );
-      }
-      // Bold **text**
-      const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
-      return boldParts.map((bp, j) => {
-        const boldMatch = bp.match(/\*\*([^*]+)\*\*/);
-        if (boldMatch) return <strong key={`${i}-${j}`}>{boldMatch[1]}</strong>;
-        return <span key={`${i}-${j}`}>{bp}</span>;
-      });
-    });
-  }
-
   return (
     <div>
       <div className="mb-6">
@@ -185,7 +160,7 @@ export default function ConversationDetail() {
                     {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
                     {msg.role === 'user' ? 'Zákazník' : 'AI Asistent'}
                   </p>
-                  <div className="whitespace-pre-wrap">{renderMessage(msg.content)}</div>
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
                   <p className="text-xs opacity-50 mt-2">
                     {new Date(msg.created_at).toLocaleTimeString('sk', {
                       hour: '2-digit',
