@@ -1752,19 +1752,20 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
     }
 
 
-// Kompatibilné produkty - pripoj PRIAMO k odpovedi (nie cez AI)
-let compatDirectBlock = '';
+// Kompatibilné produkty - vlož priamo do productsContext pre AI
 if (compatContext && compatContext.includes('](')) {
   const compatLines = compatContext.split('\n').filter(l => l.includes('](') && l.startsWith('- ['));
   if (compatLines.length > 0) {
-    compatDirectBlock = '\n\nKompatibilné stojany/príslušenstvo:\n';
+    productsContext = '\n\nNÁJDENÉ KOMPATIBILNÉ PRÍSLUŠENSTVO PRE ZÁKAZNÍKOV BICYKEL:\n';
     compatLines.forEach(line => {
-      compatDirectBlock += line.trim() + '\n';
+      productsContext += line.trim() + '\n';
     });
-    // Odstráň compatContext z AI kontextu aby AI neodpovedala "nemáme"
+    productsContext += '\nODPOVEDZ ZÁKAZNÍKOVI TAKTO:\n';
+    productsContext += '1. Povedz "Pre váš [model] máme tieto kompatibilné [stojany/blatníky/nosiče]:"\n';
+    productsContext += '2. Vypíš KAŽDÝ produkt PRESNE v tomto formáte: • [názov](url) — cena\n';
+    productsContext += '3. NIKDY nehovor "nemáme v ponuke" alebo "nemám kompatibilné"\n';
+    productsContext += '4. Ignoruj farbu bicykla - kompatibilita závisí od modelu nie od farby\n';
     compatContext = '';
-    // Pridaj info do productsContext aby AI vedela že kompatibilitu UŽ riešime
-    productsContext += '\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO UŽ BUDE PRIDANÉ AUTOMATICKY. Nehovor že nemáme daný model. Povedz že pre tento bicykel máme kompatibilné príslušenstvo ktoré je uvedené nižšie.\n';
   }
 }
 
@@ -1908,10 +1909,7 @@ KRITICKÉ PRAVIDLÁ:
     });
     
     fullResponse = response.content[0].text;
-    // Pripoj kompatibilné produkty s linkami priamo (AI ich ignoruje)
-if (compatDirectBlock) {
-  fullResponse += compatDirectBlock;
-}
+
     inputTokens = response.usage?.input_tokens || 0;
     outputTokens = response.usage?.output_tokens || 0;
     
