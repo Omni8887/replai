@@ -1570,10 +1570,13 @@ if (wantsAccessory && searchModel) {
  // Skús nájsť presnejší match s celou správou
 let bikeWithFrame = null;
 const bikeSearchTerms = message.toLowerCase()
-    .replace(/nosic|nosič|stojan|blatnik|blatník|blatniky|blatníky|carrier|kickstand|mudguard|aký|aky|aké|ake|na|pre|ku|k|do/gi, '')
+    .replace(/nosic|nosič|stojan|blatnik|blatník|blatniky|blatníky|carrier|kickstand|mudguard|aký|aky|aké|ake|na|pre|ku|k|do|pasuje|bicykel|bike|aké|ake|?\s*$/gi, '')
+    .replace(/\s*-\s*xxl|\s*-\s*xl|\s*-\s*l|\s*-\s*m|\s*-\s*s|\s*-\s*xs/gi, '')
+    .replace(/[´`'']/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 
-// 1. Skús presný match (napr. "Nature Pro")
+// 1. Skús presný match
 const { data: exactBikeResults } = await supabase
     .from('products')
     .select('name, frame_description')
@@ -1584,16 +1587,37 @@ const { data: exactBikeResults } = await supabase
 
 if (exactBikeResults?.length > 0) {
     bikeWithFrame = exactBikeResults[0];
+    console.log(`🔧 Presný match: ${bikeWithFrame.name}`);
 } else {
-    // 2. Fallback na model
-    const { data: modelBikeResults } = await supabase
-        .from('products')
-        .select('name, frame_description')
-        .eq('client_id', client.id)
-        .ilike('name', `%${searchModel}%`)
-        .not('frame_description', 'is', null)
-        .limit(1);
-    bikeWithFrame = modelBikeResults?.[0] || null;
+    // 2. Skús model + variant z správy (napr. "reaction hybrid pro 800")
+    const variantWords = message.toLowerCase()
+        .replace(/[´`'']/g, '')
+        .match(new RegExp(`${searchModel}[\\s\\w]*(?:pro|one|race|slx|slt|exc|performance|comfort)(?:\\s+\\d{3,4})?`, 'i'));
+    
+    if (variantWords) {
+        const variantSearch = variantWords[0].trim();
+        console.log(`🔧 Variant search: "${variantSearch}"`);
+        const { data: variantResults } = await supabase
+            .from('products')
+            .select('name, frame_description')
+            .eq('client_id', client.id)
+            .ilike('name', `%${variantSearch}%`)
+            .not('frame_description', 'is', null)
+            .limit(1);
+        if (variantResults?.length > 0) bikeWithFrame = variantResults[0];
+    }
+    
+    // 3. Fallback na samotný model
+    if (!bikeWithFrame) {
+        const { data: modelResults } = await supabase
+            .from('products')
+            .select('name, frame_description')
+            .eq('client_id', client.id)
+            .ilike('name', `%${searchModel}%`)
+            .not('frame_description', 'is', null)
+            .limit(1);
+        bikeWithFrame = modelResults?.[0] || null;
+    }
 }
   
   if (bikeWithFrame?.frame_description) {
