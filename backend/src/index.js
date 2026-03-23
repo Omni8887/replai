@@ -1606,28 +1606,7 @@ for (const variant of bikeSearchVariants) {
     }
 }
 
-// 1. Skús presný match (napr. "Nature Pro")
-const { data: exactBikeResults } = await supabase
-    .from('products')
-    .select('name, frame_description')
-    .eq('client_id', client.id)
-    .ilike('name', `%${bikeSearchTerms}%`)
-    .not('frame_description', 'is', null)
-    .limit(1);
 
-if (exactBikeResults?.length > 0) {
-    bikeWithFrame = exactBikeResults[0];
-} else {
-    // 2. Fallback na model
-    const { data: modelBikeResults } = await supabase
-        .from('products')
-        .select('name, frame_description')
-        .eq('client_id', client.id)
-        .ilike('name', `%${searchModel}%`)
-        .not('frame_description', 'is', null)
-        .limit(1);
-    bikeWithFrame = modelBikeResults?.[0] || null;
-}
   
   if (bikeWithFrame?.frame_description) {
     console.log(`🔧 Kompatibilita pre: ${bikeWithFrame.name} (${bikeWithFrame.frame_description})`);
