@@ -1076,6 +1076,15 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       console.log(`🎡 Veľkosť kolesa (priama): ${wheelSize}"`);
     }
     
+    // Detekcia veľkosti bez jednotky ak je v kontexte detský bicykel
+    if (!wheelSize && /detsk|dieta|deti|syn|dcer|velkost|velk/i.test(msgNorm)) {
+      const sizeMatch = msgNorm.match(/\b(12|14|16|18|20|24|26)\b/);
+      if (sizeMatch) {
+        wheelSize = sizeMatch[1];
+        console.log(`🎡 Veľkosť kolesa (z čísla v správe): ${wheelSize}"`);
+      }
+    }
+    
     // Detekcia výšky dieťaťa - PRIORITNE z aktuálnej správy
     // Tabuľka: 12"=85-100cm | 16"=100-115cm | 20"=116-124cm | 24"=125-145cm | 26"=140-160cm
     if (!wheelSize) {
