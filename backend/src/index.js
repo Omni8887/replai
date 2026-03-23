@@ -1755,13 +1755,16 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
 // Kompatibilné produkty - pripoj PRIAMO k odpovedi (nie cez AI)
 let compatDirectBlock = '';
 if (compatContext && compatContext.includes('](')) {
-  const compatLines = compatContext.split('\n').filter(l => l.includes(']('));
+  const compatLines = compatContext.split('\n').filter(l => l.includes('](') && l.startsWith('- ['));
   if (compatLines.length > 0) {
-    compatDirectBlock = '\n\n';
+    compatDirectBlock = '\n\nKompatibilné stojany/príslušenstvo:\n';
     compatLines.forEach(line => {
       compatDirectBlock += line.trim() + '\n';
     });
+    // Odstráň compatContext z AI kontextu aby AI neodpovedala "nemáme"
     compatContext = '';
+    // Pridaj info do productsContext aby AI vedela že kompatibilitu UŽ riešime
+    productsContext += '\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO UŽ BUDE PRIDANÉ AUTOMATICKY. Nehovor že nemáme daný model. Povedz že pre tento bicykel máme kompatibilné príslušenstvo ktoré je uvedené nižšie.\n';
   }
 }
 
