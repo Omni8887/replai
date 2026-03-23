@@ -1917,7 +1917,11 @@ KRITICKÉ PRAVIDLÁ:
     outputTokens = response.usage?.output_tokens || 0;
     
     // Validácia linkov
+    // Validácia linkov - pridaj aj URL z kompatibilného príslušenstva
     const validUrls = products.map(p => p.url).filter(Boolean);
+    // Extrahuj URL z compatContext/productsContext
+    const compatUrlMatches = (productsContext + compatContext).match(/https?:\/\/[^\s)]+/g);
+    if (compatUrlMatches) validUrls.push(...compatUrlMatches);
     const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
     let match;
     const originalResponse = fullResponse;
