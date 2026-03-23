@@ -848,9 +848,16 @@ const CUBE_MODELS = [
   'cubie', 'kid', 'race kid'
       ];
 
-    // Detekuj či hľadá e-bike
-    const wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(fullContext);
-    
+    // Detekuj či hľadá e-bike - PRIORITA aktuálna správa
+    let wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
+    // Ak v aktuálnej správe nie je, skús kontext ALE len ak aktuálna správa nie je o inom type
+    if (!wantsElektro && /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(fullContext)) {
+      // Ak aktuálna správa je o detských/cestných/iných bicykloch, IGNORUJ elektro z kontextu
+      const newTopicKeywords = /detsk|dieta|deti|cestn|horsk|gravel|trek|mest|20"|24"|16"|velkost/;
+      if (!newTopicKeywords.test(msgNorm)) {
+        wantsElektro = true;
+      }
+    }
 // Nájdi cieľové kategórie - PRIORITA: aktuálna správa > kontext
 let targetCategories = [];
 const keywordMap = wantsElektro ? ELEKTRO_KEYWORDS : CATEGORY_KEYWORDS;
