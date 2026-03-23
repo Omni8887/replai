@@ -1752,23 +1752,15 @@ Opýtaj sa zákazníka na konkrétnejší typ produktu alebo odporuč kontaktova
     }
 
 
-// Ak máme kompatibilné produkty s URL, pridaj ich do productsContext
+// Kompatibilné produkty - pripoj PRIAMO k odpovedi (nie cez AI)
+let compatDirectBlock = '';
 if (compatContext && compatContext.includes('](')) {
   const compatLines = compatContext.split('\n').filter(l => l.includes(']('));
   if (compatLines.length > 0) {
-    let compatProducts = '\n\nKOMPATIBILNÉ PRÍSLUŠENSTVO:\n';
-    compatLines.forEach((line, i) => {
-      const nameMatch = line.match(/\[([^\]]+)\]/);
-      const urlMatch = line.match(/\((https?:\/\/[^)]+)\)/);
-      const priceMatch = line.match(/(\d+\.?\d*)\s*€/);
-      const statusMatch = line.match(/(✅|📦|⚠️)[^]*$/);
-      if (nameMatch && urlMatch) {
-        compatProducts += `${i + 1}. ${nameMatch[1]} | ${priceMatch ? priceMatch[1] + '€' : ''} | ${urlMatch[1]} ${statusMatch ? statusMatch[0] : ''}\n`;
-      }
+    compatDirectBlock = '\n\n';
+    compatLines.forEach(line => {
+      compatDirectBlock += line.trim() + '\n';
     });
-    compatProducts += `\nToto sú kompatibilné produkty pre konkrétny bicykel. Odporúčaj IBA tieto.\n`;
-    productsContext += compatProducts;
-    // Vyčisti compatContext aby sa neduplikoval
     compatContext = '';
   }
 }
@@ -1913,6 +1905,10 @@ KRITICKÉ PRAVIDLÁ:
     });
     
     fullResponse = response.content[0].text;
+    // Pripoj kompatibilné produkty s linkami priamo (AI ich ignoruje)
+if (compatDirectBlock) {
+  fullResponse += compatDirectBlock;
+}
     inputTokens = response.usage?.input_tokens || 0;
     outputTokens = response.usage?.output_tokens || 0;
     
