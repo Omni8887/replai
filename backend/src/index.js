@@ -765,6 +765,26 @@ app.post('/chat', async (req, res) => {
     
     // Detekuj či aktuálna správa je nová téma
     const currentTopicKeywords = /detsk|dieta|deti|cestn|cestny|horsk|gravel|trek|mest|prilb|stojan|blatnik|nosic|pedal|sedlo|svetl|zamok|pump|dres|rukav|obuv|nohav|bund|okuli|batohy|task|flasa|narad|pocitac/;
+    
+    // CUBE modely - pre priame vyhľadávanie
+const CUBE_MODELS = [
+  // Cestné
+  'agree', 'attain', 'litening', 'aerium',
+  // Gravel
+  'nuroad', 'cross race',
+  // Horské
+  'reaction', 'aim', 'attention', 'acid', 'analog',
+  // Celoodpružené
+  // Celoodpružené
+   'one44', 'one22', 'one77', 'one55', 'stereo', 'ams', 'hanzz', 'fritzz',
+  // Trekingové
+  'kathmandu', 'touring', 'nature', 'nuride', 'travel',
+  // Mestské
+  'hyde', 'ella', 'supreme', 'nulane', 'town',
+  // Detské
+  'cubie', 'kid', 'race kid'
+      ];
+    
     const hasOwnTopic = currentTopicKeywords.test(msgNorm) || 
                         CUBE_MODELS.some(m => msgNorm.includes(m)) ||
                         /\b(12|14|16|18|20|24|26|27|28|29)\b/.test(msgNorm);
@@ -844,24 +864,7 @@ app.post('/chat', async (req, res) => {
       'Elektrobicykle > Transportné': ['cargo', 'naklad', 'transport', 'preprav', 'rodinn']
     };
 
-// CUBE modely - pre priame vyhľadávanie
-const CUBE_MODELS = [
-  // Cestné
-  'agree', 'attain', 'litening', 'aerium',
-  // Gravel
-  'nuroad', 'cross race',
-  // Horské
-  'reaction', 'aim', 'attention', 'acid', 'analog',
-  // Celoodpružené
-  // Celoodpružené
-   'one44', 'one22', 'one77', 'one55', 'stereo', 'ams', 'hanzz', 'fritzz',
-  // Trekingové
-  'kathmandu', 'touring', 'nature', 'nuride', 'travel',
-  // Mestské
-  'hyde', 'ella', 'supreme', 'nulane', 'town',
-  // Detské
-  'cubie', 'kid', 'race kid'
-      ];
+
 
     // Detekuj či hľadá e-bike - PRIORITA aktuálna správa
     let wantsElektro = /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
