@@ -808,7 +808,7 @@ const CUBE_MODELS = [
       // Bicykle
       'Bicykle > Cestné': ['cestn', 'cestak', 'cestny', 'cestnej', 'silnic', 'road', 'roadbike', 'zavod', 'asfalt'],
       'Bicykle > Horské pevné': ['horsk', 'horsky', 'mtb', 'mountain', 'hardtail', 'teren', 'les'],
-      'Bicykle > Celoodpružené bicykle': ['celoodpruz', 'fullsus', 'full sus', 'enduro', 'trail', 'downhill'],
+      'Bicykle > Celoodpružené bicykle': ['celoodpruz', 'celo', 'fullsus', 'full sus', 'full suspension', 'enduro', 'trail', 'downhill'],
       'Bicykle > Gravel': ['gravel', 'gravelak', 'cyklokros', 'sotorik'],
       'Bicykle > Trekingové': ['trek', 'treking', 'turistik', 'vylet', 'touring'],
       'Bicykle > Mestské': ['mest', 'mestsky', 'city', 'urban', 'dochadz'],
@@ -855,7 +855,7 @@ const CUBE_MODELS = [
     };
 
     const ELEKTRO_KEYWORDS = {
-      'Elektrobicykle > Celoodpružené elektro': ['celoodpruz', 'fullsus', 'full sus', 'enduro', 'trail', 'downhill'],
+      'Elektrobicykle > Celoodpružené elektro': ['celoodpruz', 'celo', 'fullsus', 'full sus', 'full suspension', 'enduro', 'trail', 'downhill'],
       'Elektrobicykle > Horské - Pevné elektro': ['horsk', 'horsky', 'mtb', 'mountain', 'hardtail', 'teren', 'les'],
       'Elektrobicykle > Trekingové elektro': ['trek', 'treking', 'turistik', 'touring', 'vylet'],
       'Elektrobicykle > Mestské elektro': ['mest', 'mestsky', 'city', 'urban', 'dochadz'],
