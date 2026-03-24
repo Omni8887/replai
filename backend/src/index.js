@@ -1370,6 +1370,26 @@ if (!skipProductSearch) {
         const { data } = await query.order('price', { ascending: sortAsc }).limit(3000);
         if (data) categoryProducts.push(...data);
       }
+
+
+     // Ak sa nenašli produkty v cenovom rozpätí, skús bez cenového filtra
+     if (categoryProducts.length === 0 && (maxPrice || minPrice)) {
+      console.log('⚠️ Žiadne produkty v cenovom rozpätí, skúšam bez limitu...');
+      for (const category of targetCategories.slice(0, 4)) {
+        let query = supabase
+          .from('products')
+          .select('name, description, price, category, url')
+          .eq('client_id', client.id)
+          .eq('category', category);
+        
+        const { data } = await query.order('price', { ascending: true }).limit(5);
+        if (data) categoryProducts.push(...data);
+      }
+      if (categoryProducts.length > 0) {
+        console.log(`📦 Bez cenového filtra: ${categoryProducts.length} produktov (ukáže najbližšie)`);
+      }
+    }
+
       
       // Ak sa nenašlo s batériou, skús bez filtra batérie
       if (categoryProducts.length === 0 && batterySize && wantsElektro) {
@@ -1476,9 +1496,10 @@ if (!skipProductSearch) {
         const { data } = await query.limit(10);
         if (data) products.push(...data);
       }
+    } // koniec if (!skipProductSearch)
       console.log(`📦 Fallback: ${products.length} produktov`);
     }
-  } // koniec if (!skipProductSearch)
+  
     // === POST-PROCESSING ===
     
     // Odstráň duplikáty podľa URL
