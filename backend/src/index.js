@@ -3027,6 +3027,9 @@ async function sendLeadNotification(clientEmail, leadInfo, conversationId, clien
             ${leadInfo.email ? `<p><strong>📧 Email:</strong> ${leadInfo.email}</p>` : ''}
             ${leadInfo.phone ? `<p><strong>📱 Telefón:</strong> ${leadInfo.phone}</p>` : ''}
           </div>
+          <a href="${process.env.FRONTEND_URL}/conversations/${conversationId}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+           Zobraziť konverzáciu
+           </a>
           <p style="color: #64748b; font-size: 14px;">
             Odpovedzte čo najskôr pre najlepšiu šancu na konverziu!
           </p>
