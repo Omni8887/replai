@@ -1216,8 +1216,32 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       }
     }
 
+// === DETEKCIA VÁGNEHO DOTAZU ===
+const isVagueQuery = /^(bicykl|elektrobicykl|ebike|e-bike|e bike|prilb|oblecen|doplnk|co mate|ponuk|sortiment|mate|hlad)/.test(msgNorm)
+  && msgNorm.split(/\s+/).length <= 3
+  && !maxPrice
+  && !minPrice
+  && !wheelSize
+  && !searchModel
+  && targetCategories.length === 0 || (wantsElektro && targetCategories.length > 0 && msgNorm.split(/\s+/).length <= 2);
+
+let skipProductSearch = false;
+
+if (isVagueQuery) {
+  skipProductSearch = true;
+  console.log('⏸️ Vágny dotaz - preskakujem hľadanie produktov');
+}
+
+
   // === HĽADANIE PRODUKTOV ===
-  let products = [];
+let products = [];
+
+if (skipProductSearch) {
+  products = [];
+  productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
+}
+    
+if (!skipProductSearch) {
 
 // === PRIAME HĽADANIE CELÉHO NÁZVU ===
     // Ak zákazník vložil dlhý text (>30 znakov) s modelom, hľadaj priamo
@@ -1454,7 +1478,7 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
       }
       console.log(`📦 Fallback: ${products.length} produktov`);
     }
-
+  } // koniec if (!skipProductSearch)
     // === POST-PROCESSING ===
     
     // Odstráň duplikáty podľa URL
