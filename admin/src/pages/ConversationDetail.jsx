@@ -4,6 +4,44 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
 import { ArrowLeft, Mail, Phone, User, Bot, Clock, Trash2 } from 'lucide-react'
 
+// Funkcia na renderovanie markdown linkov a bold textu
+function renderMessageContent(content, isUser) {
+  if (!content) return null
+  
+  // Regex pre markdown linky [text](url) a bold **text**
+  const parts = content.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)/g)
+  
+  return parts.map((part, i) => {
+    // Markdown link [text](url)
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    if (linkMatch) {
+      return (
+        <a
+          key={i}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`underline font-medium ${
+            isUser 
+              ? 'text-white hover:text-violet-200' 
+              : 'text-violet-600 hover:text-violet-800'
+          }`}
+        >
+          {linkMatch[1]}
+        </a>
+      )
+    }
+    
+    // Bold **text**
+    const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+    if (boldMatch) {
+      return <strong key={i}>{boldMatch[1]}</strong>
+    }
+    
+    return part
+  })
+}
+
 export default function ConversationDetail() {
   const { id } = useParams()
   const { API_URL } = useAuth()
@@ -160,7 +198,9 @@ export default function ConversationDetail() {
                     {msg.role === 'user' ? <User size={12} /> : <Bot size={12} />}
                     {msg.role === 'user' ? 'Zákazník' : 'AI Asistent'}
                   </p>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <p className="whitespace-pre-wrap">
+                    {renderMessageContent(msg.content, msg.role === 'user')}
+                  </p>
                   <p className="text-xs opacity-50 mt-2">
                     {new Date(msg.created_at).toLocaleTimeString('sk', {
                       hour: '2-digit',
