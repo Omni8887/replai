@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { Bot, Palette, Eye, Save, Check, Sparkles, Tag, Gift } from 'lucide-react'
 
 export default function Settings() {
-  const { client, API_URL, refreshProfile } = useAuth()
+  const { client, token, API_URL, refreshProfile } = useAuth()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -18,6 +18,9 @@ export default function Settings() {
     welcomeMessage: 'Dobrý deň! Ako vám môžem pomôcť?'
   })
 
+  // Kapacita prevádzok
+  const [locations, setLocations] = useState([])
+
   useEffect(() => {
     if (client) {
       setSystemPrompt(client.system_prompt || '')
@@ -28,6 +31,21 @@ export default function Settings() {
       })
     }
   }, [client])
+
+  useEffect(() => {
+    loadLocations()
+  }, [])
+
+  const loadLocations = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/bookings/locations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setLocations(res.data || [])
+    } catch (err) {
+      console.error('Error loading locations:', err)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -82,6 +100,18 @@ export default function Settings() {
       })
     } finally {
       setPromoLoading(false)
+    }
+  }
+
+  const updateCapacity = async (locId, newCapacity) => {
+    try {
+      await axios.put(`${API_URL}/bookings/locations/${locId}`, 
+        { daily_capacity: newCapacity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      loadLocations()
+    } catch (e) {
+      console.error('Error updating capacity:', e)
     }
   }
 
@@ -238,8 +268,45 @@ export default function Settings() {
           </div>
         </div>
 
-{/* Notifikačné emaily */}
-<div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        {/* Denná kapacita prevádzok */}
+        {locations.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                <Bot size={20} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Denná kapacita prevádzok</h2>
+                <p className="text-sm text-slate-500">Maximálny počet servisných rezervácií na deň pre každú prevádzku</p>
+              </div>
+            </div>
+            {locations.map(loc => (
+              <div key={loc.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #f0f0f0'}}>
+                <div>
+                  <div style={{fontWeight:500,fontSize:14}}>{loc.name?.replace('CUBE Store - ', '')}</div>
+                  <div style={{fontSize:12,color:'#888'}}>{loc.address}</div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <button 
+                    className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg flex items-center justify-center transition"
+                    style={{width:32,height:32}}
+                    onClick={() => updateCapacity(loc.id, Math.max(1, (loc.daily_capacity || 2) - 1))}
+                  >−</button>
+                  <span style={{fontSize:20,fontWeight:600,minWidth:32,textAlign:'center'}}>{loc.daily_capacity || 2}</span>
+                  <button 
+                    className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg flex items-center justify-center transition"
+                    style={{width:32,height:32}}
+                    onClick={() => updateCapacity(loc.id, (loc.daily_capacity || 2) + 1)}
+                  >+</button>
+                  <span style={{fontSize:12,color:'#888',marginLeft:4}}>/ deň</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Notifikačné emaily */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
               <Bot size={20} className="text-white" />
@@ -252,7 +319,6 @@ export default function Settings() {
 
           <NotificationEmails apiUrl={API_URL} />
         </div>
-
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -307,6 +373,7 @@ export default function Settings() {
       </div>
     </div>
   )
+
   function NotificationEmails({ apiUrl }) {
     const { token } = useAuth()
     const [emails, setEmails] = useState([])
@@ -399,7 +466,4 @@ export default function Settings() {
       </div>
     )
   }
-
-
-
 }
