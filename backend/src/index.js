@@ -4180,7 +4180,8 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
             <p style="color: #333; font-size: 15px; margin-top: 25px;">S pozdravom,<br><strong>Tím CUBE Store Bratislava</strong></p>
           </div>
           
-          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:20px;text-align:center;font-size:12px;color:#888;background-color:#000000;">© 2025 CUBE Store Bratislava | fenixbike.sk</td></tr></table>
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#000000" style="padding:20px;text-align:center;font-size:12px;color:#888;background-color:#000000;"><p style="margin:0 0 8px;">Tento email bol vygenerovaný automaticky, prosím neodpovedajte naň.</p>© 2025 CUBE Store Bratislava | fenixbike.sk</td></tr></table>
+
         </div>
       `
     });
