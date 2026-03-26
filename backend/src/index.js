@@ -2197,9 +2197,7 @@ app.post('/auth/register', async (req, res) => {
           <h2 style="color: #7c3aed;">✉️ Potvrďte váš email</h2>
           <p>Ahoj ${name},</p>
           <p>Ďakujeme za registráciu v Replai! Pre aktiváciu účtu potvrďte váš email:</p>
-          <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-            Potvrdiť email
-          </a>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;"><tr><td align="center" bgcolor="#7c3aed" style="border-radius:8px;padding:12px 24px;"><a href="${verifyUrl}" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;display:inline-block;">Potvrdiť email</a></td></tr></table>
           <p style="color: #64748b; font-size: 14px;">Link je platný 24 hodín.</p>
         </div>
       `
@@ -2370,9 +2368,7 @@ app.post('/auth/forgot-password', async (req, res) => {
           <p>Ahoj ${client.name || ''},</p>
           <p>Dostali sme žiadosť o reset hesla pre tvoj účet.</p>
           <p>Klikni na tlačidlo nižšie pre nastavenie nového hesla:</p>
-          <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-            Resetovať heslo
-          </a>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;"><tr><td align="center" bgcolor="#7c3aed" style="border-radius:8px;padding:12px 24px;"><a href="${resetUrl}" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;display:inline-block;">Resetovať heslo</a></td></tr></table>
           <p style="color: #64748b; font-size: 14px;">Link je platný 1 hodinu.</p>
           <p style="color: #64748b; font-size: 14px;">Ak si nežiadal o reset hesla, tento email ignoruj.</p>
         </div>
@@ -3072,9 +3068,7 @@ async function sendLeadNotification(clientEmail, leadInfo, conversationId, clien
             ${leadInfo.email ? `<p><strong>📧 Email:</strong> ${leadInfo.email}</p>` : ''}
             ${leadInfo.phone ? `<p><strong>📱 Telefón:</strong> ${leadInfo.phone}</p>` : ''}
           </div>
-          <a href="${process.env.FRONTEND_URL}/conversations/${conversationId}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-           Zobraziť konverzáciu
-           </a>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;"><tr><td align="center" bgcolor="#7c3aed" style="border-radius:8px;padding:12px 24px;"><a href="${process.env.FRONTEND_URL}/conversations/${conversationId}" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;display:inline-block;">Zobraziť konverzáciu</a></td></tr></table>
           <p style="color: #64748b; font-size: 14px;">
             Odpovedzte čo najskôr pre najlepšiu šancu na konverziu!
           </p>
