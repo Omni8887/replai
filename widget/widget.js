@@ -339,6 +339,41 @@
 .replai-powered a:hover {
   text-decoration: underline;
 }
+
+/* QUICK REPLIES */
+.replai-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.replai-quick-reply {
+  background: white;
+  border: 2px solid #7c3aed;
+  color: #7c3aed;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.replai-quick-reply:hover {
+  background: #7c3aed;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.replai-quick-reply:active {
+  transform: translateY(0);
+}
 `;
 
   const styleSheet = document.createElement("style");
@@ -357,10 +392,10 @@
       <div class="replai-header">
         <div class="replai-header-info">
         <div class="replai-header-avatar">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-        </svg>
-      </div>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+  </svg>
+</div>
           <div>
             <h3 id="replaiTitle">Replai Asistent</h3>
             <div class="replai-header-status">
@@ -393,6 +428,7 @@
           <span class="replai-typing-dot"></span>
         </div>
       </div>
+      <div class="replai-quick-replies" id="replaiQuickReplies"></div>
       <div class="replai-input-area">
         <div class="replai-input-wrapper">
           <textarea 
@@ -432,6 +468,7 @@
       this.statusDot = document.getElementById('replaiStatusDot');
       this.statusText = document.getElementById('replaiStatusText');
       this.offlineMsg = document.getElementById('replaiOfflineMsg');
+      this.quickRepliesContainer = document.getElementById('replaiQuickReplies');
 
       this.isOpen = false;
       this.isOnline = false;
@@ -453,8 +490,6 @@
       }
 
       this.initializeEventListeners();
-
-      // Check status every 30 seconds
       setInterval(() => this.checkOnlineStatus(), 30000);
     }
 
@@ -464,12 +499,7 @@
           method: 'GET',
           timeout: 5000 
         });
-
-        if (response.ok) {
-          this.setOnlineStatus(true);
-        } else {
-          this.setOnlineStatus(false);
-        }
+        this.setOnlineStatus(response.ok);
       } catch (error) {
         this.setOnlineStatus(false);
       }
@@ -477,7 +507,6 @@
 
     setOnlineStatus(online) {
       this.isOnline = online;
-
       if (online) {
         this.buttonStatus.classList.add('online');
         this.statusDot.classList.add('online');
@@ -560,12 +589,10 @@
 
     renderMessages() {
       this.messagesContainer.innerHTML = '';
-
       if (this.messages.length === 0) {
         this.showWelcomeMessage();
         return;
       }
-
       this.messages.forEach(msg => {
         this.appendMessage(msg.content, msg.role === 'user', false);
       });
@@ -576,6 +603,7 @@
       localStorage.setItem('replai_thread_id', this.currentThreadId);
       this.messages = [];
       this.messagesContainer.innerHTML = '';
+      this.hideQuickReplies();
       this.showWelcomeMessage();
     }
 
@@ -607,6 +635,28 @@
     closeChat() {
       this.isOpen = false;
       this.widget.classList.remove('open');
+    }
+
+    // Quick Replies
+    showQuickReplies(replies) {
+      this.quickRepliesContainer.innerHTML = '';
+      if (!replies || replies.length === 0) return;
+      
+      replies.forEach(reply => {
+        const btn = document.createElement('button');
+        btn.className = 'replai-quick-reply';
+        btn.textContent = reply;
+        btn.addEventListener('click', () => {
+          this.hideQuickReplies();
+          this.input.value = reply;
+          this.sendMessage();
+        });
+        this.quickRepliesContainer.appendChild(btn);
+      });
+    }
+
+    hideQuickReplies() {
+      this.quickRepliesContainer.innerHTML = '';
     }
 
     appendMessage(message, isUser = false, save = true) {
@@ -652,6 +702,7 @@
       this.input.disabled = true;
       this.input.value = '';
       this.adjustTextareaHeight();
+      this.hideQuickReplies();
 
       this.appendMessage(userInput, true);
 
@@ -684,11 +735,11 @@
           throw new Error(errorData.error || 'Network error');
         }
 
-        // === SSE STREAMING ===
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let aiResponse = '';
         let responseDiv = null;
+        let quickReplies = [];
 
         while (true) {
           const { value, done } = await reader.read();
@@ -704,10 +755,16 @@
 
               try {
                 const parsed = JSON.parse(data);
+                
+                // Quick Replies
+                if (parsed.quickReplies) {
+                  quickReplies = parsed.quickReplies;
+                  continue;
+                }
+                
                 if (parsed.text !== undefined) {
                   aiResponse += parsed.text;
 
-                  // Skry typing indicator a vytvor response div pri prvom texte
                   if (!responseDiv) {
                     this.hideTypingIndicator();
                     responseDiv = document.createElement('div');
@@ -716,11 +773,9 @@
                     this.messagesContainer.appendChild(responseDiv);
                   }
 
-                  // Aktualizuj text s formátovaním
                   let formattedContent = aiResponse
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
-                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+                    .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
 
                   responseDiv.querySelector('.replai-message-bubble').innerHTML = formattedContent;
                   this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
@@ -730,12 +785,16 @@
           }
         }
 
-        // Ulož kompletnú odpoveď
         if (aiResponse) {
           this.messages.push({
             role: 'assistant',
             content: aiResponse
           });
+        }
+
+        // Zobraz quick replies ak existujú
+        if (quickReplies.length > 0) {
+          this.showQuickReplies(quickReplies);
         }
 
       } catch (error) {

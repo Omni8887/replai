@@ -1238,7 +1238,11 @@ let products = [];
 
 if (skipProductSearch) {
   products = [];
-  productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
+  if (isDualModel) {
+    productsContext = `\nModel ${dualModelName} máme v klasickej aj elektrickej verzii (${dualModelName} Hybrid). MUSÍŠ sa zákazníka opýtať ktorú verziu chce. Odpovedz PRESNE: "Model ${dualModelName} máme v klasickej aj elektrickej verzii. Ktorá vás zaujíma?"\n`;
+  } else {
+    productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
+  }
 }
     
 if (!skipProductSearch) {
@@ -1269,7 +1273,29 @@ if (!skipProductSearch) {
     }
 
     
+// === DETEKCIA DUAL VERZIE (klasický + elektro) ===
+const DUAL_MODELS = [
+  'stereo', 'ams', 'one44', 'one22', 'one77', 'one55',
+  'reaction', 'kathmandu', 'touring', 'nature', 'nuride',
+  'supreme', 'ella', 'town', 'nuroad'
+];
 
+let isDualModel = false;
+let dualModelName = null;
+
+if (searchModel && !wantsElektro && DUAL_MODELS.includes(searchModel)) {
+  // Zákazník hľadá model ktorý existuje v oboch verziách a NEPOVEDAL či chce elektro
+  // Skontroluj či v aktuálnej správe alebo kontexte nie je indikácia typu
+  const hasTypeIndication = /klasick|normal|obycajn|bez motor|hardtail|celoodpruz|fullsus/.test(msgNorm) ||
+                             /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
+  
+  if (!hasTypeIndication) {
+    isDualModel = true;
+    dualModelName = searchModel.charAt(0).toUpperCase() + searchModel.slice(1);
+    skipProductSearch = true;
+    console.log(`🔀 Dual model detected: ${searchModel} - asking customer`);
+  }
+}
    
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
@@ -2066,6 +2092,8 @@ res.setHeader('Connection', 'keep-alive');
 // Pošli quick replies na začiatku ak existujú
 if (res.quickReplies && res.quickReplies.length > 0) {
   res.write(`data: ${JSON.stringify({ quickReplies: res.quickReplies })}\n\n`);
+} else if (isDualModel) {
+  res.write(`data: ${JSON.stringify({ quickReplies: ['Klasický bicykel', 'Elektrobicykel'] })}\n\n`);
 }
 
 const words = fullResponse.split(/(\s+)/);
