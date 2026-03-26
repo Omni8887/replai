@@ -758,8 +758,7 @@ app.post('/chat', async (req, res) => {
 
     const msgNorm = normalize(message);
 
-    let isDualModel = false;
-    let dualModelName = null;
+   
     
    // Spoj s kontextom z predchádzajúcich správ
     // ALE ak aktuálna správa je o novej téme, IGNORUJ kontext
@@ -1235,37 +1234,7 @@ if (isVagueQuery) {
   console.log('⏸️ Vágny dotaz - preskakujem hľadanie produktov');
 }
 
-// === DETEKCIA DUAL VERZIE (klasický + elektro) ===
-const DUAL_MODELS = [
-  'stereo', 'ams', 'one44', 'one22', 'one77', 'one55',
-  'reaction', 'kathmandu', 'touring', 'nature', 'nuride',
-  'supreme', 'ella', 'town', 'nuroad'
-];
 
-// Zisti či zákazník zadal kombináciu modelov (napr. "AMS one44")
-let dualCheckModel = searchModel;
-if (searchModel) {
-  // Skontroluj či v správe nie je aj iný DUAL model
-  const otherModels = DUAL_MODELS.filter(m => m !== searchModel && msgNorm.includes(m));
-  if (otherModels.length > 0) {
-    // Zákazník napísal viac modelov - použi kombináciu ako searchModel
-    // napr. "ams one44" → searchModel = "ams" + hľadaj "one44" v názve
-    dualCheckModel = searchModel; // Stále checkujeme hlavný model
-  }
-}
-
-if (dualCheckModel && !wantsElektro && DUAL_MODELS.includes(dualCheckModel)) {
-  const hasTypeIndication = /klasick|normal|obycajn|bez motor|hardtail|celoodpruz|fullsus/.test(msgNorm) ||
-                             /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
-  if (!hasTypeIndication) {
-    isDualModel = true;
-    // Pre zobrazenie použi všetky modely z správy
-    const allModelsInMsg = DUAL_MODELS.filter(m => msgNorm.includes(m));
-    dualModelName = allModelsInMsg.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' ');
-    skipProductSearch = true;
-    console.log(`🔀 Dual model detected: ${allModelsInMsg.join(' + ')} - asking customer`);
-  }
-}
 
 // === HĽADANIE PRODUKTOV ===
 let products = [];
@@ -1273,11 +1242,7 @@ let productsContext = '';
 
 if (skipProductSearch) {
   products = [];
-  if (isDualModel) {
-    productsContext = `\nModel ${dualModelName} máme v klasickej aj elektrickej verzii (${dualModelName} Hybrid). MUSÍŠ sa zákazníka opýtať ktorú verziu chce. Odpovedz PRESNE: "Model ${dualModelName} máme v klasickej aj elektrickej verzii. Ktorá vás zaujíma?"\n`;
-  } else {
-    productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
-  }
+  productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
 }
 
 if (!skipProductSearch) {
@@ -1309,9 +1274,6 @@ if (!skipProductSearch) {
       // Ak hľadá elektro model, filtruj na Hybrid
       if (wantsElektro) {
         query = query.ilike('name', '%Hybrid%');
-      } else {
-        // Ak NEhľadá elektro, vylúč Hybrid
-        query = query.not('name', 'ilike', '%Hybrid%');
       }
       
       const { data } = await query.order('price', { ascending: true }).limit(20);
@@ -1329,9 +1291,8 @@ if (!skipProductSearch) {
         
         if (wantsElektro) {
           queryNoPrice = queryNoPrice.ilike('name', '%Hybrid%');
-        } else {
-          queryNoPrice = queryNoPrice.not('name', 'ilike', '%Hybrid%');
-        }
+        } 
+      
         
         const { data: noPriceData } = await queryNoPrice.order('price', { ascending: true }).limit(5);
         
@@ -2080,8 +2041,7 @@ res.setHeader('Connection', 'keep-alive');
 // Pošli quick replies na začiatku ak existujú
 if (res.quickReplies && res.quickReplies.length > 0) {
   res.write(`data: ${JSON.stringify({ quickReplies: res.quickReplies })}\n\n`);
-} else if (isDualModel) {
-  res.write(`data: ${JSON.stringify({ quickReplies: ['Klasický bicykel', 'Elektrobicykel'] })}\n\n`);
+
 }
 
 const words = fullResponse.split(/(\s+)/);
