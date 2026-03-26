@@ -1509,13 +1509,7 @@ if (!skipProductSearch) {
       );
     }
     
-    // Ak NEhľadá elektro ale hľadá bicykel, vylúč elektro
-    if (!wantsElektro && targetCategories.some(c => c.startsWith('Bicykle'))) {
-      products = products.filter(p => 
-        !p.name.toLowerCase().includes('hybrid') && 
-        !p.category.toLowerCase().includes('elektro')
-      );
-    }
+  
 
     // Zoraď od najdrahšieho (zákazník chce "najlepšie" v rozpočte) a limituj
     // Ak máme produkty z viacerých kategórií, rozdeľ limit spravodlivo
