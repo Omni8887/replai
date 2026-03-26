@@ -1235,6 +1235,37 @@ if (isVagueQuery) {
   console.log('⏸️ Vágny dotaz - preskakujem hľadanie produktov');
 }
 
+// === DETEKCIA DUAL VERZIE (klasický + elektro) ===
+const DUAL_MODELS = [
+  'stereo', 'ams', 'one44', 'one22', 'one77', 'one55',
+  'reaction', 'kathmandu', 'touring', 'nature', 'nuride',
+  'supreme', 'ella', 'town', 'nuroad'
+];
+
+// Zisti či zákazník zadal kombináciu modelov (napr. "AMS one44")
+let dualCheckModel = searchModel;
+if (searchModel) {
+  // Skontroluj či v správe nie je aj iný DUAL model
+  const otherModels = DUAL_MODELS.filter(m => m !== searchModel && msgNorm.includes(m));
+  if (otherModels.length > 0) {
+    // Zákazník napísal viac modelov - použi kombináciu ako searchModel
+    // napr. "ams one44" → searchModel = "ams" + hľadaj "one44" v názve
+    dualCheckModel = searchModel; // Stále checkujeme hlavný model
+  }
+}
+
+if (dualCheckModel && !wantsElektro && DUAL_MODELS.includes(dualCheckModel)) {
+  const hasTypeIndication = /klasick|normal|obycajn|bez motor|hardtail|celoodpruz|fullsus/.test(msgNorm) ||
+                             /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
+  if (!hasTypeIndication) {
+    isDualModel = true;
+    // Pre zobrazenie použi všetky modely z správy
+    const allModelsInMsg = DUAL_MODELS.filter(m => msgNorm.includes(m));
+    dualModelName = allModelsInMsg.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' ');
+    skipProductSearch = true;
+    console.log(`🔀 Dual model detected: ${allModelsInMsg.join(' + ')} - asking customer`);
+  }
+}
 
   // === HĽADANIE PRODUKTOV ===
 let products = [];
@@ -1251,54 +1282,7 @@ if (skipProductSearch) {
 if (!skipProductSearch) {
 
 // === PRIAME HĽADANIE CELÉHO NÁZVU ===
-    // Ak zákazník vložil dlhý text (>30 znakov) s modelom, hľadaj priamo
-    if (msgNorm.length > 30 && searchModel) {
-      // Extrahuj kľúčové slová z správy (bez CUBE a roku)
-      const directSearch = message
-      .replace(/^CUBE\s+/i, '')
-      .replace(/\s*20\d{2}\s*$/i, '')
-      .replace(/[´`'']/g, '%')
-      .trim();
-      
-      if (directSearch.length > 20) {
-        const { data: directProducts } = await supabase
-          .from('products')
-          .select('name, description, price, category, url')
-          .eq('client_id', client.id)
-          .ilike('name', `%${directSearch}%`)
-          .limit(5);
-        
-        if (directProducts && directProducts.length > 0) {
-          products = directProducts;
-          console.log(`🎯 Priamy match: "${directSearch}" → ${products.length} produktov`);
-        }
-      }
-    }
 
-    
-// === DETEKCIA DUAL VERZIE (klasický + elektro) ===
-const DUAL_MODELS = [
-  'stereo', 'ams', 'one44', 'one22', 'one77', 'one55',
-  'reaction', 'kathmandu', 'touring', 'nature', 'nuride',
-  'supreme', 'ella', 'town', 'nuroad'
-];
-
-let isDualModel = false;
-let dualModelName = null;
-
-if (searchModel && !wantsElektro && DUAL_MODELS.includes(searchModel)) {
-  // Zákazník hľadá model ktorý existuje v oboch verziách a NEPOVEDAL či chce elektro
-  // Skontroluj či v aktuálnej správe alebo kontexte nie je indikácia typu
-  const hasTypeIndication = /klasick|normal|obycajn|bez motor|hardtail|celoodpruz|fullsus/.test(msgNorm) ||
-                             /elektr|ebike|e-bike|e bike|motor|bosch|bater|hybrid/.test(msgNorm);
-  
-  if (!hasTypeIndication) {
-    isDualModel = true;
-    dualModelName = searchModel.charAt(0).toUpperCase() + searchModel.slice(1);
-    skipProductSearch = true;
-    console.log(`🔀 Dual model detected: ${searchModel} - asking customer`);
-  }
-}
    
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
