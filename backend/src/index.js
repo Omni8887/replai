@@ -1267,8 +1267,9 @@ if (dualCheckModel && !wantsElektro && DUAL_MODELS.includes(dualCheckModel)) {
   }
 }
 
-  // === HĽADANIE PRODUKTOV ===
+// === HĽADANIE PRODUKTOV ===
 let products = [];
+let productsContext = '';
 
 if (skipProductSearch) {
   products = [];
@@ -1278,7 +1279,7 @@ if (skipProductSearch) {
     productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
   }
 }
-    
+
 if (!skipProductSearch) {
 
 // === PRIAME HĽADANIE CELÉHO NÁZVU ===
@@ -1807,7 +1808,7 @@ for (const variant of bikeSearchVariants) {
 
 
 // === VYTVOR KONTEXT PRE AI ===
-let productsContext = '';
+productsContext = '';
 if (products.length > 0) {
 productsContext = `
 DOSTUPNÉ PRODUKTY (použi IBA tieto):
