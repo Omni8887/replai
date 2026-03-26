@@ -757,6 +757,9 @@ app.post('/chat', async (req, res) => {
     };
 
     const msgNorm = normalize(message);
+
+    let isDualModel = false;
+    let dualModelName = null;
     
    // Spoj s kontextom z predchádzajúcich správ
     // ALE ak aktuálna správa je o novej téme, IGNORUJ kontext
