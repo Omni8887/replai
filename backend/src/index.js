@@ -1488,10 +1488,12 @@ if (!skipProductSearch) {
     // Odstráň duplikáty podľa modelu (nechaj len 1 farebnú variantu)
     const seenModels = new Set();
     products = products.filter(p => {
-      // Extrahuj model z názvu - odstráň farbu a rok
+      // Extrahuj model z názvu - odstráň LEN farbu a rok, NECHAJ výbavu (SLT, Race, Pro, TM...)
       const modelName = p.name
-        .replace(/\d{4}$/, '')
-        .replace(/(black|white|grey|blue|red|green|orange|yellow|pink|olive|darkblue|lightblue|flashwhite|ružová|čierna|biela|šedá|modrá|červená|zelená|teal|mint|coral|berry|lime|amber|violet|sage|petrol|polarblue|frostwhite|metallicteal|smaragd|xenon|golddust|prism|cyclamen|carbon|glossy|matte|matt|shiny|n\'|´n´)/gi, '')
+        .replace(/\s*20\d{2}\s*$/, '')  // rok na konci
+        .replace(/\s*\(.*?\)\s*/g, '')  // text v zátvorkách
+        .replace(/\s+(black|white|grey|blue|red|green|orange|yellow|pink|olive|darkblue|lightblue|flashwhite|teal|mint|coral|berry|lime|amber|violet|sage|petrol|polarblue|frostwhite|metallicteal|smaragd|xenon|golddust|prism|cyclamen|carbon|glossy|matte|matt|shiny|reedgreen|matrix|dazzle|nebula|chrome|flashgrey|desert|flashyellow|deepsea|deepgreen|stonegrey|flashmango|actionteam|teamline|sparkgreen|liquidred|metalblack|classicblue|fadedgrey|hazypurple|flashlemon|blueberry|moonwalk|darkmoss).*$/gi, '')  // farba a všetko za ňou
+        .replace(/[´`']/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase();
