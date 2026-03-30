@@ -1249,7 +1249,46 @@ if (!skipProductSearch) {
 
 // === PRIAME HĽADANIE CELÉHO NÁZVU ===
 
-   
+    // 0. Smart name search - ak zákazník napíše názov produktu (napr. "Dres CUBE MTB Jersey ARTLINE")
+    if (products.length === 0) {
+      // Vyčisti slová - odstráň bežné frázy zákazníka
+      const skipWords = ['mate', 'mame', 'chcem', 'chcel', 'chcela', 'pytat', 'vidim', 'pozeram', 
+        'velkost', 'panske', 'damske', 'junior', 'alebo', 'este', 'tiez', 'prosim', 'dakujem',
+        'dobry', 'den', 'ahoj', 'zdravim', 'akurat', 'hladam', 'zaujima', 'info', 'informacie'];
+      
+      const searchWords = msgNorm.split(/\s+/)
+        .filter(w => w.length > 2 && !skipWords.includes(w))
+        .sort((a, b) => b.length - a.length); // Najdlhšie (najšpecifickejšie) prvé
+      
+      if (searchWords.length >= 2) {
+        // Hľadaj podľa najšpecifickejšieho slova (najdlhšie = najpravdepodobnejšie unikátne)
+        const bestKeyword = searchWords.find(w => w.length >= 4) || searchWords[0];
+        
+        const { data: nameMatches } = await supabase
+          .from('products')
+          .select('name, description, price, category, url')
+          .eq('client_id', client.id)
+          .ilike('name', `%${bestKeyword}%`)
+          .limit(30);
+        
+        if (nameMatches && nameMatches.length > 0) {
+          // Skóruj výsledky - koľko slov zo správy matchuje názov produktu
+          const scored = nameMatches.map(p => {
+            const pName = normalize(p.name);
+            const matchedWords = searchWords.filter(w => pName.includes(w));
+            return { ...p, _score: matchedWords.length, _matched: matchedWords };
+          })
+          .filter(p => p._score >= 2) // Minimálne 2 slová musia matchovať
+          .sort((a, b) => b._score - a._score);
+          
+          if (scored.length > 0) {
+            products = scored.slice(0, 10);
+            console.log(`🎯 Smart name search: "${bestKeyword}" → ${nameMatches.length} výsledkov, ${scored.length} s 2+ match`);
+            scored.slice(0, 3).forEach(p => console.log(`   ✅ ${p.name} (score: ${p._score}, matched: ${p._matched.join(', ')})`));
+          }
+        }
+      }
+    }
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
     if (searchModel && products.length === 0) {
