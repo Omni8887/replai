@@ -1283,12 +1283,18 @@ if (!skipProductSearch) {
           
           if (scored.length > 0) {
             products = scored.slice(0, 10);
+            skipProductSearch = true; // Smart search našiel - preskočiť kategóriové hľadanie
             console.log(`🎯 Smart name search: "${bestKeyword}" → ${nameMatches.length} výsledkov, ${scored.length} s 2+ match`);
+            console.log(`⏭️ Preskakujem kategóriové hľadanie - smart search má výsledky`);
             scored.slice(0, 3).forEach(p => console.log(`   ✅ ${p.name} (score: ${p._score}, matched: ${p._matched.join(', ')})`));
           }
         }
       }
     }
+
+  } // koniec smart search skip
+
+  if (!skipProductSearch) {
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
     if (searchModel && products.length === 0) {
@@ -1510,9 +1516,9 @@ if (!skipProductSearch) {
         const { data } = await query.limit(10);
         if (data) products.push(...data);
       }
-    } // koniec if (!skipProductSearch)
+    } // koniec fallback keyword search
       console.log(`📦 Fallback: ${products.length} produktov`);
-    }
+    } // koniec if (!skipProductSearch) - kategóriové hľadanie
   
     // === POST-PROCESSING ===
     
