@@ -1553,6 +1553,7 @@
         isSelected ? 'selected' : '',
         (!isAvailable || isPast) ? 'disabled' : ''
       ].filter(Boolean).join(' ');
+      html += `<div class="${classes}" data-date="${dateStr}" data-available="${isAvailable && !isPast}" data-spots="${spotsLeft}" data-max="${maxCap}" data-open="${dayData?.open_time || ''}" data-close="${dayData?.close_time || ''}">${day}</div>`;
     }
 
     container.innerHTML = html;
