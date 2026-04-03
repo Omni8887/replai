@@ -838,14 +838,7 @@
       margin: 12px 0 0;
     }
     
-    .fbw-last-spot {
-      position: absolute;
-      top: 2px;
-      right: 4px;
-      font-size: 9px;
-      color: #f59e0b;
-      font-weight: 700;
-    }
+    
     
     .fbw-calendar-day {
       position: relative;
@@ -1560,7 +1553,6 @@
         isSelected ? 'selected' : '',
         (!isAvailable || isPast) ? 'disabled' : ''
       ].filter(Boolean).join(' ');
-      html += `<div class="${classes}" data-date="${dateStr}" data-available="${isAvailable && !isPast}" data-spots="${spotsLeft}" data-max="${maxCap}" data-open="${dayData?.open_time || ''}" data-close="${dayData?.close_time || ''}">${day}${(isAvailable && !isPast && spotsLeft <= 1 && spotsLeft > 0) ? '<span class="fbw-last-spot">!</span>' : ''}</div>`;
     }
 
     container.innerHTML = html;
