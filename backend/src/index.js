@@ -218,7 +218,9 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       // Spočítaj rezervácie na deň
       const bookingsPerDay = {};
       (bookings || []).forEach(b => {
-        const dateStr = new Date(b.booking_date).toISOString().split('T')[0];
+        const dateStr = typeof b.booking_date === 'string' 
+          ? b.booking_date.split('T')[0] 
+          : new Date(b.booking_date).toISOString().split('T')[0];
         bookingsPerDay[dateStr] = (bookingsPerDay[dateStr] || 0) + 1;
       });
 
