@@ -4134,9 +4134,15 @@ async function sendServiceCompletedEmail(booking, finalPrice) {
         
         if (hours && hours.length > 0) {
           const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
-          openingHours = hours.map(h => 
-            `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`}</td></tr>`
-          ).join('');
+          openingHours = hours.map(h => {
+            let timeText;
+            if (h.day_of_week === 6 && locationName.toLowerCase().includes('sport')) {
+              timeText = '09:00 – 14:00';
+            } else {
+              timeText = h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`;
+            }
+            return `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${timeText}</td></tr>`;
+          }).join('');
         }
       }
     } catch(e) { console.error('Hours fetch error:', e); }
@@ -4695,9 +4701,15 @@ async function sendBookingCreatedEmail(booking) {
         
         if (hours && hours.length > 0) {
           const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
-          openingHours = hours.map(h => 
-            `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`}</td></tr>`
-          ).join('');
+          openingHours = hours.map(h => {
+            let timeText;
+            if (h.day_of_week === 6 && locationName.toLowerCase().includes('sport')) {
+              timeText = '09:00 – 14:00';
+            } else {
+              timeText = h.is_closed ? 'Zatvorené' : `${h.open_time?.substring(0,5)} – ${h.close_time?.substring(0,5)}`;
+            }
+            return `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:13px;">${dayNames[h.day_of_week]}</td><td style="padding:4px 0;font-size:13px;font-weight:500;">${timeText}</td></tr>`;
+          }).join('');
         }
       }
     } catch(e) { console.error('Hours fetch error:', e); }
