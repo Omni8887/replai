@@ -4351,10 +4351,11 @@ app.get('/public/booking/availability/days', async (req, res) => {
       .select('blocked_date')
       .eq('location_id', loc.id);
     
-    const blockedDates = (blocked || []).map(b => {
-      const d = new Date(b.blocked_date);
-      return d.toISOString().split('T')[0];
-    });
+      const blockedDates = (blocked || []).map(b => {
+        return typeof b.blocked_date === 'string' 
+          ? b.blocked_date.split('T')[0] 
+          : new Date(b.blocked_date).toISOString().split('T')[0];
+      });
     
     // Získaj počet rezervácií pre každý deň v mesiaci
     const [year, monthNum] = month.split('-').map(Number);
@@ -4372,7 +4373,9 @@ app.get('/public/booking/availability/days', async (req, res) => {
     // Spočítaj rezervácie na deň
     const bookingsPerDay = {};
     (bookings || []).forEach(b => {
-      const dateStr = new Date(b.booking_date).toISOString().split('T')[0];
+      const dateStr = typeof b.booking_date === 'string' 
+        ? b.booking_date.split('T')[0] 
+        : new Date(b.booking_date).toISOString().split('T')[0];
       bookingsPerDay[dateStr] = (bookingsPerDay[dateStr] || 0) + 1;
     });
     
