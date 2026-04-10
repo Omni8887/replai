@@ -4357,10 +4357,11 @@ app.get('/public/booking/availability/days', async (req, res) => {
           : new Date(b.blocked_date).toISOString().split('T')[0];
       });
     
-    // Získaj počet rezervácií pre každý deň v mesiaci
-    const [year, monthNum] = month.split('-').map(Number);
-    const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
-    const endDate = `${year}-${String(monthNum).padStart(2, '0')}-31`;
+// Získaj počet rezervácií pre každý deň v mesiaci
+const [year, monthNum] = month.split('-').map(Number);
+const totalDays = new Date(year, monthNum, 0).getDate();
+const startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+const endDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
     
     const { data: bookings } = await supabase
       .from('bookings')
