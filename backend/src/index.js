@@ -4369,6 +4369,10 @@ app.get('/public/booking/availability/days', async (req, res) => {
       .gte('booking_date', startDate)
       .lte('booking_date', endDate)
       .neq('status', 'cancelled');
+
+      console.log('📅 DEBUG bookings raw:', JSON.stringify(bookings));
+    console.log('📅 DEBUG location_id:', loc.id);
+    console.log('📅 DEBUG startDate:', startDate, 'endDate:', endDate);
     
     // Spočítaj rezervácie na deň
     const bookingsPerDay = {};
