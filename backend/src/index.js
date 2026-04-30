@@ -89,6 +89,18 @@ const BOOKING_TOOLS = [
       }, 
       required: ["location_id", "service_id", "date", "time", "customer_name", "customer_email", "customer_phone"] 
     }
+  },
+  {
+    name: "check_store_status",
+    description: "Skontroluje či je predajňa otvorená alebo zatvorená v konkrétny deň. Zavolaj keď sa zákazník pýta 'máte otvorené?', 'ste zajtra otvorení?', 'otváracie hodiny' alebo či je predajňa otvorená v konkrétny deň.",
+    input_schema: { 
+      type: "object", 
+      properties: { 
+        location_id: { type: "string", description: "UUID prevádzky" },
+        date: { type: "string", description: "Dátum vo formáte YYYY-MM-DD" }
+      }, 
+      required: ["location_id", "date"] 
+    }
   }
 ];
 // Detekcia či správa súvisí s bookingom
@@ -101,7 +113,8 @@ function isBookingRelated(message, context = []) {
     'pondelok', 'utorok', 'streda', 'stvrtok', 'piatok', 'sobota', 'nedela',
     'zajtra', 'dnes', 'buduci', 'tento tyzden', 'rano', 'poobede',
     'ano', 'hej', 'jasne', 'ok', 'dobre', 'super', 'fajn',
-    'tri veze', 'sport mall', 'bajkalska', 'vajnorska'
+    'tri veze', 'sport mall', 'bajkalska', 'vajnorska',
+    'otvorene', 'zatvoren', 'sviat', 'otvaracky', 'funguje',
   ];
   
   const msgLower = message.toLowerCase();
@@ -197,9 +210,9 @@ async function handleBookingTool(toolName, toolInput, clientId) {
 
       // Získaj blokované dni
       const { data: blocked } = await supabase
-        .from('booking_blocked_slots')
-        .select('blocked_date')
-        .eq('location_id', toolInput.location_id);
+      .from('booking_blocked_slots')
+      .select('blocked_date, reason')
+      .eq('location_id', toolInput.location_id);
       const blockedDates = new Set((blocked || []).map(b => new Date(b.blocked_date).toISOString().split('T')[0]));
 
       // Získaj existujúce rezervácie na najbližších 30 dní
@@ -514,6 +527,59 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       };
     }
     
+    case 'check_store_status': {
+      const dateObj = new Date(toolInput.date);
+      const dayOfWeek = dateObj.getDay();
+      const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
+      const formattedDate = `${dayNames[dayOfWeek]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.`;
+      
+      // Skontroluj blokované dni
+      const { data: blockedSlot } = await supabase
+        .from('booking_blocked_slots')
+        .select('reason')
+        .eq('location_id', toolInput.location_id)
+        .eq('blocked_date', toolInput.date)
+        .maybeSingle();
+      
+      if (blockedSlot) {
+        const reason = blockedSlot.reason || 'interný dôvod';
+        const isSviatok = reason.toLowerCase().includes('sviatok');
+        return { 
+          status: 'closed',
+          date: formattedDate,
+          reason: reason,
+          message: isSviatok 
+            ? `V ${formattedDate} máme zatvorené z dôvodu štátneho sviatku.`
+            : `V ${formattedDate} máme zatvorené (${reason}).`
+        };
+      }
+      
+      // Skontroluj otváracie hodiny
+      const { data: hours } = await supabase
+        .from('booking_working_hours')
+        .select('open_time, close_time, is_closed')
+        .eq('location_id', toolInput.location_id)
+        .eq('day_of_week', dayOfWeek)
+        .maybeSingle();
+      
+      if (!hours || hours.is_closed) {
+        return { 
+          status: 'closed',
+          date: formattedDate,
+          message: `V ${formattedDate} máme zatvorené (mimo pracovné dni).`
+        };
+      }
+      
+      return { 
+        status: 'open',
+        date: formattedDate,
+        open_time: hours.open_time?.substring(0, 5),
+        close_time: hours.close_time?.substring(0, 5),
+        message: `V ${formattedDate} máme otvorené od ${hours.open_time?.substring(0, 5)} do ${hours.close_time?.substring(0, 5)}.`
+      };
+    }
+
+
     default:
       return { error: 'Neznámy nástroj' };
   }
