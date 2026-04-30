@@ -252,8 +252,9 @@ export default function Services() {
   }
 
   const handleDayClick = (dayInfo) => {
-    if (!dayInfo || dayInfo.isPast || dayInfo.isClosed) return
+    if (!dayInfo || dayInfo.isPast) return
     
+    // Ak je už blokovaný (aj na closed dni), ponúkni odblokovanie
     if (dayInfo.blocked) {
       if (window.confirm(`Odblokovať ${dayInfo.day}. ${MONTH_NAMES[currentMonth.getMonth()]}?\n\nDôvod: ${dayInfo.blocked.reason || '(bez dôvodu)'}`)) {
         unblockDay(dayInfo.blocked.id)
@@ -261,6 +262,7 @@ export default function Services() {
       return
     }
     
+    // Closed dni (napr. sobota/nedeľa) - povoliť výber pre blokovanie
     setSelectedDays(prev => {
       const exists = prev.find(d => d.date === dayInfo.date)
       if (exists) {
@@ -430,8 +432,8 @@ export default function Services() {
         .calendar-day.past:hover { background: none; border-color: #eaeaea; }
         .calendar-day.blocked { background: #fef2f2; border-color: #fecaca; }
         .calendar-day.blocked:hover { background: #fee2e2; }
-        .calendar-day.closed { background: #f5f5f5; border-color: #e5e5e5; opacity: 0.6; cursor: not-allowed; }
-        .calendar-day.closed:hover { background: #f5f5f5; border-color: #e5e5e5; }
+        .calendar-day.closed { background: #f5f5f5; border-color: #e5e5e5; opacity: 0.7; cursor: pointer; }
+        .calendar-day.closed:hover { background: #efefef; border-color: #ccc; }
         .calendar-day.today { border-color: #111; border-width: 2px; }
         .calendar-day.selected { background: #eff6ff; border-color: #3b82f6; border-width: 2px; }
         .calendar-day.selected:hover { background: #dbeafe; }
@@ -617,12 +619,12 @@ export default function Services() {
 
                     return (
                       <div key={day.date} className={classes} onClick={() => handleDayClick(day)}
-                        title={day.isClosed ? 'Zatvorené' : day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : isSelected ? 'Klikni pre zrušenie výberu' : 'Klikni pre výber'}>
-                        {day.blocked && !day.isClosed && <span className="blocked-icon"><IconLock /></span>}
-                        {isSelected && !day.blocked && !day.isClosed && <span className="selected-check"><IconCheck /></span>}
+                        title={day.isClosed ? (day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : 'Zatvorené (klikni pre blokovanie ako sviatok)') : day.blocked ? `Blokovaný: ${day.blocked.reason || 'bez dôvodu'}\nKlikni pre odblokovanie` : isSelected ? 'Klikni pre zrušenie výberu' : 'Klikni pre výber'}>
+                        {day.blocked && <span className="blocked-icon"><IconLock /></span>}
+                        {isSelected && !day.blocked && <span className="selected-check"><IconCheck /></span>}
                         <span className="day-number">{day.day}</span>
-                        {day.isClosed && <span className="day-reason">Zatvorené</span>}
-                        {day.blocked?.reason && !day.isClosed && <span className="day-reason">{day.blocked.reason}</span>}
+                        {day.isClosed && !day.blocked && <span className="day-reason">Zatvorené</span>}
+                        {day.blocked?.reason && <span className="day-reason">{day.blocked.reason}</span>}
                       </div>
                     )
                   })}
