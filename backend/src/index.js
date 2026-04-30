@@ -114,7 +114,7 @@ function isBookingRelated(message, context = []) {
     'zajtra', 'dnes', 'buduci', 'tento tyzden', 'rano', 'poobede',
     'ano', 'hej', 'jasne', 'ok', 'dobre', 'super', 'fajn',
     'tri veze', 'sport mall', 'bajkalska', 'vajnorska',
-    'otvorene', 'zatvoren', 'sviat', 'otvaracky', 'funguje',
+    'otvoren', 'zatvoren', 'sviat', 'otvaracky', 'funguje',
   ];
   
   const msgLower = message.toLowerCase();
