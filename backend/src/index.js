@@ -1983,6 +1983,11 @@ PREVÁDZKY:
 - "Tri Veže" / "Bajkalská" = location_id: 703f75e8-6aea-4588-86a4-139f6b9f2ca2
 - "Sport Mall" / "Vajnorská" = location_id: ded49cea-1957-48e6-b946-4932780dbe0f
 
+KONTROLA OTVÁRACÍCH HODÍN:
+- Keď sa zákazník pýta na otváracie hodiny alebo či je otvorené, VŽDY zavolaj check_store_status pre KAŽDÚ prevádzku zvlášť
+- Ak sa pýta na "druhú predajňu" alebo inú prevádzku, zavolaj check_store_status znova s location_id tej druhej prevádzky
+- NIKDY neodpovedaj na otváracie hodiny bez zavolania check_store_status
+
 POSTUP (dodržuj presne!):
 1. Zákazník chce servis → get_booking_locations
 2. Vyberie prevádzku → get_booking_services + get_available_days
