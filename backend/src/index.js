@@ -528,7 +528,7 @@ async function handleBookingTool(toolName, toolInput, clientId) {
     }
     
     case 'check_store_status': {
-      const dateObj = new Date(toolInput.date);
+      const dateObj = new Date(toolInput.date + 'T12:00:00');
       const dayOfWeek = dateObj.getDay();
       const dayNames = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota'];
       const formattedDate = `${dayNames[dayOfWeek]} ${dateObj.getDate()}.${dateObj.getMonth() + 1}.`;
@@ -544,10 +544,44 @@ async function handleBookingTool(toolName, toolInput, clientId) {
       if (blockedSlot) {
         const reason = blockedSlot.reason || 'interný dôvod';
         const isSviatok = reason.toLowerCase().includes('sviatok');
+        
+        // Nájdi najbližšie otvorené dni (pred aj po)
+        const { data: allBlocked } = await supabase
+          .from('booking_blocked_slots')
+          .select('blocked_date')
+          .eq('location_id', toolInput.location_id);
+        const blockedSet = new Set((allBlocked || []).map(b => typeof b.blocked_date === 'string' ? b.blocked_date.split('T')[0] : new Date(b.blocked_date).toISOString().split('T')[0]));
+        
+        const { data: wh } = await supabase
+          .from('booking_working_hours')
+          .select('day_of_week, is_closed, open_time, close_time')
+          .eq('location_id', toolInput.location_id);
+        const closedDays = new Set((wh || []).filter(h => h.is_closed).map(h => h.day_of_week));
+        const hoursMap = {};
+        (wh || []).forEach(h => { if (!h.is_closed) hoursMap[h.day_of_week] = `${h.open_time?.substring(0,5)}-${h.close_time?.substring(0,5)}`; });
+        
+        const alternatives = [];
+        // Hľadaj 2 dni pred a 2 dni po
+        for (let i = -3; i <= 3; i++) {
+          if (i === 0) continue;
+          const d = new Date(toolInput.date + 'T12:00:00');
+          d.setDate(d.getDate() + i);
+          const ds = d.toISOString().split('T')[0];
+          if (!closedDays.has(d.getDay()) && !blockedSet.has(ds)) {
+            alternatives.push({
+              date: ds,
+              day_name: dayNames[d.getDay()],
+              formatted: `${dayNames[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`,
+              hours: hoursMap[d.getDay()] || null
+            });
+          }
+        }
+        
         return { 
           status: 'closed',
           date: formattedDate,
           reason: reason,
+          alternatives: alternatives.slice(0, 4),
           message: isSviatok 
             ? `V ${formattedDate} máme zatvorené z dôvodu štátneho sviatku.`
             : `V ${formattedDate} máme zatvorené (${reason}).`
