@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import Logo from './Logo.jsx'
 
 export default function Layout() {
   const { client, logout, API_URL } = useAuth()
@@ -50,9 +51,7 @@ export default function Layout() {
       <aside className="w-72 bg-white border-r border-slate-200 fixed h-full flex flex-col">
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">R</span>
-            </div>
+            <Logo size={40} />
             <div>
               <h1 className="text-xl font-bold text-slate-900">Replai</h1>
               <p className="text-sm text-slate-500">{client?.name}</p>
