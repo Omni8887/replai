@@ -4,289 +4,430 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kontakt – Replai</title>
-  <meta name="description" content="Kontaktujte nás. Radi vám pomôžeme s nastavením AI chatbota pre váš web.">
+  <meta name="description" content="Objednajte si bezplatnú konzultáciu. Ukážeme vám, ako AI agent pomôže práve vašej firme.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap');
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     :root {
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      --mono: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
-      --bg-dark: #09090b;
-      --bg-light: #fafafa;
-      --bg-white: #ffffff;
-      --ink: #09090b;
-      --ink-secondary: #52525b;
-      --ink-muted: #a1a1aa;
-      --ink-faint: #d4d4d8;
-      --border: #27272a;
-      --border-light: #e4e4e7;
-      --accent: #6366f1;
-      --accent-light: #818cf8;
-      --accent-glow: rgba(99,102,241,0.12);
-      --green: #22c55e;
-      --radius: 12px;
+      --font: 'DM Sans', -apple-system, sans-serif;
+      --display: 'Onest', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --bg: #F3F4FA;
+      --bg-2: #0F1035;
+      --bg-light: #EAEDF6;
+      --bg-white: #FFFFFF;
+      --border: rgba(0,0,0,0.09);
+      --border-h: rgba(0,0,0,0.18);
+      --border-light: rgba(0,0,0,0.075);
+      --a: #0BB878;
+      --a-dim: rgba(11,184,120,0.12);
+      --a-glow: rgba(11,184,120,0.32);
+      --a-2: #6B5FED;
+      --a-2-dim: rgba(107,95,237,0.12);
+      --a-2-glow: rgba(107,95,237,0.30);
+      --t: #0C0C22;
+      --t-2: #5A5A80;
+      --t-3: #9898B8;
+      --t-dark: #0C0C1A;
+      --t-dark-2: #48486A;
+      --r: 14px;
+      --r-sm: 9px;
+      --r-lg: 22px;
     }
 
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{font-family:var(--font);background:var(--bg-dark);color:#fafafa;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-    ::selection{background:rgba(99,102,241,0.3)}
-    .container{max-width:1140px;margin:0 auto;padding:0 24px}
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--t);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      cursor: none;
+    }
+    @media (pointer: coarse) {
+      body, a, button, [role="button"] { cursor: auto !important; }
+      #cursor-dot, #cursor-ring { display: none !important; }
+    }
+    ::selection { background: var(--a-dim); color: var(--a); }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
 
-    /* Reveal */
-    .r{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
-    .r.v{opacity:1;transform:none}
-    .rd1{transition-delay:.06s}.rd2{transition-delay:.12s}.rd3{transition-delay:.18s}.rd4{transition-delay:.24s}
+    /* CURSOR */
+    #cursor-dot {
+      width: 5px; height: 5px; background: var(--a); border-radius: 50%;
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999;
+      will-change: transform; box-shadow: 0 0 8px var(--a);
+    }
+    #cursor-ring {
+      width: 34px; height: 34px; border: 1.5px solid rgba(11,184,120,0.45); border-radius: 50%;
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998;
+      will-change: transform;
+      transition: width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, background 0.3s;
+    }
+    #cursor-ring.hover { width: 54px; height: 54px; border-color: var(--a); background: rgba(11,184,120,0.06); }
 
-    /* ═══ NAV ═══ */
-    nav{
-      position:fixed;top:0;left:0;right:0;z-index:100;
-      height:60px;display:flex;align-items:center;padding:0 24px;
-      background:rgba(9,9,11,0.8);backdrop-filter:blur(16px) saturate(1.6);
-      border-bottom:1px solid var(--border);
-    }
-    nav .container{display:flex;justify-content:space-between;align-items:center;width:100%}
-    .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;font-weight:700;font-size:17px;letter-spacing:-0.3px}
-    .logo-mark{
-      width:28px;height:28px;border-radius:7px;
-      background:linear-gradient(135deg,var(--accent),#a78bfa);
-      display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;
-    }
-    .nav-links{display:flex;gap:28px;align-items:center}
-    .nav-links a{font-size:13.5px;font-weight:500;color:var(--ink-muted);text-decoration:none;transition:color .2s}
-    .nav-links a:hover{color:#fff}
-    .btn-nav{
-      font-family:var(--font);font-size:13px;font-weight:600;
-      color:#fff;background:var(--accent);border:none;
-      border-radius:8px;padding:7px 16px;cursor:pointer;transition:all .2s;
-    }
-    .btn-nav:hover{background:var(--accent-light)}
-    .mobile-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;z-index:102}
-    .mobile-btn span{display:block;width:20px;height:1.5px;background:#fff;margin:5px 0;transition:.3s;border-radius:2px}
-    .mobile-btn.on span:nth-child(1){transform:rotate(45deg) translate(4.5px,4.5px)}
-    .mobile-btn.on span:nth-child(2){opacity:0}
-    .mobile-btn.on span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px)}
+    /* REVEAL */
+    .r { opacity: 0; transform: translateY(24px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+    .r.v { opacity: 1; transform: none; }
+    .rd1{transition-delay:.08s} .rd2{transition-delay:.16s} .rd3{transition-delay:.24s} .rd4{transition-delay:.32s}
 
-    /* ═══ BUTTONS ═══ */
-    .btn{
-      font-family:var(--font);font-weight:600;font-size:14px;
-      padding:12px 24px;border-radius:8px;border:none;
-      cursor:pointer;text-decoration:none;display:inline-flex;
-      align-items:center;gap:6px;transition:all .2s;letter-spacing:-0.1px;
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; display: flex; align-items: center;
+      padding: 0 28px; transition: all 0.4s ease;
     }
-    .btn-accent{background:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,0.3)}
-    .btn-accent:hover{background:var(--accent-light);transform:translateY(-1px)}
-    .btn-ghost{background:transparent;color:#fff;border:1px solid var(--border)}
-    .btn-ghost:hover{border-color:#52525b;background:rgba(255,255,255,0.04)}
-    .btn-dark{background:var(--ink);color:#fff}
-    .btn-dark:hover{background:#27272a}
-    .btn-outline-dark{background:transparent;color:var(--ink);border:1px solid var(--border-light)}
-    .btn-outline-dark:hover{border-color:var(--ink)}
-    .btn-outline-light{background:transparent;color:#fff;border:1px solid var(--border)}
-    .btn-outline-light:hover{border-color:#52525b}
+    nav.scrolled {
+      background: rgba(243,244,250,0.90);
+      backdrop-filter: blur(20px) saturate(1.8);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 
-    /* ═══ HERO ═══ */
-    .page-hero{
-      padding:140px 0 80px;position:relative;overflow:hidden;
-      text-align:center;
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: rgba(255,255,255,0.92);
+      font-family: var(--display); font-weight: 800; font-size: 18px;
+      letter-spacing: -0.6px; transition: color 0.3s;
     }
-    .page-hero::before{
-      content:'';position:absolute;inset:0;
+    nav.scrolled .logo { color: var(--t); }
+    .logo-icon { display: block; flex-shrink: 0; }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.65);
+      text-decoration: none; transition: color 0.2s; position: relative;
+    }
+    nav.scrolled .nav-links a { color: var(--t-2); }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+      height: 1px; background: var(--a);
+      transform: scaleX(0); transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+    }
+    .nav-links a:hover { color: rgba(255,255,255,0.95); }
+    nav.scrolled .nav-links a:hover { color: var(--t); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+
+    .btn-nav {
+      font-family: var(--font); font-size: 13.5px; font-weight: 600;
+      color: #FFFFFF; background: var(--a); border: none;
+      border-radius: var(--r-sm); padding: 8px 18px; cursor: none; transition: all 0.25s;
+    }
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--a-glow); }
+
+    .mobile-btn { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 202; }
+    .mobile-btn span { display: block; width: 22px; height: 1.5px; background: rgba(255,255,255,0.85); margin: 5px 0; transition: 0.3s; border-radius: 2px; }
+    nav.scrolled .mobile-btn span { background: var(--t); }
+    .mobile-btn.on span:nth-child(1) { transform: rotate(45deg) translate(4.5px,4.5px); }
+    .mobile-btn.on span:nth-child(2) { opacity: 0; }
+    .mobile-btn.on span:nth-child(3) { transform: rotate(-45deg) translate(4.5px,-4.5px); }
+
+    /* BUTTONS */
+    .btn {
+      font-family: var(--font); font-weight: 600; font-size: 14px;
+      padding: 13px 26px; border-radius: var(--r-sm); border: none;
+      cursor: none; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 7px;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s, background 0.2s;
+      letter-spacing: -0.1px;
+    }
+    .btn-primary { background: var(--a); color: #FFFFFF; }
+    .btn-primary:hover { box-shadow: 0 8px 32px var(--a-glow); transform: translateY(-1px); }
+    .btn-dark { background: var(--t-dark); color: #fff; }
+    .btn-dark:hover { background: #1A1A30; }
+    .btn-outline-dark { background: transparent; color: var(--t-dark); border: 1px solid var(--border-light); }
+    .btn-outline-dark:hover { border-color: var(--t-dark); }
+
+    /* PAGE HERO — dark */
+    .page-hero {
+      padding: 160px 0 100px; position: relative; overflow: hidden;
+      text-align: center; background: var(--bg-2);
+    }
+    #hero-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    .hero-grid-bg {
+      position: absolute; inset: 0; z-index: 0;
       background-image:
-        linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);
-      background-size:64px 64px;
-      mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,black 20%,transparent 100%);
-      -webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,black 20%,transparent 100%);
+        linear-gradient(rgba(107,95,237,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(107,95,237,0.07) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%);
     }
-    .page-hero-orb{
-      position:absolute;width:500px;height:500px;border-radius:50%;
-      background:radial-gradient(circle,rgba(99,102,241,0.1),transparent 70%);
-      top:-150px;left:50%;transform:translateX(-50%);filter:blur(40px);pointer-events:none;
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0;
     }
-    .sec-tag{font-family:var(--mono);font-size:12px;color:var(--accent-light);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
-    .page-hero h1{
-      font-size:clamp(36px,5vw,52px);font-weight:700;
-      letter-spacing:-2px;line-height:1.1;margin-bottom:16px;
-      position:relative;z-index:1;
+    .orb-a {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(11,184,120,0.18), transparent 60%);
+      top: -300px; left: 50%; transform: translateX(-50%);
     }
-    .page-hero p{
-      font-size:17px;color:var(--ink-muted);max-width:480px;
-      margin:0 auto;line-height:1.65;position:relative;z-index:1;
+    .orb-b {
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(107,95,237,0.16), transparent 60%);
+      top: -100px; right: -100px;
     }
 
-    /* ═══ CONTACT GRID ═══ */
-    .contact-section{padding:0 0 100px;position:relative;z-index:1}
-    .contact-grid{
-      display:grid;grid-template-columns:1fr 1.3fr;
-      gap:24px;align-items:start;
+    .page-hero .container { position: relative; z-index: 1; }
+    .sec-tag {
+      font-family: var(--mono); font-size: 11px; color: var(--a);
+      text-transform: uppercase; letter-spacing: 3px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px; justify-content: center;
+    }
+    .page-hero h1 {
+      font-family: var(--display);
+      font-size: clamp(38px, 5vw, 60px);
+      font-weight: 900; letter-spacing: -2.5px;
+      line-height: 1.05; margin-bottom: 20px;
+      color: rgba(255,255,255,0.95);
+    }
+    .page-hero h1 em {
+      background: linear-gradient(125deg, var(--a), var(--a-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; font-style: normal;
+    }
+    .page-hero p {
+      font-size: 17px; color: rgba(255,255,255,0.6); max-width: 480px;
+      margin: 0 auto; line-height: 1.72;
+    }
+
+    /* CONTACT SECTION */
+    .contact-section { padding: 80px 0 110px; }
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1.5fr;
+      gap: 28px; align-items: start;
     }
 
     /* Info cards */
-    .info-cards{display:flex;flex-direction:column;gap:12px}
-    .info-card{
-      background:rgba(255,255,255,0.03);border:1px solid var(--border);
-      border-radius:var(--radius);padding:24px;
-      transition:all .3s;cursor:default;
+    .info-cards { display: flex; flex-direction: column; gap: 16px; }
+    .info-card {
+      background: #FFFFFF; border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 28px 30px;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      position: relative; overflow: hidden;
     }
-    .info-card:hover{background:rgba(255,255,255,0.05);border-color:#3f3f46;transform:translateY(-2px)}
-    .info-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-    .info-icon{
-      width:40px;height:40px;border-radius:10px;
-      background:rgba(99,102,241,0.08);
-      display:grid;place-items:center;
+    .info-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--a), var(--a-2));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
     }
-    .info-icon svg{width:18px;height:18px;color:var(--accent-light)}
-    .info-card h3{font-size:15px;font-weight:650}
-    .info-card p{font-size:13.5px;color:var(--ink-muted);line-height:1.55}
-    .info-card a{color:var(--accent-light);text-decoration:none;font-weight:600;transition:color .2s}
-    .info-card a:hover{color:#c7d2fe}
+    .info-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.10); border-color: var(--border-h); }
+    .info-card:hover::before { transform: scaleX(1); }
+    .info-card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .info-icon {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: var(--a-dim); display: grid; place-items: center;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .info-card:hover .info-icon { transform: scale(1.1) rotate(-4deg); }
+    .info-icon svg { width: 18px; height: 18px; color: var(--a); stroke-width: 2; }
+    .info-icon.purple { background: var(--a-2-dim); }
+    .info-icon.purple svg { color: var(--a-2); }
+    .info-card h3 { font-family: var(--display); font-size: 15.5px; font-weight: 700; color: var(--t); letter-spacing: -0.3px; }
+    .info-card p { font-size: 13.5px; color: var(--t-2); line-height: 1.65; }
+    .info-card a { color: var(--a); text-decoration: none; font-weight: 600; transition: color 0.2s; }
+    .info-card a:hover { color: #089960; }
+    .info-card a.purple-link { color: var(--a-2); }
+    .info-card a.purple-link:hover { color: #5548d9; }
 
-    /* Form */
-    .form-card{
-      background:rgba(255,255,255,0.03);border:1px solid var(--border);
-      border-radius:16px;padding:36px;
+    .info-card-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 12px; padding: 5px 12px;
+      background: var(--a-dim); border-radius: 100px;
+      font-size: 12px; font-weight: 600; color: var(--a);
     }
-    .form-card h2{font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px}
-    .form-card>p{font-size:14px;color:var(--ink-muted);margin-bottom:28px}
-    .form-group{margin-bottom:18px}
-    .form-group label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:#d4d4d8;letter-spacing:0.2px}
-    .form-group input,.form-group textarea,.form-group select{
-      width:100%;padding:11px 14px;
-      background:rgba(255,255,255,0.04);border:1px solid var(--border);
-      border-radius:8px;font-size:14px;font-family:var(--font);
-      color:#fff;transition:all .2s;
+    .info-card-badge span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--a); box-shadow: 0 0 6px var(--a);
+      animation: badgePulse 2s ease-in-out infinite;
     }
-    .form-group input:focus,.form-group textarea:focus{
-      outline:none;border-color:var(--accent);
-      box-shadow:0 0 0 3px rgba(99,102,241,0.12);
-      background:rgba(255,255,255,0.06);
-    }
-    .form-group input::placeholder,.form-group textarea::placeholder{color:#52525b}
-    .form-group textarea{min-height:120px;resize:vertical}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .form-submit{margin-top:4px}
-    .form-submit .btn{width:100%;justify-content:center;padding:13px 24px}
-    .form-note{text-align:center;margin-top:12px;font-size:11.5px;color:#52525b}
+    @keyframes badgePulse { 0%,100%{box-shadow:0 0 4px var(--a)} 50%{box-shadow:0 0 12px var(--a)} }
 
-    /* Success */
-    .success-message{display:none;text-align:center;padding:60px 32px}
-    .success-message.show{display:block}
-    .success-icon{
-      width:64px;height:64px;border-radius:50%;
-      background:rgba(34,197,94,0.08);
-      display:grid;place-items:center;margin:0 auto 20px;
+    /* Form card */
+    .form-card {
+      background: #FFFFFF; border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 44px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07);
     }
-    .success-icon svg{width:28px;height:28px;color:var(--green)}
-    .success-message h3{font-size:20px;font-weight:700;margin-bottom:8px}
-    .success-message p{font-size:14px;color:var(--ink-muted)}
+    .form-card h2 {
+      font-family: var(--display); font-size: 24px; font-weight: 900;
+      letter-spacing: -0.7px; margin-bottom: 5px; color: var(--t);
+    }
+    .form-card > p { font-size: 14px; color: var(--t-2); margin-bottom: 32px; }
 
-    /* ═══ FAQ ═══ */
-    .faq-section{
-      padding:80px 0 100px;background:var(--bg-light);color:var(--ink);
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block; font-size: 12.5px; font-weight: 600;
+      margin-bottom: 7px; color: var(--t-dark); letter-spacing: 0.1px;
     }
-    .faq-header{text-align:center;margin-bottom:48px}
-    .faq-header h2{font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:8px;color:var(--ink)}
-    .faq-header p{font-size:15px;color:var(--ink-secondary)}
-    .faq-grid{
-      display:grid;grid-template-columns:1fr 1fr;
-      gap:14px;max-width:860px;margin:0 auto;
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%; padding: 12px 16px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); font-size: 14px; font-family: var(--font);
+      color: var(--t); transition: all 0.2s; outline: none; appearance: none;
     }
-    .faq-card{
-      background:var(--bg-white);border:1px solid var(--border-light);
-      border-radius:var(--radius);padding:24px;
-      transition:all .3s;cursor:default;
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--a); box-shadow: 0 0 0 3px var(--a-dim); background: #FFFFFF;
     }
-    .faq-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.04)}
-    .faq-card h4{font-size:14.5px;font-weight:650;margin-bottom:8px;color:var(--ink)}
-    .faq-card p{font-size:13.5px;color:var(--ink-secondary);line-height:1.6}
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--t-3); }
+    .form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898B8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+    .form-group select option { color: var(--t); }
+    .form-group textarea { min-height: 130px; resize: vertical; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-submit { margin-top: 6px; }
+    .form-submit .btn { width: 100%; justify-content: center; padding: 15px 24px; font-size: 15px; }
+    .form-note { text-align: center; margin-top: 12px; font-size: 11.5px; color: var(--t-3); }
 
-    /* ═══ FOOTER ═══ */
-    footer{border-top:1px solid var(--border);padding:32px 0;background:var(--bg-dark)}
-    footer .container{display:flex;justify-content:space-between;align-items:center}
-    .footer-links{display:flex;gap:24px}
-    .footer-links a{font-size:13px;color:#52525b;text-decoration:none;transition:color .2s}
-    .footer-links a:hover{color:#fff}
-    .fcopy{font-size:13px;color:#3f3f46}
+    .success-message { display: none; text-align: center; padding: 60px 32px; }
+    .success-message.show { display: block; }
+    .success-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--a-dim); border: 2px solid rgba(11,184,120,0.2);
+      display: grid; place-items: center; margin: 0 auto 22px;
+      animation: successPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes successPop { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+    .success-icon svg { width: 28px; height: 28px; color: var(--a); }
+    .success-message h3 { font-family: var(--display); font-size: 23px; font-weight: 900; margin-bottom: 10px; letter-spacing: -0.5px; color: var(--t); }
+    .success-message p { font-size: 14.5px; color: var(--t-2); line-height: 1.7; }
 
-    /* ═══ LOGIN PANEL ═══ */
-    .login-overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,0.5);
-      opacity:0;visibility:hidden;transition:all .3s;z-index:200;
-      backdrop-filter:blur(4px);
+    /* FAQ */
+    .faq-section { padding: 90px 0 110px; background: var(--bg-light); }
+    .faq-header { text-align: center; margin-bottom: 52px; }
+    .faq-header .sec-tag { color: var(--a-2); }
+    .faq-header h2 {
+      font-family: var(--display); font-size: clamp(28px, 3.2vw, 40px);
+      font-weight: 900; letter-spacing: -1.5px; margin-bottom: 10px; color: var(--t-dark);
     }
-    .login-overlay.active{opacity:1;visibility:visible}
-    .login-panel{
-      position:fixed;top:0;right:0;width:100%;max-width:380px;height:100%;
-      background:var(--bg-white);transform:translateX(100%);visibility:hidden;
-      transition:transform .35s cubic-bezier(.4,0,.2,1),visibility .35s;
-      z-index:201;overflow-y:auto;color:var(--ink);
-    }
-    .login-panel.active{transform:translateX(0);visibility:visible}
-    .login-close{
-      position:absolute;top:16px;left:16px;width:36px;height:36px;
-      border-radius:8px;background:var(--ink);color:#fff;
-      border:none;cursor:pointer;display:grid;place-items:center;transition:.2s;
-    }
-    .login-close:hover{background:#27272a}
-    .login-content{padding:80px 32px 32px}
-    .login-content h2{font-size:24px;font-weight:700;text-align:center;margin-bottom:28px;letter-spacing:-0.5px;color:var(--ink)}
-    .login-form{display:flex;flex-direction:column;gap:12px}
-    .login-field{position:relative}
-    .login-field input{
-      width:100%;padding:12px 16px;border:1px solid var(--border-light);
-      border-radius:8px;font-size:14px;font-family:var(--font);
-      transition:all .2s;background:var(--bg-white);color:var(--ink);
-    }
-    .login-field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-    .login-field input::placeholder{color:var(--ink-muted)}
-    .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-muted);cursor:pointer}
-    .login-opts{display:flex;justify-content:space-between;align-items:center;margin:2px 0}
-    .chk-label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-secondary);cursor:pointer}
-    .chk-label input{accent-color:var(--accent)}
-    .forgot{font-size:12.5px;color:var(--accent);text-decoration:none;font-weight:550}
-    .forgot:hover{text-decoration:underline}
-    .login-submit{width:100%;margin-top:4px}
-    .login-div{text-align:center;margin:24px 0;position:relative}
-    .login-div::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border-light)}
-    .login-div span{background:var(--bg-white);padding:0 12px;position:relative;color:var(--ink-muted);font-size:12.5px}
-    .reg-btn{width:100%;justify-content:center}
+    .faq-header p { font-size: 15px; color: var(--t-dark-2); }
 
-    /* ═══ RESPONSIVE ═══ */
-    @media(max-width:1024px){
-      .contact-grid{grid-template-columns:1fr;gap:20px}
-      .info-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;order:2}
-      .faq-grid{grid-template-columns:1fr}
+    .faq-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; max-width: 900px; margin: 0 auto;
     }
-    @media(max-width:768px){
-      .mobile-btn{display:block}
-      .nav-links{
-        position:fixed;top:0;left:0;width:100%;height:100vh;
-        background:var(--bg-dark);flex-direction:column;
-        justify-content:center;align-items:center;gap:24px;
-        opacity:0;pointer-events:none;transition:opacity .3s;z-index:101;
+    .faq-card {
+      background: #FFFFFF; border: 1px solid var(--border-light);
+      border-radius: var(--r-lg); padding: 28px 30px;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      position: relative; overflow: hidden;
+    }
+    .faq-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--a), var(--a-2));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .faq-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,0,0,0.08); }
+    .faq-card:hover::before { transform: scaleX(1); }
+    .faq-q-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--a-dim); display: grid; place-items: center;
+      margin-bottom: 14px;
+    }
+    .faq-q-icon svg { width: 14px; height: 14px; color: var(--a); }
+    .faq-card h4 { font-family: var(--display); font-size: 15.5px; font-weight: 700; margin-bottom: 9px; color: var(--t-dark); letter-spacing: -0.3px; }
+    .faq-card p { font-size: 13.5px; color: var(--t-dark-2); line-height: 1.68; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid rgba(255,255,255,0.1); padding: 36px 0; background: var(--bg-2); }
+    footer .container { display: flex; justify-content: space-between; align-items: center; }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.85); }
+    .fcopy { font-size: 13px; color: rgba(255,255,255,0.4); }
+    footer .logo { color: rgba(255,255,255,0.85); }
+
+    /* LOGIN PANEL */
+    .login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); opacity: 0; visibility: hidden; transition: all 0.35s; z-index: 8000; backdrop-filter: blur(8px); }
+    .login-overlay.active { opacity: 1; visibility: visible; }
+    .login-panel { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: var(--bg-white); transform: translateX(100%); visibility: hidden; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), visibility 0.4s; z-index: 8001; overflow-y: auto; color: var(--t-dark); }
+    .login-panel.active { transform: translateX(0); visibility: visible; }
+    .login-close { position: absolute; top: 18px; left: 18px; width: 38px; height: 38px; border-radius: var(--r-sm); background: var(--t-dark); color: #fff; border: none; cursor: pointer; display: grid; place-items: center; transition: 0.2s; }
+    .login-close:hover { background: #1A1A30; }
+    .login-content { padding: 84px 36px 36px; }
+    .login-content h2 { font-family: var(--display); font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 32px; letter-spacing: -0.8px; color: var(--t-dark); }
+    .login-form { display: flex; flex-direction: column; gap: 14px; }
+    .login-field { position: relative; }
+    .login-field input { width: 100%; padding: 13px 18px; border: 1.5px solid var(--border-light); border-radius: var(--r-sm); font-size: 14px; font-family: var(--font); transition: all 0.2s; background: var(--bg-white); color: var(--t-dark); }
+    .login-field input:focus { outline: none; border-color: var(--a); box-shadow: 0 0 0 3px var(--a-dim); }
+    .login-field input::placeholder { color: var(--t-dark-2); }
+    .pw-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-dark-2); cursor: pointer; }
+    .login-opts { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; }
+    .chk-label { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--t-dark-2); cursor: pointer; }
+    .chk-label input { accent-color: var(--a); }
+    .forgot { font-size: 13px; color: var(--a-2); text-decoration: none; font-weight: 550; }
+    .forgot:hover { text-decoration: underline; }
+    .login-submit { width: 100%; margin-top: 4px; }
+    .login-div { text-align: center; margin: 28px 0; position: relative; }
+    .login-div::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border-light); }
+    .login-div span { background: var(--bg-white); padding: 0 14px; position: relative; color: var(--t-dark-2); font-size: 13px; }
+    .reg-btn { width: 100%; justify-content: center; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .contact-grid { grid-template-columns: 1fr; }
+      .info-cards { display: grid; grid-template-columns: 1fr 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .mobile-btn { display: block; }
+      .nav-links {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+        background: var(--bg-2); flex-direction: column;
+        justify-content: center; align-items: center; gap: 32px;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 201;
       }
-      .nav-links.active{opacity:1;pointer-events:auto}
-      .nav-links a{font-size:18px;color:#fff}
-      .page-hero{padding:120px 0 60px}
-      .form-row{grid-template-columns:1fr}
-      .info-cards{grid-template-columns:1fr}
-      .form-card{padding:28px 20px}
-      footer .container{flex-direction:column;gap:16px;text-align:center}
-      .footer-links{flex-wrap:wrap;justify-content:center}
+      .nav-links.active { opacity: 1; pointer-events: auto; }
+      .nav-links a { font-size: 22px; color: rgba(255,255,255,0.85); }
+      .form-row { grid-template-columns: 1fr; }
+      .info-cards { grid-template-columns: 1fr; }
+      .form-card { padding: 28px 22px; }
+      footer .container { flex-direction: column; gap: 20px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
 <!-- NAV -->
-<nav>
+<nav id="navbar">
   <div class="container">
-    <a href="index.html" class="logo"><div class="logo-mark">R</div> replai</a>
+    <a href="index.html" class="logo">
+      <svg class="logo-icon" width="30" height="30" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgK" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgK)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
     <div class="nav-links" id="navLinks">
-      <a href="index.html#features">Funkcie</a>
-      <a href="index.html#how">Ako to funguje</a>
-      <a href="index.html#pricing">Cenník</a>
+      <a href="index.html#why">Prečo AI agent</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="o-nas.html">O nás</a>
+      <a href="kontakt.html">Kontakt</a>
       <button class="btn-nav" onclick="openLogin()">Prihlásiť sa</button>
     </div>
     <button class="mobile-btn" id="mobileBtn"><span></span><span></span><span></span></button>
@@ -295,11 +436,14 @@
 
 <!-- HERO -->
 <section class="page-hero">
-  <div class="page-hero-orb"></div>
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-grid-bg"></div>
+  <div class="hero-orb orb-a"></div>
+  <div class="hero-orb orb-b"></div>
   <div class="container">
     <div class="sec-tag r">Kontakt</div>
-    <h1 class="r rd1">Porozprávajme sa</h1>
-    <p class="r rd2">Máte otázky ohľadom Replai? Radi pomôžeme s nastavením alebo výberom správneho plánu.</p>
+    <h1 class="r rd1">Konzultácia <em>zadarmo.</em><br>Záväzky žiadne.</h1>
+    <p class="r rd2">Ukážeme vám konkrétne, kde AI agent pomôže vášmu biznisu, koľko ušetríte a ako dlho trvá nasadenie.</p>
   </div>
 </section>
 
@@ -308,38 +452,38 @@
   <div class="container">
     <div class="contact-grid">
 
-      <!-- INFO CARDS -->
       <div class="info-cards">
         <div class="info-card r">
           <div class="info-card-head">
             <div class="info-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             </div>
             <h3>Email</h3>
           </div>
-          <p>Pre otázky a podporu</p>
-          <p><a href="mailto:info@replai.sk">info@replai.sk</a></p>
+          <p>Pre otázky a konzultácie</p>
+          <p style="margin-top:8px"><a href="mailto:info@replai.sk">info@replai.sk</a></p>
         </div>
 
         <div class="info-card r rd1">
           <div class="info-card-head">
-            <div class="info-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div class="info-icon purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </div>
             <h3>Telefón</h3>
           </div>
           <p>Po – Pia: 9:00 – 17:00</p>
-          <p><a href="tel:+421911415288">+421 911 415 288</a></p>
+          <p style="margin-top:8px"><a href="tel:+421911415288" class="purple-link">+421 911 415 288</a></p>
         </div>
 
         <div class="info-card r rd2">
           <div class="info-card-head">
             <div class="info-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <h3>Rýchla odpoveď</h3>
           </div>
-          <p>Emaily do 24h. Pre urgentné veci volajte.</p>
+          <p>Emaily vybavujeme do 24 hodín. Urgentné veci riešte telefonicky.</p>
+          <div class="info-card-badge"><span></span> Aktívna podpora</div>
         </div>
       </div>
 
@@ -347,7 +491,7 @@
       <div class="form-card r rd1">
         <div id="formContent">
           <h2>Napíšte nám</h2>
-          <p>Vyplňte formulár a ozveme sa do 24 hodín.</p>
+          <p>Vyplňte formulár a ozveme sa do 24 hodín s konkrétnym návrhom.</p>
 
           <form id="contactForm">
             <div class="form-row">
@@ -371,11 +515,24 @@
               </div>
             </div>
             <div class="form-group">
+              <label for="interest">Záujem o *</label>
+              <select id="interest" name="interest" required>
+                <option value="" disabled selected>Vyberte riešenie…</option>
+                <option value="chat">AI Chat pre web</option>
+                <option value="rezervacie">Rezervačný systém</option>
+                <option value="custom">Agent na mieru</option>
+                <option value="other">Iné / neviem ešte</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label for="message">Správa *</label>
-              <textarea id="message" name="message" placeholder="Napíšte nám, ako vám môžeme pomôcť..." required></textarea>
+              <textarea id="message" name="message" placeholder="Stručne opíšte váš biznis a čo chcete automatizovať…" required></textarea>
             </div>
             <div class="form-submit">
-              <button type="submit" class="btn btn-accent">Odoslať správu</button>
+              <button type="submit" class="btn btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Odoslať a dohodnúť konzultáciu
+              </button>
             </div>
             <p class="form-note">Odoslaním súhlasíte so spracovaním osobných údajov.</p>
           </form>
@@ -383,12 +540,13 @@
 
         <div class="success-message" id="successMsg">
           <div class="success-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <h3>Ďakujeme za správu!</h3>
-          <p>Ozveme sa čo najskôr, zvyčajne do 24 hodín.</p>
+          <p>Ozveme sa čo najskôr — zvyčajne do 24 hodín.<br>Tešíme sa na spoluprácu.</p>
         </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -397,25 +555,30 @@
 <section class="faq-section">
   <div class="container">
     <div class="faq-header r">
+      <div class="sec-tag">FAQ</div>
       <h2>Časté otázky</h2>
-      <p>Nenašli ste odpoveď? Napíšte nám!</p>
+      <p>Nenašli ste odpoveď? Napíšte nám priamo.</p>
     </div>
     <div class="faq-grid">
       <div class="faq-card r">
-        <h4>Ako dlho trvá nastavenie?</h4>
-        <p>Základné nastavenie trvá menej ako 5 minút. Import obsahu závisí od množstva, ale zvyčajne je hotový za pár minút.</p>
+        <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h4>Ako dlho trvá vývoj agenta?</h4>
+        <p>Závisí od komplexnosti. Jednoduchý AI chat zvládneme za 1–2 týždne, rezervačný systém alebo agent na mieru za 3–6 týždňov.</p>
       </div>
       <div class="faq-card r rd1">
-        <h4>Môžem zmeniť plán kedykoľvek?</h4>
-        <p>Áno, plán môžete upgradovať alebo downgradovať kedykoľvek. Zmena sa prejaví okamžite.</p>
+        <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h4>Musím mať technické znalosti?</h4>
+        <p>Nie. O technickú stránku sa staráme celú my — od vývoja cez integráciu až po nasadenie. Vy iba schválite výsledok.</p>
       </div>
       <div class="faq-card r rd2">
-        <h4>Poskytujete zaškolenie?</h4>
-        <p>Pre Pro a Business plány poskytujeme bezplatné online zaškolenie. Pre Starter máme video tutoriály.</p>
+        <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h4>Čo ak agent nie je presný?</h4>
+        <p>Agent je natrénovaný na vašich dátach a pred nasadením prejde testovacou fázou. Po spustení optimalizujeme na základe reálnych konverzácií.</p>
       </div>
       <div class="faq-card r rd3">
-        <h4>Aké platobné metódy akceptujete?</h4>
-        <p>Platby kartou (Visa, Mastercard), bankový prevod a faktúra pre Business zákazníkov.</p>
+        <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h4>Na aké systémy sa agent napojí?</h4>
+        <p>Väčšinu bežných systémov — Google Kalendár, CRM, Shopify, WooCommerce, platobné brány, email a ďalšie cez API.</p>
       </div>
     </div>
   </div>
@@ -424,18 +587,32 @@
 <!-- FOOTER -->
 <footer>
   <div class="container">
-    <a href="index.html" class="logo" style="font-size:15px"><div class="logo-mark" style="width:22px;height:22px;font-size:10px;border-radius:5px">R</div> replai</a>
+    <a href="index.html" class="logo" style="font-size:15px">
+      <svg class="logo-icon" width="24" height="24" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgKF" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgKF)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
     <div class="footer-links">
       <a href="index.html">Domov</a>
-      <a href="index.html#features">Funkcie</a>
-      <a href="index.html#pricing">Cenník</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="o-nas.html">O nás</a>
       <a href="kontakt.html">Kontakt</a>
     </div>
     <p class="fcopy">© 2025 Replai</p>
   </div>
 </footer>
 
-<!-- LOGIN PANEL -->
 <div class="login-overlay" id="loginOverlay"></div>
 <div class="login-panel" id="loginPanel">
   <button class="login-close" id="loginClose">
@@ -463,41 +640,158 @@
 </div>
 
 <script>
-// ═══ REVEAL ═══
-const ro=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');ro.unobserve(e.target)}})},{threshold:0.08,rootMargin:'0px 0px -30px 0px'});
-document.querySelectorAll('.r').forEach(el=>ro.observe(el));
+// REVEAL
+const ro = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); ro.unobserve(e.target); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.r').forEach(el => ro.observe(el));
 
-// ═══ MOBILE ═══
-const mb=document.getElementById('mobileBtn'),nl=document.getElementById('navLinks');
-mb.addEventListener('click',()=>{mb.classList.toggle('on');nl.classList.toggle('active');document.body.style.overflow=nl.classList.contains('active')?'hidden':''});
-nl.querySelectorAll('a,button').forEach(e=>e.addEventListener('click',()=>{mb.classList.remove('on');nl.classList.remove('active');document.body.style.overflow=''}));
+// NAV
+const nb = document.getElementById('navbar');
+window.addEventListener('scroll', () => { nb.classList.toggle('scrolled', scrollY > 40); }, { passive: true });
 
-// ═══ LOGIN ═══
-const lp=document.getElementById('loginPanel'),lo=document.getElementById('loginOverlay');
-function openLogin(){lp.classList.add('active');lo.classList.add('active');document.body.style.overflow='hidden'}
-function closeLogin(){lp.classList.remove('active');lo.classList.remove('active');document.body.style.overflow=''}
-document.getElementById('loginClose').addEventListener('click',closeLogin);
-lo.addEventListener('click',closeLogin);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLogin()});
-function togglePassword(){const p=document.getElementById('loginPassword');p.type=p.type==='password'?'text':'password'}
+// MOBILE MENU
+const mb = document.getElementById('mobileBtn'), nl = document.getElementById('navLinks');
+mb.addEventListener('click', () => {
+  mb.classList.toggle('on'); nl.classList.toggle('active');
+  document.body.style.overflow = nl.classList.contains('active') ? 'hidden' : '';
+});
+nl.querySelectorAll('a,button').forEach(e => e.addEventListener('click', () => {
+  mb.classList.remove('on'); nl.classList.remove('active'); document.body.style.overflow = '';
+}));
 
-document.getElementById('loginForm').addEventListener('submit',async function(e){
-  e.preventDefault();const em=document.getElementById('loginEmail').value,pw=document.getElementById('loginPassword').value,btn=this.querySelector('.login-submit');
-  btn.disabled=true;btn.textContent='Prihlasujem...';
-  try{const r=await fetch('https://replai-backend.onrender.com/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw})});
-  const d=await r.json();if(r.ok&&d.token){window.location.href=`https://replai-chi.vercel.app/login?token=${d.token}`}else{alert(d.error||'Nesprávne údaje');btn.disabled=false;btn.textContent='Prihlásiť'}}
-  catch(err){alert('Chyba servera');btn.disabled=false;btn.textContent='Prihlásiť'}});
+// LOGIN
+const lp = document.getElementById('loginPanel'), lo = document.getElementById('loginOverlay');
+function openLogin() { lp.classList.add('active'); lo.classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeLogin() { lp.classList.remove('active'); lo.classList.remove('active'); document.body.style.overflow = ''; }
+document.getElementById('loginClose').addEventListener('click', closeLogin);
+lo.addEventListener('click', closeLogin);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
+function togglePassword() { const p = document.getElementById('loginPassword'); p.type = p.type === 'password' ? 'text' : 'password'; }
 
-// ═══ CONTACT FORM ═══
-const cf=document.getElementById('contactForm'),fc=document.getElementById('formContent'),sm=document.getElementById('successMsg');
-cf.addEventListener('submit',async function(e){
-  e.preventDefault();const btn=cf.querySelector('button[type="submit"]');
-  btn.disabled=true;btn.textContent='Odosielam...';
-  const data={name:document.getElementById('name').value,email:document.getElementById('email').value,company:document.getElementById('company').value,phone:document.getElementById('phone').value,message:document.getElementById('message').value};
-  try{const r=await fetch('https://replai-backend.onrender.com/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  if(r.ok){fc.style.display='none';sm.classList.add('show');sm.scrollIntoView({behavior:'smooth',block:'center'})}
-  else{const d=await r.json();alert(d.error||'Nepodarilo sa odoslať');btn.disabled=false;btn.textContent='Odoslať správu'}}
-  catch(err){alert('Chyba servera');btn.disabled=false;btn.textContent='Odoslať správu'}});
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const em = document.getElementById('loginEmail').value;
+  const pw = document.getElementById('loginPassword').value;
+  const btn = this.querySelector('.login-submit');
+  btn.disabled = true; btn.textContent = 'Prihlasujem...';
+  try {
+    const r = await fetch('https://replai-backend.onrender.com/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: em, password: pw })
+    });
+    const d = await r.json();
+    if (r.ok && d.token) { window.location.href = `https://replai-chi.vercel.app/login?token=${d.token}`; }
+    else { alert(d.error || 'Nesprávne údaje'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
+  } catch(err) { alert('Chyba servera'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
+});
+
+// CONTACT FORM
+const cf = document.getElementById('contactForm');
+const fc = document.getElementById('formContent');
+const sm = document.getElementById('successMsg');
+cf.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = cf.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Odosielam...';
+  const data = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    company: document.getElementById('company').value,
+    phone: document.getElementById('phone').value,
+    interest: document.getElementById('interest').value,
+    message: document.getElementById('message').value
+  };
+  try {
+    const r = await fetch('https://replai-backend.onrender.com/contact', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (r.ok) {
+      fc.style.display = 'none'; sm.classList.add('show');
+      sm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      const d = await r.json();
+      alert(d.error || 'Nepodarilo sa odoslať');
+      btn.disabled = false; btn.textContent = 'Odoslať a dohodnúť konzultáciu';
+    }
+  } catch(err) { alert('Chyba servera'); btn.disabled = false; btn.textContent = 'Odoslať a dohodnúť konzultáciu'; }
+});
+
+// CURSOR
+(function() {
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = -100, my = -100, rx = -100, ry = -100;
+  dot.style.cssText += 'left:0;top:0;will-change:transform;';
+  ring.style.cssText += 'left:0;top:0;will-change:transform;';
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = `translate(${mx - 2.5}px,${my - 2.5}px)`;
+  }, { passive: true });
+  (function animRing() {
+    rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
+    ring.style.transform = `translate(${rx - 17}px,${ry - 17}px)`;
+    requestAnimationFrame(animRing);
+  })();
+  document.querySelectorAll('a, button, .info-card, .faq-card').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+  });
+})();
+
+// HERO PARTICLE NETWORK
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const GREEN = [11, 184, 120], PURPLE = [107, 95, 237];
+  function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+  const nodes = Array.from({ length: 35 }, () => {
+    const c = Math.random() > 0.5 ? GREEN : PURPLE;
+    return { x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, r: Math.random() * 1.8 + 1, color: c, pulse: Math.random() * Math.PI * 2 };
+  });
+  let frame = 0;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy; n.pulse += 0.018;
+      if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+      if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+    });
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          const alpha = (1 - dist / 150) * 0.2;
+          const t = 0.5 + 0.5 * Math.sin(frame * 0.008 + i + j);
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(${a.color[0]*t+b.color[0]*(1-t)},${a.color[1]*t+b.color[1]*(1-t)},${a.color[2]*t+b.color[2]*(1-t)},${alpha})`;
+          ctx.lineWidth = 0.8; ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n => {
+      const pulse = 0.5 + 0.5 * Math.sin(n.pulse);
+      const alpha = 0.45 + 0.45 * pulse;
+      const glow = n.r + pulse * 7;
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glow);
+      grad.addColorStop(0, `rgba(${n.color[0]},${n.color[1]},${n.color[2]},${alpha * 0.9})`);
+      grad.addColorStop(1, `rgba(${n.color[0]},${n.color[1]},${n.color[2]},0)`);
+      ctx.beginPath(); ctx.arc(n.x, n.y, glow, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${n.color[0]},${n.color[1]},${n.color[2]},${alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
 </script>
 
 <script src="https://replai-backend.onrender.com/static/widget.js" data-api-key="d735d9fa298dd94e4f106f93ac538c7ae7f87acd53ebffd19feef811405f08d3" data-backend-url="https://replai-backend.onrender.com"></script>

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O nás – Replai</title>
+  <meta name="description" content="Sme slovenský tím, ktorý buduje inteligentných AI agentov pre firmy. Zoznámte sa s nami.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --font: 'DM Sans', -apple-system, sans-serif;
+      --display: 'Onest', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --bg: #F3F4FA;
+      --bg-2: #0F1035;
+      --bg-light: #EAEDF6;
+      --bg-white: #FFFFFF;
+      --border: rgba(0,0,0,0.09);
+      --border-h: rgba(0,0,0,0.18);
+      --border-light: rgba(0,0,0,0.075);
+      --a: #0BB878;
+      --a-dim: rgba(11,184,120,0.12);
+      --a-glow: rgba(11,184,120,0.32);
+      --a-2: #6B5FED;
+      --a-2-dim: rgba(107,95,237,0.12);
+      --a-2-glow: rgba(107,95,237,0.30);
+      --t: #0C0C22;
+      --t-2: #5A5A80;
+      --t-3: #9898B8;
+      --t-dark: #0C0C1A;
+      --t-dark-2: #48486A;
+      --r: 14px;
+      --r-sm: 9px;
+      --r-lg: 22px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--t);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      cursor: none;
+    }
+    @media (pointer: coarse) {
+      body, a, button, [role="button"] { cursor: auto !important; }
+      #cursor-dot, #cursor-ring { display: none !important; }
+    }
+    ::selection { background: var(--a-dim); color: var(--a); }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+    /* CURSOR */
+    #cursor-dot { width: 5px; height: 5px; background: var(--a); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999; will-change: transform; box-shadow: 0 0 8px var(--a); }
+    #cursor-ring { width: 34px; height: 34px; border: 1.5px solid rgba(11,184,120,0.45); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998; will-change: transform; transition: width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, background 0.3s; }
+    #cursor-ring.hover { width: 54px; height: 54px; border-color: var(--a); background: rgba(11,184,120,0.06); }
+
+    /* REVEAL */
+    .r { opacity: 0; transform: translateY(28px); transition: opacity .75s cubic-bezier(.16,1,.3,1), transform .75s cubic-bezier(.16,1,.3,1); }
+    .r.v { opacity: 1; transform: none; }
+    .rd1{transition-delay:.08s} .rd2{transition-delay:.16s} .rd3{transition-delay:.24s} .rd4{transition-delay:.32s} .rd5{transition-delay:.40s}
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; height: 64px; display: flex; align-items: center; padding: 0 28px; transition: all 0.4s ease; }
+    nav.scrolled { background: rgba(243,244,250,0.90); backdrop-filter: blur(20px) saturate(1.8); border-bottom: 1px solid var(--border); }
+    nav .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: rgba(255,255,255,0.92); font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -0.6px; transition: color 0.3s; }
+    nav.scrolled .logo { color: var(--t); }
+    .logo-icon { display: block; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.65); text-decoration: none; transition: color 0.2s; position: relative; }
+    nav.scrolled .nav-links a { color: var(--t-2); }
+    .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 1px; background: var(--a); transform: scaleX(0); transition: transform 0.25s cubic-bezier(0.16,1,0.3,1); }
+    .nav-links a:hover { color: rgba(255,255,255,0.95); }
+    nav.scrolled .nav-links a:hover { color: var(--t); }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .btn-nav { font-family: var(--font); font-size: 13.5px; font-weight: 600; color: #FFFFFF; background: var(--a); border: none; border-radius: var(--r-sm); padding: 8px 18px; cursor: none; transition: all 0.25s; }
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--a-glow); }
+    .mobile-btn { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 202; }
+    .mobile-btn span { display: block; width: 22px; height: 1.5px; background: rgba(255,255,255,0.85); margin: 5px 0; transition: 0.3s; border-radius: 2px; }
+    nav.scrolled .mobile-btn span { background: var(--t); }
+    .mobile-btn.on span:nth-child(1) { transform: rotate(45deg) translate(4.5px,4.5px); }
+    .mobile-btn.on span:nth-child(2) { opacity: 0; }
+    .mobile-btn.on span:nth-child(3) { transform: rotate(-45deg) translate(4.5px,-4.5px); }
+
+    /* BUTTONS */
+    .btn { font-family: var(--font); font-weight: 600; font-size: 14px; padding: 13px 26px; border-radius: var(--r-sm); border: none; cursor: none; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s, background 0.2s; letter-spacing: -0.1px; }
+    .btn-primary { background: var(--a); color: #FFFFFF; }
+    .btn-primary:hover { box-shadow: 0 8px 32px var(--a-glow); transform: translateY(-1px); }
+    .btn-ghost-white { background: transparent; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.18); }
+    .btn-ghost-white:hover { border-color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.07); }
+    .btn-outline-dark { background: transparent; color: var(--t-dark); border: 1px solid var(--border-light); }
+    .btn-outline-dark:hover { border-color: var(--t-dark); }
+    .btn-dark { background: var(--t-dark); color: #fff; }
+    .btn-dark:hover { background: #1A1A30; }
+
+    /* HERO */
+    .page-hero { padding: 160px 0 110px; position: relative; overflow: hidden; text-align: center; background: var(--bg-2); }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .hero-grid-bg { position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(rgba(107,95,237,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(107,95,237,0.07) 1px, transparent 1px); background-size: 72px 72px; mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%); -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%); }
+    .hero-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+    .orb-a { width: 700px; height: 700px; background: radial-gradient(circle, rgba(107,95,237,0.18), transparent 60%); top: -300px; left: 50%; transform: translateX(-50%); }
+    .orb-b { width: 450px; height: 450px; background: radial-gradient(circle, rgba(11,184,120,0.14), transparent 60%); top: -80px; right: -100px; }
+    .page-hero .container { position: relative; z-index: 1; }
+
+    .sec-tag { font-family: var(--mono); font-size: 11px; color: var(--a); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+    .sec-tag.center { justify-content: center; }
+    .sec-tag::before { content: ''; width: 22px; height: 1px; background: currentColor; flex-shrink: 0; }
+    .sec-tag.center::before { display: none; }
+
+    .page-hero h1 { font-family: var(--display); font-size: clamp(40px, 5.5vw, 66px); font-weight: 900; letter-spacing: -3px; line-height: 1.04; margin-bottom: 22px; color: rgba(255,255,255,0.95); }
+    .page-hero h1 em { background: linear-gradient(125deg, var(--a), var(--a-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-style: normal; }
+    .page-hero p { font-size: 17px; color: rgba(255,255,255,0.60); max-width: 520px; margin: 0 auto 36px; line-height: 1.74; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* MISSION */
+    .mission { padding: 100px 0; background: var(--bg-white); }
+    .mission-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .mission-label { font-family: var(--mono); font-size: 11px; color: var(--a); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .mission-label::before { content: ''; width: 22px; height: 1px; background: currentColor; }
+    .mission-left h2 { font-family: var(--display); font-size: clamp(30px, 3.4vw, 46px); font-weight: 900; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px; color: var(--t-dark); }
+    .mission-left h2 em { background: linear-gradient(125deg, var(--a), var(--a-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-style: normal; }
+    .mission-left p { font-size: 15.5px; color: var(--t-dark-2); line-height: 1.8; margin-bottom: 16px; }
+    .mission-right { display: flex; flex-direction: column; gap: 20px; }
+    .mission-stat { background: var(--bg); border: 1px solid var(--border-light); border-radius: var(--r-lg); padding: 28px 32px; position: relative; overflow: hidden; transition: all 0.35s cubic-bezier(0.16,1,0.3,1); }
+    .mission-stat::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--a), var(--a-2)); border-radius: 3px 0 0 3px; }
+    .mission-stat:hover { transform: translateX(6px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .mission-stat-num { font-family: var(--display); font-size: 40px; font-weight: 900; letter-spacing: -2px; color: var(--t-dark); line-height: 1; margin-bottom: 4px; }
+    .mission-stat-label { font-size: 14px; color: var(--t-dark-2); font-weight: 500; }
+
+    /* VALUES */
+    .values { padding: 100px 0; background: var(--bg-2); position: relative; overflow: hidden;
+      --t-dark: rgba(255,255,255,0.93); --t-dark-2: rgba(255,255,255,0.60);
+    }
+    .values-orb { position: absolute; width: 800px; height: 800px; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(11,184,120,0.1), rgba(107,95,237,0.06) 45%, transparent 70%); filter: blur(80px); pointer-events: none; }
+    .values-header { text-align: center; margin-bottom: 64px; }
+    .values-header h2 { font-family: var(--display); font-size: clamp(30px, 3.4vw, 46px); font-weight: 900; letter-spacing: -2px; color: rgba(255,255,255,0.95); margin-bottom: 14px; }
+    .values-header p { font-size: 16px; color: rgba(255,255,255,0.58); max-width: 440px; margin: 0 auto; line-height: 1.72; }
+    .values-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; position: relative; z-index: 1; }
+    .val-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: var(--r-lg); padding: 36px 32px; display: flex; gap: 22px; align-items: flex-start; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); cursor: default; }
+    .val-card:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); transform: translateY(-4px); }
+    .val-icon { width: 48px; height: 48px; border-radius: 13px; background: rgba(11,184,120,0.12); border: 1px solid rgba(11,184,120,0.2); display: grid; place-items: center; flex-shrink: 0; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .val-card:hover .val-icon { transform: scale(1.1) rotate(-5deg); background: rgba(11,184,120,0.2); }
+    .val-icon svg { width: 22px; height: 22px; color: var(--a); }
+    .val-icon.purple { background: rgba(107,95,237,0.12); border-color: rgba(107,95,237,0.2); }
+    .val-icon.purple svg { color: var(--a-2); }
+    .val-card:hover .val-icon.purple { background: rgba(107,95,237,0.2); }
+    .val-body h3 { font-family: var(--display); font-size: 18px; font-weight: 700; margin-bottom: 9px; color: rgba(255,255,255,0.93); letter-spacing: -0.4px; }
+    .val-body p { font-size: 14px; color: rgba(255,255,255,0.58); line-height: 1.7; }
+
+    /* STORY / TIMELINE */
+    .story { padding: 100px 0; background: var(--bg-white); }
+    .story-header { margin-bottom: 64px; }
+    .story-header h2 { font-family: var(--display); font-size: clamp(30px, 3.4vw, 46px); font-weight: 900; letter-spacing: -2px; color: var(--t-dark); margin-bottom: 14px; }
+    .story-header p { font-size: 16px; color: var(--t-dark-2); max-width: 500px; line-height: 1.74; }
+    .timeline { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 40px; }
+    .timeline::before { content: ''; position: absolute; left: 16px; top: 0; bottom: 0; width: 1.5px; background: linear-gradient(180deg, var(--a), var(--a-2), transparent); }
+    .tl-item { position: relative; padding: 0 0 44px 32px; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-dot { position: absolute; left: -32px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--a-2)); box-shadow: 0 0 0 4px rgba(11,184,120,0.15), 0 0 12px rgba(11,184,120,0.3); }
+    .tl-year { font-family: var(--mono); font-size: 11px; color: var(--a); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    .tl-item h3 { font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--t-dark); margin-bottom: 8px; }
+    .tl-item p { font-size: 14.5px; color: var(--t-dark-2); line-height: 1.72; max-width: 540px; }
+
+    /* TEAM */
+    .team { padding: 100px 0; background: var(--bg-light); }
+    .team-header { text-align: center; margin-bottom: 64px; }
+    .team-header h2 { font-family: var(--display); font-size: clamp(30px, 3.4vw, 46px); font-weight: 900; letter-spacing: -2px; color: var(--t-dark); margin-bottom: 14px; }
+    .team-header p { font-size: 16px; color: var(--t-dark-2); max-width: 420px; margin: 0 auto; line-height: 1.72; }
+    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .team-card { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--r-lg); padding: 36px 28px; text-align: center; transition: all 0.4s cubic-bezier(0.16,1,0.3,1); position: relative; overflow: hidden; }
+    .team-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--a), var(--a-2)); transform: scaleX(0); transform-origin: left; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .team-card:hover { transform: translateY(-8px); box-shadow: 0 28px 56px rgba(0,0,0,0.10); }
+    .team-card:hover::before { transform: scaleX(1); }
+    .team-avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 18px; overflow: hidden; border: 3px solid var(--border-light); transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .team-card:hover .team-avatar { border-color: var(--a); box-shadow: 0 0 0 4px var(--a-dim); }
+    .team-avatar-placeholder { width: 100%; height: 100%; display: grid; place-items: center; font-family: var(--display); font-size: 28px; font-weight: 900; background: linear-gradient(135deg, var(--a-dim), var(--a-2-dim)); color: var(--a-2); }
+    .team-card h3 { font-family: var(--display); font-size: 18px; font-weight: 800; letter-spacing: -0.4px; color: var(--t-dark); margin-bottom: 4px; }
+    .team-role { font-size: 12.5px; font-weight: 600; color: var(--a); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; font-family: var(--mono); }
+    .team-card p { font-size: 13.5px; color: var(--t-dark-2); line-height: 1.68; }
+
+    /* FOUNDER */
+    .founder-wrap { max-width: 900px; margin: 0 auto; }
+    .founder-card { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--r-lg); padding: 52px 48px; display: grid; grid-template-columns: 200px 1fr; gap: 52px; align-items: start; position: relative; overflow: hidden; transition: box-shadow 0.4s; }
+    .founder-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--a), var(--a-2)); }
+    .founder-card:hover { box-shadow: 0 28px 60px rgba(0,0,0,0.09); }
+    .founder-left { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .founder-avatar { width: 148px; height: 148px; border-radius: 50%; overflow: hidden; border: 3px solid var(--border-light); transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .founder-card:hover .founder-avatar { border-color: var(--a); box-shadow: 0 0 0 5px var(--a-dim); }
+    .founder-avatar-placeholder { width: 100%; height: 100%; display: grid; place-items: center; font-family: var(--display); font-size: 44px; font-weight: 900; background: linear-gradient(135deg, var(--a-dim), var(--a-2-dim)); color: var(--a-2); }
+    .founder-tags { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+    .founder-tag { font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border-light); color: var(--t-dark-2); font-family: var(--mono); letter-spacing: 0.3px; text-align: center; }
+    .founder-tag.green { background: var(--a-dim); border-color: rgba(11,184,120,0.2); color: var(--a); }
+    .founder-right h3 { font-family: var(--display); font-size: 32px; font-weight: 900; letter-spacing: -1.5px; color: var(--t-dark); margin-bottom: 4px; }
+    .founder-role { font-size: 12px; font-weight: 600; color: var(--a); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; font-family: var(--mono); }
+    .founder-bio { font-size: 14.5px; color: var(--t-dark-2); line-height: 1.82; }
+    .founder-bio p { margin-bottom: 14px; }
+    .founder-bio p:last-child { margin-bottom: 0; }
+    .founder-quote { margin-top: 24px; padding: 18px 22px; border-radius: var(--r); border-left: 3px solid var(--a); background: var(--a-dim); font-size: 14px; color: var(--t-dark); font-style: italic; line-height: 1.72; }
+    @media (max-width: 768px) {
+      .founder-card { grid-template-columns: 1fr; text-align: center; padding: 36px 24px; gap: 32px; }
+      .founder-tags { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+      .founder-tag { font-size: 11px; }
+    }
+
+    /* WHY US */
+    .why-us { padding: 100px 0; background: var(--bg-white); }
+    .why-us-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .why-us-list { display: flex; flex-direction: column; gap: 16px; }
+    .why-us-item { display: flex; gap: 16px; align-items: flex-start; padding: 22px 24px; border-radius: var(--r-lg); border: 1px solid var(--border-light); background: var(--bg); transition: all 0.35s cubic-bezier(0.16,1,0.3,1); cursor: default; }
+    .why-us-item:hover { border-color: rgba(11,184,120,0.25); background: var(--a-dim); transform: translateX(6px); }
+    .why-us-item-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--a-dim); display: grid; place-items: center; flex-shrink: 0; transition: all 0.35s cubic-bezier(0.16,1,0.3,1); }
+    .why-us-item:hover .why-us-item-icon { background: rgba(11,184,120,0.2); transform: scale(1.05); }
+    .why-us-item-icon svg { width: 18px; height: 18px; color: var(--a); }
+    .why-us-item h4 { font-family: var(--display); font-size: 15.5px; font-weight: 700; color: var(--t-dark); margin-bottom: 4px; letter-spacing: -0.3px; }
+    .why-us-item p { font-size: 13.5px; color: var(--t-dark-2); line-height: 1.65; }
+    .why-us-visual { position: relative; }
+    .why-us-card-main { background: var(--bg-2); border-radius: var(--r-lg); padding: 40px 36px; position: relative; overflow: hidden; }
+    .why-us-card-orb { position: absolute; width: 400px; height: 400px; border-radius: 50%; top: -150px; right: -150px; background: radial-gradient(circle, rgba(11,184,120,0.15), transparent 60%); filter: blur(60px); }
+    .why-us-card-main h3 { font-family: var(--display); font-size: clamp(24px,2.5vw,32px); font-weight: 900; letter-spacing: -1.5px; color: rgba(255,255,255,0.95); margin-bottom: 12px; position: relative; z-index: 1; }
+    .why-us-card-main p { font-size: 15px; color: rgba(255,255,255,0.60); line-height: 1.76; margin-bottom: 28px; position: relative; z-index: 1; }
+    .why-us-card-main .btn { position: relative; z-index: 1; }
+    .why-us-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+    .why-us-stat { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--r); padding: 18px 20px; text-align: center; }
+    .why-us-stat-num { font-family: var(--display); font-size: 30px; font-weight: 900; letter-spacing: -1.5px; color: var(--t-dark); line-height: 1; }
+    .why-us-stat-label { font-size: 12px; color: var(--t-dark-2); margin-top: 4px; font-weight: 500; }
+
+    /* CTA */
+    .cta { padding: 130px 0; background: var(--bg-2); text-align: center; position: relative; overflow: hidden; }
+    .cta-orb { position: absolute; width: 700px; height: 700px; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(107,95,237,0.14), rgba(11,184,120,0.06) 45%, transparent 70%); filter: blur(80px); pointer-events: none; }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta h2 { font-family: var(--display); font-size: clamp(34px, 4.5vw, 58px); font-weight: 900; letter-spacing: -2.5px; color: rgba(255,255,255,0.95); margin-bottom: 18px; line-height: 1.08; }
+    .cta h2 em { background: linear-gradient(125deg, var(--a), var(--a-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-style: normal; }
+    .cta p { font-size: 17px; color: rgba(255,255,255,0.62); margin-bottom: 38px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.72; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .cta-note { margin-top: 20px; font-size: 13px; color: rgba(255,255,255,0.35); }
+
+    /* FOOTER */
+    footer { border-top: 1px solid rgba(255,255,255,0.1); padding: 36px 0; background: var(--bg-2); }
+    footer .container { display: flex; justify-content: space-between; align-items: center; }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.85); }
+    .fcopy { font-size: 13px; color: rgba(255,255,255,0.4); }
+    footer .logo { color: rgba(255,255,255,0.85); }
+
+    /* LOGIN PANEL */
+    .login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); opacity: 0; visibility: hidden; transition: all 0.35s; z-index: 8000; backdrop-filter: blur(8px); }
+    .login-overlay.active { opacity: 1; visibility: visible; }
+    .login-panel { position: fixed; top: 0; right: 0; width: 100%; max-width: 400px; height: 100%; background: var(--bg-white); transform: translateX(100%); visibility: hidden; transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), visibility 0.4s; z-index: 8001; overflow-y: auto; }
+    .login-panel.active { transform: translateX(0); visibility: visible; }
+    .login-close { position: absolute; top: 18px; left: 18px; width: 38px; height: 38px; border-radius: var(--r-sm); background: var(--t-dark); color: #fff; border: none; cursor: pointer; display: grid; place-items: center; transition: 0.2s; }
+    .login-close:hover { background: #1A1A30; }
+    .login-content { padding: 84px 36px 36px; }
+    .login-content h2 { font-family: var(--display); font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 32px; letter-spacing: -0.8px; color: var(--t-dark); }
+    .login-form { display: flex; flex-direction: column; gap: 14px; }
+    .login-field { position: relative; }
+    .login-field input { width: 100%; padding: 13px 18px; border: 1.5px solid var(--border-light); border-radius: var(--r-sm); font-size: 14px; font-family: var(--font); transition: all 0.2s; background: var(--bg-white); color: var(--t-dark); }
+    .login-field input:focus { outline: none; border-color: var(--a); box-shadow: 0 0 0 3px var(--a-dim); }
+    .login-field input::placeholder { color: var(--t-dark-2); }
+    .pw-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-dark-2); cursor: pointer; }
+    .login-opts { display: flex; justify-content: space-between; align-items: center; margin: 2px 0; }
+    .chk-label { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--t-dark-2); cursor: pointer; }
+    .chk-label input { accent-color: var(--a); }
+    .forgot { font-size: 13px; color: var(--a-2); text-decoration: none; font-weight: 550; }
+    .forgot:hover { text-decoration: underline; }
+    .login-submit { width: 100%; margin-top: 4px; }
+    .login-div { text-align: center; margin: 28px 0; position: relative; }
+    .login-div::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border-light); }
+    .login-div span { background: var(--bg-white); padding: 0 14px; position: relative; color: var(--t-dark-2); font-size: 13px; }
+    .reg-btn { width: 100%; justify-content: center; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .mission-inner { grid-template-columns: 1fr; gap: 48px; }
+      .values-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr 1fr; }
+      .why-us-inner { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .mobile-btn { display: block; }
+      .nav-links { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg-2); flex-direction: column; justify-content: center; align-items: center; gap: 32px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 201; }
+      .nav-links.active { opacity: 1; pointer-events: auto; }
+      .nav-links a { font-size: 22px; color: rgba(255,255,255,0.85); }
+      .team-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
+      .why-us-stats { grid-template-columns: 1fr 1fr; }
+      .val-card { flex-direction: column; }
+      footer .container { flex-direction: column; gap: 20px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="container">
+    <a href="index.html" class="logo">
+      <svg class="logo-icon" width="30" height="30" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgO" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgO)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#why">Prečo AI agent</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="o-nas.html">O nás</a>
+      <a href="kontakt.html">Kontakt</a>
+      <button class="btn-nav" onclick="openLogin()">Prihlásiť sa</button>
+    </div>
+    <button class="mobile-btn" id="mobileBtn"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="page-hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-grid-bg"></div>
+  <div class="hero-orb orb-a"></div>
+  <div class="hero-orb orb-b"></div>
+  <div class="container">
+    <div class="sec-tag center r">O nás</div>
+    <h1 class="r rd1">Som slovenský expert,<br>ktorý <em>verí v AI</em> pre každú firmu</h1>
+    <p class="r rd2">Nie som korporácia. Som človek, ktorý skutočne rozumie technológii — a vie ju pretaviť do riešení, ktoré fungujú v praxi.</p>
+    <div class="hero-btns r rd3">
+      <a href="kontakt.html" class="btn btn-primary">Porozprávajme sa</a>
+      <a href="#mission" class="btn btn-ghost-white">Moja misia</a>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="mission" id="mission">
+  <div class="container">
+    <div class="mission-inner">
+      <div class="mission-left r">
+        <div class="mission-label">Moja misia</div>
+        <h2>Verím, že každá firma si zaslúži <em>inteligentnú automatizáciu</em></h2>
+        <p>Začal som s jednoduchou myšlienkou: prečo by mali AI riešenia byť dostupné len veľkým korporáciám? Malé a stredné firmy majú rovnaké potreby — zákazníkov, ktorí čakajú odpovede, procesy, ktoré sa opakujú, a čas, ktorý sa stráca manuálnou prácou.</p>
+        <p>Replai existuje preto, aby túto nerovnováhu zmenil. Každý agent, ktorý postavím, je riešenie šité presne na mieru — nie šablóna, nie generický chatbot. Skutočná automatizácia, ktorá mení každodenný chod biznisu.</p>
+      </div>
+      <div class="mission-right r rd1">
+        <div class="mission-stat">
+          <div class="mission-stat-num">100%</div>
+          <div class="mission-stat-label">riešení postavených na mieru — žiadne šablóny</div>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-num">24/7</div>
+          <div class="mission-stat-label">dostupnosť každého agenta, ktorý som nasadil</div>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-num">&lt;3 týž</div>
+          <div class="mission-stat-label">priemerný čas od konzultácie po živý agent</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values">
+  <div class="values-orb"></div>
+  <div class="container">
+    <div class="values-header r">
+      <div class="sec-tag center" style="color:var(--a)">Čo ma poháňa</div>
+      <h2>Moje hodnoty</h2>
+      <p>Tieto štyri princípy ovplyvňujú každé rozhodnutie, ktoré robím — pri vývoji aj pri komunikácii s klientmi.</p>
+    </div>
+    <div class="values-grid">
+      <div class="val-card r">
+        <div class="val-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="val-body">
+          <h3>Rýchlosť bez kompromisov</h3>
+          <p>Verím v rýchle nasadenie a rýchlu spätnú väzbu. Klient nečaká mesiace — vidí výsledky v týždňoch. Ale nikdy na úkor kvality alebo stability riešenia.</p>
+        </div>
+      </div>
+      <div class="val-card r rd1">
+        <div class="val-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="val-body">
+          <h3>Klient je partner</h3>
+          <p>Nepredávam produkt a neodídem. Každý klient dostane priamu komunikáciu, úprimné rady a dlhodobú podporu. Váš úspech je môj úspech — to nie je klišé, tak to reálne funguje.</p>
+        </div>
+      </div>
+      <div class="val-card r rd2">
+        <div class="val-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div class="val-body">
+          <h3>Transparentnosť od prvého dňa</h3>
+          <p>Žiadne skryté náklady, žiadne prekvapenia. Pred začiatkom projektu vždy viem, čo sa bude robiť, prečo a koľko to bude stáť. Tak to má byť.</p>
+        </div>
+      </div>
+      <div class="val-card r rd3">
+        <div class="val-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="val-body">
+          <h3>Neustále sa učím</h3>
+          <p>AI sa vyvíja každý deň. Ja s ním. Aktívne sledujem nové modely, nástroje a prístupy — aby agenti, ktorých stavím dnes, fungovali spoľahlivo aj zajtra.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story">
+  <div class="container">
+    <div class="story-header r">
+      <div class="sec-tag">Môj príbeh</div>
+      <h2>Ako som sa sem dostal</h2>
+      <p>Od prvých rokov za pultom cyklo predajne po vlastný AI nástroj, ktorý dnes odpovedá zákazníkom 24/7.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl-item r">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2007</div>
+        <h3>Prvé kroky v cyklistike</h3>
+        <p>Nastúpil som ako predajca do cyklistického obchodu Zanozo Bike a prvýkrát som sa ponoril do sveta kvalitných bicyklov. Kúpil som si prvý horský bicykel od Meridy — a cyklistika ma úplne pohltila. Začala sa budovať odbornosť, ktorú využívam dodnes.</p>
+      </div>
+      <div class="tl-item r rd1">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2019</div>
+        <h3>Odborný poradca v Kaktus Bike</h3>
+        <p>Začal som sa špecializovať na horské, cestné aj elektrobicykle. Tvoril som edukatívny obsah pre sociálne siete a každý deň som videl rovnaký problém: zákazníci hľadajú odborné rady online, ale externí operátori chatu ich poskytnúť nevedia. Nápad dozrieval.</p>
+      </div>
+      <div class="tl-item r rd2">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2023</div>
+        <h3>AI technológie naplno</h3>
+        <p>Zanorial som sa do sveta umelej inteligencie a začal som vyvíjať customizované AI riešenia pre firmy. Uvedomil som si, že nastal ideálny čas spojiť dve vášne: 18 rokov praxe v cyklistike a možnosti moderného AI.</p>
+      </div>
+      <div class="tl-item r rd3">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2024</div>
+        <h3>Rezervačný systém a klientské rozhranie</h3>
+        <p>K AI agentom pribudol vlastný rezervačný systém s prehľadným rozhraním pre klientov. Firmy dostali nástroj, kde v reálnom čase vidia rezervácie, spravujú dostupnosť a komunikujú so zákazníkmi — všetko na jednom mieste, bez potreby externých platforiem.</p>
+      </div>
+      <div class="tl-item r rd4">
+        <div class="tl-dot"></div>
+        <div class="tl-year">2025</div>
+        <h3>Vznik Replai</h3>
+        <p>Vznikol Replai — platforma pre customizované AI riešenia šité na mieru firmám. Každý agent je postavený od základu pre konkrétny biznis, nie šablóna. Replai spája hlbokú znalosť odvetvia s modernou AI technológiou, aby firmy mohli poskytovať odborné poradenstvo a podporu 24 hodín denne.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM / FOUNDER -->
+<section class="team">
+  <div class="container">
+    <div class="team-header r">
+      <div class="sec-tag center" style="color:var(--a-2)">Zakladateľ</div>
+      <h2>Človek za Replai</h2>
+      <p>Spojenie 18 rokov cyklistickej praxe a modernej umelej inteligencie.</p>
+    </div>
+    <div class="founder-wrap r rd1">
+      <div class="founder-card">
+        <div class="founder-left">
+          <div class="founder-avatar"><div class="founder-avatar-placeholder">PU</div></div>
+          <div class="founder-tags">
+            <div class="founder-tag green">18 rokov v cyklistike</div>
+            <div class="founder-tag">AI & LLM</div>
+            <div class="founder-tag">BikeSupp</div>
+            <div class="founder-tag">E-bikes</div>
+          </div>
+        </div>
+        <div class="founder-right">
+          <h3>Peter Urbánek</h3>
+          <div class="founder-role">Zakladateľ Replai · Cyklistický odborník & AI špecialista</div>
+          <div class="founder-bio">
+            <p>Bicyklovanie je súčasťou môjho života odkedy si pamätám. V roku 2007 som nastúpil do cyklistického obchodu Zanozo Bike, kde som sa prvýkrát ponoril do sveta kvalitných bicyklov a profesionálneho vybavenia. Od roku 2019 som pôsobil ako odborný poradca v Kaktus Bike — špecializoval som sa na horské, cestné aj elektrobicykle a tvoril edukatívny obsah pre sociálne siete.</p>
+            <p>Práve tam som si začal všímať zaujímavý trend: stále viac zákazníkov hľadalo poradenstvo online, ale externí operátori chatu nemali dostatok odborných znalostí. Zákazníci aj tak museli zavolať priamo do predajne. Vtedy sa zrodila myšlienka — čo keby existoval spôsob poskytnúť odborné poradenstvo online 24 hodín denne?</p>
+            <p>Dnes sa naplno venujem AI technológiám a pod značkou Replai vyvíjam customizované AI riešenia pre firmy na mieru. Každý agent je postavený od základu pre konkrétny biznis — či už ide o inteligentného poradcu, rezervačný systém alebo automatizáciu zákazníckej podpory.</p>
+          </div>
+          <div class="founder-quote">„Verím, že spojenie odborných znalostí z daného odvetvia a AI technológie je budúcnosťou zákazníckej podpory. Replai nie je len chatbot — je to riešenie, ktoré skutočne rozumie vášmu biznisu."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-us">
+  <div class="container">
+    <div class="why-us-inner">
+      <div class="r">
+        <div class="sec-tag">Prečo Replai</div>
+        <h2 style="font-family:var(--display);font-size:clamp(28px,3.2vw,42px);font-weight:900;letter-spacing:-1.8px;color:var(--t-dark);margin-bottom:14px;line-height:1.1">Čo ma odlišuje<br>od ostatných</h2>
+        <p style="font-size:15.5px;color:var(--t-dark-2);line-height:1.8;margin-bottom:32px">Nie som platforma. Nie som šablóna. Som človek, ktorý si sadne s vami, pochopí váš biznis a postaví presne to, čo potrebujete.</p>
+        <div class="why-us-list">
+          <div class="why-us-item">
+            <div class="why-us-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <div><h4>Riešenia na mieru, nie šablóny</h4><p>Každý agent je postavený od základu pre váš konkrétny prípad. Žiadne copy-paste riešenia.</p></div>
+          </div>
+          <div class="why-us-item">
+            <div class="why-us-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div><h4>Priama komunikácia so mnou</h4><p>Nemáte support ticket systém. Máte kontakt priamo na mňa — človeka, ktorý váš agent staval.</p></div>
+          </div>
+          <div class="why-us-item">
+            <div class="why-us-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div><h4>Optimalizácia po nasadení</h4><p>Sledujeme výkon agenta a aktívne navrhujeme vylepšenia. Nasadenie nie je koniec — je to začiatok.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="r rd2">
+        <div class="why-us-card-main">
+          <div class="why-us-card-orb"></div>
+          <h3>Konzultácia zadarmo — bez záväzkov</h3>
+          <p>Ukážeme vám presne, kde AI agent pomôže vášmu biznisu. Konkrétne čísla, reálne príklady z vášho odvetvia.</p>
+          <a href="kontakt.html" class="btn btn-primary">Dohodnúť konzultáciu →</a>
+        </div>
+        <div class="why-us-stats">
+          <div class="why-us-stat r rd3">
+            <div class="why-us-stat-num">98%</div>
+            <div class="why-us-stat-label">spokojnosť klientov</div>
+          </div>
+          <div class="why-us-stat r rd4">
+            <div class="why-us-stat-num">&lt;3 týž</div>
+            <div class="why-us-stat-label">od konzultácie po live</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-orb"></div>
+  <div class="container">
+    <div class="cta-inner">
+      <h2 class="r">Poďme spolu<br>spraviť váš biznis <em>inteligentnejším</em></h2>
+      <p class="r rd1">Konzultácia zadarmo. Žiadne záväzky. Slovenský expert, ktorý rozumie vašim potrebám.</p>
+      <div class="cta-btns r rd2">
+        <a href="kontakt.html" class="btn btn-primary">Objednať konzultáciu →</a>
+        <a href="index.html#solutions" class="btn btn-ghost-white">Pozrieť riešenia</a>
+      </div>
+      <p class="cta-note r rd3">Odpoveď do 24 hodín · Bez záväzkov · info@replai.sk</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <a href="index.html" class="logo" style="font-size:15px">
+      <svg class="logo-icon" width="24" height="24" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgOF" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgOF)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
+    <div class="footer-links">
+      <a href="index.html">Domov</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="o-nas.html">O nás</a>
+      <a href="kontakt.html">Kontakt</a>
+    </div>
+    <p class="fcopy">© 2025 Replai</p>
+  </div>
+</footer>
+
+<div class="login-overlay" id="loginOverlay"></div>
+<div class="login-panel" id="loginPanel">
+  <button class="login-close" id="loginClose">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div class="login-content">
+    <h2>Prihlásiť sa</h2>
+    <form class="login-form" id="loginForm">
+      <div class="login-field"><input type="email" id="loginEmail" placeholder="E-mail" required></div>
+      <div class="login-field">
+        <input type="password" id="loginPassword" placeholder="Heslo" required>
+        <button type="button" class="pw-toggle" onclick="togglePassword()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="login-opts">
+        <label class="chk-label"><input type="checkbox"><span>Zapamätať</span></label>
+        <a href="#" class="forgot">Zabudnuté heslo?</a>
+      </div>
+      <button type="submit" class="btn btn-dark login-submit">Prihlásiť</button>
+    </form>
+    <div class="login-div"><span>Nemáte účet?</span></div>
+    <a href="https://replai-chi.vercel.app/register" class="btn btn-outline-dark reg-btn">Registrovať sa</a>
+  </div>
+</div>
+
+<script>
+// REVEAL
+const ro = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); ro.unobserve(e.target); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.r').forEach(el => ro.observe(el));
+
+// NAV
+const nb = document.getElementById('navbar');
+window.addEventListener('scroll', () => { nb.classList.toggle('scrolled', scrollY > 40); }, { passive: true });
+
+// MOBILE MENU
+const mb = document.getElementById('mobileBtn'), nl = document.getElementById('navLinks');
+mb.addEventListener('click', () => {
+  mb.classList.toggle('on'); nl.classList.toggle('active');
+  document.body.style.overflow = nl.classList.contains('active') ? 'hidden' : '';
+});
+nl.querySelectorAll('a,button').forEach(e => e.addEventListener('click', () => {
+  mb.classList.remove('on'); nl.classList.remove('active'); document.body.style.overflow = '';
+}));
+
+// LOGIN
+const lp = document.getElementById('loginPanel'), lo = document.getElementById('loginOverlay');
+function openLogin() { lp.classList.add('active'); lo.classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeLogin() { lp.classList.remove('active'); lo.classList.remove('active'); document.body.style.overflow = ''; }
+document.getElementById('loginClose').addEventListener('click', closeLogin);
+lo.addEventListener('click', closeLogin);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
+function togglePassword() { const p = document.getElementById('loginPassword'); p.type = p.type === 'password' ? 'text' : 'password'; }
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const em = document.getElementById('loginEmail').value;
+  const pw = document.getElementById('loginPassword').value;
+  const btn = this.querySelector('.login-submit');
+  btn.disabled = true; btn.textContent = 'Prihlasujem...';
+  try {
+    const r = await fetch('https://replai-backend.onrender.com/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: em, password: pw })
+    });
+    const d = await r.json();
+    if (r.ok && d.token) { window.location.href = `https://replai-chi.vercel.app/login?token=${d.token}`; }
+    else { alert(d.error || 'Nesprávne údaje'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
+  } catch(err) { alert('Chyba servera'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
+});
+
+// CURSOR
+(function() {
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = -100, my = -100, rx = -100, ry = -100;
+  dot.style.cssText += 'left:0;top:0;will-change:transform;';
+  ring.style.cssText += 'left:0;top:0;will-change:transform;';
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = `translate(${mx - 2.5}px,${my - 2.5}px)`;
+  }, { passive: true });
+  (function animRing() {
+    rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
+    ring.style.transform = `translate(${rx - 17}px,${ry - 17}px)`;
+    requestAnimationFrame(animRing);
+  })();
+  document.querySelectorAll('a, button, .val-card, .team-card, .why-us-item, .tl-item, .mission-stat').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+  });
+})();
+
+// HERO PARTICLE NETWORK
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const GREEN = [11, 184, 120], PURPLE = [107, 95, 237];
+  function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+  const nodes = Array.from({ length: 40 }, () => {
+    const c = Math.random() > 0.5 ? GREEN : PURPLE;
+    return { x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, r: Math.random() * 1.8 + 1, color: c, pulse: Math.random() * Math.PI * 2 };
+  });
+  let frame = 0;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy; n.pulse += 0.018;
+      if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+      if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+    });
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 155) {
+          const alpha = (1 - dist / 155) * 0.22;
+          const t = 0.5 + 0.5 * Math.sin(frame * 0.008 + i + j);
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(${a.color[0]*t+b.color[0]*(1-t)},${a.color[1]*t+b.color[1]*(1-t)},${a.color[2]*t+b.color[2]*(1-t)},${alpha})`;
+          ctx.lineWidth = 0.8; ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n => {
+      const pulse = 0.5 + 0.5 * Math.sin(n.pulse);
+      const alpha = 0.45 + 0.45 * pulse;
+      const glow = n.r + pulse * 7;
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glow);
+      grad.addColorStop(0, `rgba(${n.color[0]},${n.color[1]},${n.color[2]},${alpha * 0.9})`);
+      grad.addColorStop(1, `rgba(${n.color[0]},${n.color[1]},${n.color[2]},0)`);
+      ctx.beginPath(); ctx.arc(n.x, n.y, glow, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${n.color[0]},${n.color[1]},${n.color[2]},${alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+
+<script src="https://replai-backend.onrender.com/static/widget.js" data-api-key="d735d9fa298dd94e4f106f93ac538c7ae7f87acd53ebffd19feef811405f08d3" data-backend-url="https://replai-backend.onrender.com"></script>
+</body>
+</html>
