@@ -35,12 +35,12 @@ const anthropic = new Anthropic({
 const BOOKING_TOOLS = [
   {
     name: "get_booking_locations",
-    description: "Získa zoznam prevádzok s ich ID. VŽDY zavolaj ako prvé keď zákazník chce servis. Vráti location_id ktoré potrebuješ pre ďalšie nástroje.",
+    description: "Získa zoznam prevádzok/pobočiek s ich ID. VŽDY zavolaj ako prvé keď zákazník chce rezerváciu alebo termín. Vráti location_id ktoré potrebuješ pre ďalšie nástroje.",
     input_schema: { type: "object", properties: {}, required: [] }
   },
   {
     name: "get_booking_services", 
-    description: "Získa zoznam servisných služieb s cenami pre danú prevádzku. Zavolaj po tom čo zákazník vyberie prevádzku.",
+    description: "Získa zoznam dostupných služieb s cenami pre danú prevádzku/pobočku. Zavolaj po tom čo zákazník vyberie prevádzku.",
     input_schema: { 
       type: "object", 
       properties: { 
@@ -74,7 +74,7 @@ const BOOKING_TOOLS = [
   },
   {
     name: "create_booking",
-    description: "Vytvorí rezerváciu servisu. Zavolaj AŽ keď máš všetky údaje: location_id, service_id, date, time a kontaktné údaje zákazníka.",
+    description: "Vytvorí rezerváciu. Zavolaj AŽ keď máš všetky údaje: location_id, service_id, date, time a kontaktné údaje zákazníka.",
     input_schema: { 
       type: "object", 
       properties: { 
@@ -92,7 +92,7 @@ const BOOKING_TOOLS = [
   },
   {
     name: "check_store_status",
-    description: "Skontroluje či je predajňa otvorená alebo zatvorená v konkrétny deň. Zavolaj keď sa zákazník pýta 'máte otvorené?', 'ste zajtra otvorení?', 'otváracie hodiny' alebo či je predajňa otvorená v konkrétny deň.",
+    description: "Skontroluje či je prevádzka/pobočka otvorená alebo zatvorená v konkrétny deň. Zavolaj keď sa zákazník pýta na otváracie hodiny alebo či je otvorené.",
     input_schema: { 
       type: "object", 
       properties: { 
@@ -104,7 +104,22 @@ const BOOKING_TOOLS = [
   }
 ];
 // Detekcia či správa súvisí s bookingom
-function isBookingRelated(message, context = []) {
+// VYŽADUJE clientId parameter — bez booking_locations sa booking flow NIKDY neaktivuje
+async function isBookingRelated(message, context = [], clientId = null) {
+  // Ak nemáme clientId, booking je vypnutý
+  if (!clientId) return false;
+  
+  // Skontroluj či tento tenant má AKTÍVNE booking lokácie
+  const { data: locations } = await supabase
+    .from('booking_locations')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('is_active', true)
+    .limit(1);
+  
+  // Ak tenant nemá žiadne booking lokácie, NIKDY nepoužívaj booking flow
+  if (!locations || locations.length === 0) return false;
+  
   const bookingKeywords = [
     'servis', 'objedna', 'rezerv', 'termin', 'oprav', 
     'prehliadka', 'udrzba', 'kontrola', 'nastavenie',
@@ -119,12 +134,10 @@ function isBookingRelated(message, context = []) {
   
   const msgLower = message.toLowerCase();
   
-  // Kontroluj aktuálnu správu
   if (bookingKeywords.some(kw => msgLower.includes(kw))) {
     return true;
   }
   
-  // Kontroluj či predchádzajúca ASSISTANT správa bola o bookingu
   if (context.length > 0) {
     const lastAssistant = [...context].reverse().find(m => m.role === 'assistant');
     if (lastAssistant) {
@@ -1964,14 +1977,28 @@ if (compatContext && compatContext.includes('](')) {
     // === VALIDOVANÁ ODPOVEĎ (bez streamingu) ===
 // === ODPOVEĎ S BOOKING TOOLS ===
 try {
-  const useBookingTools = isBookingRelated(message, context);
+  const useBookingTools = await isBookingRelated(message, context, client.id);
   let fullResponse = '';
   let inputTokens = 0;
   let outputTokens = 0;
   
   if (useBookingTools) {
-    // === BOOKING FLOW S TOOLS ===
     console.log('🔧 Booking mode - using tools');
+    
+    // Načítaj prevádzky DYNAMICKY z databázy pre tohto tenanta
+    const { data: tenantLocations } = await supabase
+      .from('booking_locations')
+      .select('id, name, address')
+      .eq('client_id', client.id)
+      .eq('is_active', true);
+    
+    // Zostav zoznam prevádzok dynamicky
+    let locationsText = 'PREVÁDZKY:\n';
+    if (tenantLocations && tenantLocations.length > 0) {
+      tenantLocations.forEach(loc => {
+        locationsText += `- "${loc.name}" (${loc.address}) = location_id: ${loc.id}\n`;
+      });
+    }
     
     const bookingInstructions = `
 REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
@@ -1979,9 +2006,7 @@ REZERVAČNÝ SYSTÉM - STRIKTNÉ PRAVIDLÁ:
 DNEŠNÝ DÁTUM: ${now.toISOString().split('T')[0]} (${days[now.getDay()]})
 Zajtra: ${new Date(now.getTime() + 24*60*60*1000).toISOString().split('T')[0]}
 
-PREVÁDZKY:
-- "Tri Veže" / "Bajkalská" = location_id: 703f75e8-6aea-4588-86a4-139f6b9f2ca2
-- "Sport Mall" / "Vajnorská" = location_id: ded49cea-1957-48e6-b946-4932780dbe0f
+${locationsText}
 
 KONTROLA OTVÁRACÍCH HODÍN:
 - Keď sa zákazník pýta na otváracie hodiny alebo či je otvorené, VŽDY zavolaj check_store_status pre KAŽDÚ prevádzku zvlášť
@@ -1989,10 +2014,10 @@ KONTROLA OTVÁRACÍCH HODÍN:
 - NIKDY neodpovedaj na otváracie hodiny bez zavolania check_store_status
 
 POSTUP (dodržuj presne!):
-1. Zákazník chce servis → get_booking_locations
+1. Zákazník chce termín → get_booking_locations
 2. Vyberie prevádzku → get_booking_services + get_available_days
 3. Vyberie službu a deň → get_available_slots
-4. Vyberie čas → opýtaj sa: "Máte nejakú poznámku k servisu? (napr. čo treba skontrolovať, aký máte problém)"
+4. Vyberie čas → opýtaj sa: "Máte nejakú poznámku? (napr. čo potrebujete riešiť)"
 5. Odpovie na poznámku (alebo povie "nie") → opýtaj sa na VŠETKY kontaktné údaje: "Pre dokončenie rezervácie potrebujem vaše meno, email a telefónne číslo."
 6. Dá kontakt → SKONTROLUJ či máš všetky 3 údaje (meno, email, telefón). Ak chýba email alebo telefón, DOPÝTAJ SA!
 7. Máš všetko → create_booking (nezabudni poslať note ak zákazník niečo napísal)
