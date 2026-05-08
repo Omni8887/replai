@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Bot, Palette, Eye, Save, Check, Sparkles, Tag, Gift } from 'lucide-react'
+import { Bot, Palette, Eye, Save, Check, Sparkles, Tag, Gift, Mail } from 'lucide-react'
 
 export default function Settings() {
   const { client, token, API_URL, refreshProfile } = useAuth()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [systemPrompt, setSystemPrompt] = useState('')
   const [promoCode, setPromoCode] = useState('')
   const [promoLoading, setPromoLoading] = useState(false)
@@ -18,7 +17,6 @@ export default function Settings() {
     welcomeMessage: 'Dobrý deň! Ako vám môžem pomôcť?'
   })
 
-  // Kapacita prevádzok
   const [locations, setLocations] = useState([])
 
   useEffect(() => {
@@ -66,37 +64,22 @@ export default function Settings() {
     }
   }
 
-  const handleOrderPrompt = async () => {
-    setCheckoutLoading(true)
-    try {
-      const response = await axios.post(`${API_URL}/create-service-checkout`, { service: 'prompt_custom' })
-      if (response.data.url) {
-        window.location.href = response.data.url
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Nepodarilo sa vytvoriť objednávku. Skúste znova.')
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }
-
   const handleApplyPromo = async (e) => {
     e.preventDefault()
     if (!promoCode.trim()) return
-    
+
     setPromoLoading(true)
     setPromoMessage(null)
-    
+
     try {
       const response = await axios.post(`${API_URL}/promo/apply`, { code: promoCode })
       setPromoMessage({ type: 'success', text: response.data.message })
       setPromoCode('')
       await refreshProfile()
     } catch (error) {
-      setPromoMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'Nepodarilo sa použiť kód' 
+      setPromoMessage({
+        type: 'error',
+        text: error.response?.data?.error || 'Nepodarilo sa použiť kód'
       })
     } finally {
       setPromoLoading(false)
@@ -105,7 +88,7 @@ export default function Settings() {
 
   const updateCapacity = async (locId, newCapacity) => {
     try {
-      await axios.put(`${API_URL}/bookings/locations/${locId}`, 
+      await axios.put(`${API_URL}/bookings/locations/${locId}`,
         { daily_capacity: newCapacity },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -123,6 +106,7 @@ export default function Settings() {
       </div>
 
       <div className="space-y-6">
+
         {/* Promo Code Section */}
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -134,7 +118,7 @@ export default function Settings() {
               <p className="text-sm text-slate-500">Máte promo kód? Aktivujte si bonus!</p>
             </div>
           </div>
-          
+
           <form onSubmit={handleApplyPromo} className="flex gap-3">
             <div className="relative flex-1">
               <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -154,11 +138,11 @@ export default function Settings() {
               {promoLoading ? 'Overujem...' : 'Aktivovať'}
             </button>
           </form>
-          
+
           {promoMessage && (
             <div className={`mt-3 px-4 py-3 rounded-xl text-sm ${
-              promoMessage.type === 'success' 
-                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+              promoMessage.type === 'success'
+                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                 : 'bg-red-100 text-red-700 border border-red-200'
             }`}>
               {promoMessage.text}
@@ -166,6 +150,7 @@ export default function Settings() {
           )}
         </div>
 
+        {/* System Prompt */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-xl flex items-center justify-center">
@@ -185,7 +170,7 @@ export default function Settings() {
           />
         </div>
 
-        {/* Prompt na mieru */}
+        {/* Prompt na mieru - kontakt namiesto Stripe */}
         <div className="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-2xl border border-violet-200 p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -197,17 +182,17 @@ export default function Settings() {
                 <p className="text-slate-600 text-sm">Vytvoríme vám profesionálny prompt na mieru pre váš biznis</p>
               </div>
             </div>
-            <button
-              onClick={handleOrderPrompt}
-              disabled={checkoutLoading}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-violet-200"
+            <a
+              href="mailto:info@replai.sk?subject=Prompt na mieru"
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg shadow-violet-200"
             >
-              <Sparkles size={18} />
-              {checkoutLoading ? 'Načítavam...' : 'Prompt na mieru'}
-            </button>
+              <Mail size={18} />
+              Kontaktovať
+            </a>
           </div>
         </div>
 
+        {/* Widget vzhľad */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
@@ -287,13 +272,13 @@ export default function Settings() {
                   <div style={{fontSize:12,color:'#888'}}>{loc.address}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <button 
+                  <button
                     className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg flex items-center justify-center transition"
                     style={{width:32,height:32}}
                     onClick={() => updateCapacity(loc.id, Math.max(1, (loc.daily_capacity || 2) - 1))}
                   >−</button>
                   <span style={{fontSize:20,fontWeight:600,minWidth:32,textAlign:'center'}}>{loc.daily_capacity || 2}</span>
-                  <button 
+                  <button
                     className="bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg flex items-center justify-center transition"
                     style={{width:32,height:32}}
                     onClick={() => updateCapacity(loc.id, (loc.daily_capacity || 2) + 1)}
@@ -316,10 +301,10 @@ export default function Settings() {
               <p className="text-sm text-slate-500">Emaily na ktoré budú chodiť notifikácie o leadoch a rezerváciách</p>
             </div>
           </div>
-
           <NotificationEmails apiUrl={API_URL} />
         </div>
 
+        {/* Náhľad widgetu */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
@@ -333,7 +318,7 @@ export default function Settings() {
 
           <div className="bg-slate-100 rounded-xl p-6">
             <div className="w-80 bg-white rounded-2xl shadow-xl mx-auto overflow-hidden border border-slate-200">
-              <div 
+              <div
                 className="p-4 text-white font-semibold"
                 style={{ backgroundColor: widgetSettings.primaryColor }}
               >
@@ -348,20 +333,14 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Save button */}
         <div className="flex items-center gap-4">
           <button
             onClick={handleSave}
             disabled={saving}
             className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-violet-200"
           >
-            {saving ? (
-              'Ukladám...'
-            ) : (
-              <>
-                <Save size={20} />
-                Uložiť nastavenia
-              </>
-            )}
+            {saving ? 'Ukladám...' : <><Save size={20} />Uložiť nastavenia</>}
           </button>
           {saved && (
             <span className="text-emerald-600 font-medium flex items-center gap-1">
@@ -380,11 +359,11 @@ export default function Settings() {
     const [newEmail, setNewEmail] = useState('')
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-  
+
     useEffect(() => {
       loadEmails()
     }, [])
-  
+
     const loadEmails = async () => {
       try {
         const res = await axios.get(`${apiUrl}/admin/notification-emails`, {
@@ -396,12 +375,12 @@ export default function Settings() {
       }
       setLoading(false)
     }
-  
+
     const addEmail = async () => {
       if (!newEmail.trim() || !newEmail.includes('@')) return
       setSaving(true)
       try {
-        await axios.post(`${apiUrl}/admin/notification-emails`, 
+        await axios.post(`${apiUrl}/admin/notification-emails`,
           { email: newEmail.trim() },
           { headers: { Authorization: `Bearer ${token}` } }
         )
@@ -412,7 +391,7 @@ export default function Settings() {
       }
       setSaving(false)
     }
-  
+
     const removeEmail = async (email) => {
       if (!window.confirm(`Odstrániť ${email}?`)) return
       try {
@@ -425,9 +404,9 @@ export default function Settings() {
         console.error(err)
       }
     }
-  
+
     if (loading) return <p style={{color:'#888',fontSize:13}}>Načítavam...</p>
-  
+
     return (
       <div>
         <div style={{display:'flex',gap:8,marginBottom:16}}>
@@ -447,7 +426,7 @@ export default function Settings() {
             {saving ? '...' : 'Pridať'}
           </button>
         </div>
-  
+
         {emails.length === 0 ? (
           <p style={{color:'#888',fontSize:13}}>Žiadne notifikačné emaily. Notifikácie chodia na váš registračný email.</p>
         ) : (
