@@ -335,11 +335,8 @@ export default function Bookings() {
             >
               <option value="">Všetky stavy</option>
               <option value="pending">Čakajúce</option>
-              <option value="confirmed">Potvrdené</option>
-              <option value="in_progress">Prebieha</option>
               <option value="waiting_parts">Čaká sa na komponent</option>
               <option value="completed">Dokončené</option>
-              <option value="cancelled">Zrušené</option>
             </select>
             <input
               type="text"
