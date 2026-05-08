@@ -4,17 +4,18 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { Mail, Lock, Building, Globe, ArrowRight, CheckCircle } from 'lucide-react'
 
 const ReplaiLogo = () => (
-  <svg width="28" height="26" viewBox="0 0 32 30" fill="none">
+  <svg width="32" height="32" viewBox="0 0 34 34" fill="none">
     <defs>
-      <linearGradient id="lgReg" x1="0" y1="0" x2="32" y2="30" gradientUnits="userSpaceOnUse">
+      <linearGradient id="lgReg" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
         <stop stopColor="#0BB878"/>
         <stop offset="1" stopColor="#6B5FED"/>
       </linearGradient>
     </defs>
-    <path fill="url(#lgReg)" d="M4 0h24a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H16l-7 8v-8H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z"/>
-    <circle cx="10" cy="11" r="2.2" fill="white" fillOpacity="0.92"/>
-    <circle cx="16" cy="11" r="2.2" fill="white" fillOpacity="0.92"/>
-    <circle cx="22" cy="11" r="2.2" fill="white" fillOpacity="0.92"/>
+    <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgReg)"/>
+    <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <path d="M14 17l5 7" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
+    <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+    <circle cx="26" cy="9" r="2" fill="white"/>
   </svg>
 )
 
@@ -345,13 +346,11 @@ const styles = {
     animation: 'cardIn 0.7s cubic-bezier(0.16,1,0.3,1) both',
   },
   card: {
-    background: 'rgba(255,255,255,0.82)',
-    backdropFilter: 'blur(24px) saturate(1.8)',
-    WebkitBackdropFilter: 'blur(24px) saturate(1.8)',
-    border: '1px solid rgba(255,255,255,0.9)',
+    background: '#FFFFFF',
+    border: '1px solid rgba(0,0,0,0.09)',
     borderRadius: 22,
     padding: '44px 36px 38px',
-    boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)',
+    boxShadow: '0 4px 32px rgba(0,0,0,0.07)',
   },
   logo: {
     display: 'flex',
@@ -456,7 +455,7 @@ const styles = {
     borderRadius: 9,
     fontSize: 14,
     fontFamily: "'DM Sans', sans-serif",
-    background: 'rgba(255,255,255,0.7)',
+    background: '#F3F4FA',
     color: '#0C0C22',
     outline: 'none',
     transition: 'all 0.25s',
