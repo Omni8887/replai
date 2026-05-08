@@ -245,7 +245,7 @@ export default function Dashboard() {
             </div>
           </div>
           <a
-            href="mailto:info@replai.sk"
+            href="https://replai.sk/kontakt.html" target="_blank" rel="noopener noreferrer"
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition"
           >
             Kontaktovať
@@ -266,7 +266,7 @@ export default function Dashboard() {
             </div>
           </div>
           <a
-            href="mailto:info@replai.sk"
+            href="https://replai.sk/kontakt.html" target="_blank" rel="noopener noreferrer"
             className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-semibold transition"
           >
             Kontaktovať
@@ -309,7 +309,7 @@ export default function Dashboard() {
                   <p className="text-xs text-violet-600 mt-0.5">Starter od 30€/mes · Business od 99€/mes</p>
                 </div>
                 <a
-                  href="mailto:info@replai.sk"
+                  href="https://replai.sk/kontakt.html" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
                 >
                   <Mail size={15} />

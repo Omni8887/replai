@@ -183,7 +183,7 @@ export default function Settings() {
               </div>
             </div>
             <a
-              href="mailto:info@replai.sk?subject=Prompt na mieru"
+              href="https://replai.sk/kontakt.html" target="_blank" rel="noopener noreferrer"
               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg shadow-violet-200"
             >
               <Mail size={18} />
