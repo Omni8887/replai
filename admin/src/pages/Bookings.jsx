@@ -357,11 +357,11 @@ export default function Bookings() {
           <thead>
             <tr>
               <th>Číslo</th>
+              <th>Vytvorené</th>
               <th>Zákazník</th>
               <th>Prevádzka</th>
               <th>Služba</th>
               <th>Termín</th>
-              <th>Vytvorené</th>
               <th>Stav</th>
               <th></th>
             </tr>
@@ -376,16 +376,16 @@ export default function Bookings() {
                 <tr key={b.id}>
                   <td><span className="cell-booking">{b.booking_number}</span></td>
                   <td>
+                    <div>{formatDate(b.created_at)}</div>
+                    <div className="cell-meta">{new Date(b.created_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</div>
+                  </td>
+                  <td>
                     <div className="cell-customer">{b.customer_name}</div>
                     <div className="cell-meta">{b.customer_phone}</div>
                   </td>
                   <td>{b.location_name?.replace('CUBE Store - ', '')}</td>
                   <td>{b.service_name}</td>
                   <td>{formatDate(b.booking_date)}</td>
-                  <td>
-                    <div>{formatDate(b.created_at)}</div>
-                    <div className="cell-meta">{new Date(b.created_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</div>
-                  </td>
                   <td><span className={`badge badge-${b.status}`}>{statusLabels[b.status]}</span></td>
                   <td>
                     <div className="actions">
@@ -472,11 +472,8 @@ export default function Bookings() {
                 <label>Stav</label>
                 <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
                   <option value="pending">Čakajúce</option>
-                  <option value="confirmed">Potvrdené</option>
-                  <option value="in_progress">Prebieha</option>
                   <option value="waiting_parts">Čaká sa na komponent</option>
                   <option value="completed">Dokončené</option>
-                  <option value="cancelled">Zrušené</option>
                 </select>
               </div>
               <div className="form-field">
