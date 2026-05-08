@@ -8,6 +8,7 @@ const statusLabels = {
   pending: 'Čakajúce',
   confirmed: 'Potvrdené',
   in_progress: 'Prebieha',
+  waiting_parts: 'Čaká sa na komponent',
   completed: 'Dokončené',
   cancelled: 'Zrušené'
 }
@@ -48,7 +49,6 @@ export default function Bookings() {
   const [editForm, setEditForm] = useState({ status: '', final_price: '', admin_notes: '' })
   const [contactTemplate, setContactTemplate] = useState('ready')
   
-  // Rental toggle state
   const [rentalEnabled, setRentalEnabled] = useState(false)
   const [savingRental, setSavingRental] = useState(false)
 
@@ -202,401 +202,74 @@ export default function Bookings() {
   return (
     <div className="bookings-page">
       <style>{`
-        .bookings-page {
-          padding: 24px;
-        }
-        
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        
-        .page-title {
-          font-size: 20px;
-          font-weight: 600;
-          color: #111;
-        }
-        
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        
-        .rental-toggle {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 14px;
-          background: #f8f8f8;
-          border-radius: 8px;
-          border: 1px solid #eaeaea;
-        }
-        
-        .rental-toggle-label {
-          font-size: 13px;
-          color: #555;
-        }
-        
-        .toggle-switch {
-          position: relative;
-          width: 44px;
-          height: 24px;
-          background: #ddd;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        
-        .toggle-switch.active {
-          background: #22c55e;
-        }
-        
-        .toggle-switch.disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        
-        .toggle-switch::after {
-          content: '';
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 20px;
-          height: 20px;
-          background: #fff;
-          border-radius: 50%;
-          transition: transform 0.2s;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        
-        .toggle-switch.active::after {
-          transform: translateX(20px);
-        }
-        
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 12px;
-          margin-bottom: 24px;
-        }
-        
-        .stat-card {
-          background: #fff;
-          border: 1px solid #eaeaea;
-          border-radius: 8px;
-          padding: 16px;
-        }
-        
-        .stat-value {
-          font-size: 24px;
-          font-weight: 600;
-          color: #111;
-        }
-        
-        .stat-label {
-          font-size: 12px;
-          color: #888;
-        }
-        
+        .bookings-page { padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-title { font-size: 20px; font-weight: 600; color: #111; }
+        .header-actions { display: flex; align-items: center; gap: 16px; }
+        .rental-toggle { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #f8f8f8; border-radius: 8px; border: 1px solid #eaeaea; }
+        .rental-toggle-label { font-size: 13px; color: #555; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: #ddd; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+        .toggle-switch.active { background: #22c55e; }
+        .toggle-switch.disabled { opacity: 0.5; cursor: not-allowed; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-switch.active::after { transform: translateX(20px); }
+        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border: 1px solid #eaeaea; border-radius: 8px; padding: 16px; }
+        .stat-value { font-size: 24px; font-weight: 600; color: #111; }
+        .stat-label { font-size: 12px; color: #888; }
         .stat-card.pending .stat-value { color: #b45309; }
         .stat-card.confirmed .stat-value { color: #1d4ed8; }
         .stat-card.in-progress .stat-value { color: #7c3aed; }
         .stat-card.completed .stat-value { color: #15803d; }
         .stat-card.cancelled .stat-value { color: #b91c1c; }
-        
-        .card {
-          background: #fff;
-          border: 1px solid #eaeaea;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-        
-        .card-header {
-          padding: 14px 18px;
-          border-bottom: 1px solid #eaeaea;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-        
-        .card-title {
-          font-size: 14px;
-          font-weight: 600;
-        }
-        
-        .filters {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        
-        .filter-input,
-        .filter-select {
-          padding: 7px 10px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 13px;
-        }
-        
-        .filter-input:focus,
-        .filter-select:focus {
-          outline: none;
-          border-color: #111;
-        }
-        
-        .btn {
-          padding: 8px 14px;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          border: 1px solid transparent;
-        }
-        
-        .btn-primary {
-          background: #111;
-          color: #fff;
-          border: none;
-        }
-        
-        .btn-primary:hover {
-          background: #000;
-        }
-        
-        .btn-ghost {
-          background: transparent;
-          border: 1px solid #ddd;
-          color: #333;
-        }
-        
-        .btn-ghost:hover {
-          background: #f5f5f5;
-        }
-        
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        
-        th {
-          text-align: left;
-          padding: 10px 14px;
-          font-size: 11px;
-          font-weight: 500;
-          color: #888;
-          text-transform: uppercase;
-          background: #fafafa;
-          border-bottom: 1px solid #eaeaea;
-        }
-        
-        td {
-          padding: 12px 14px;
-          border-bottom: 1px solid #f0f0f0;
-          vertical-align: middle;
-        }
-        
-        tbody tr:hover {
-          background: #fafafa;
-        }
-        
-        .cell-booking {
-          font-family: monospace;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .cell-customer {
-          font-weight: 500;
-        }
-        
-        .cell-meta {
-          font-size: 12px;
-          color: #888;
-        }
-        
-        .badge {
-          display: inline-block;
-          padding: 3px 8px;
-          border-radius: 4px;
-          font-size: 11px;
-          font-weight: 500;
-        }
-        
+        .card { background: #fff; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden; }
+        .card-header { padding: 14px 18px; border-bottom: 1px solid #eaeaea; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .card-title { font-size: 14px; font-weight: 600; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-input, .filter-select { padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; }
+        .filter-input:focus, .filter-select:focus { outline: none; border-color: #111; }
+        .btn { padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
+        .btn-primary { background: #111; color: #fff; border: none; }
+        .btn-primary:hover { background: #000; }
+        .btn-ghost { background: transparent; border: 1px solid #ddd; color: #333; }
+        .btn-ghost:hover { background: #f5f5f5; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; background: #fafafa; border-bottom: 1px solid #eaeaea; }
+        td { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        tbody tr:hover { background: #fafafa; }
+        .cell-booking { font-family: monospace; font-size: 12px; font-weight: 500; }
+        .cell-customer { font-weight: 500; }
+        .cell-meta { font-size: 12px; color: #888; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
         .badge-pending { background: #fef3c7; color: #92400e; }
         .badge-confirmed { background: #dbeafe; color: #1e40af; }
         .badge-in_progress { background: #ede9fe; color: #5b21b6; }
         .badge-completed { background: #dcfce7; color: #166534; }
         .badge-cancelled { background: #fee2e2; color: #991b1b; }
-        
-        .actions {
-          display: flex;
-          gap: 4px;
-        }
-        
-        .action-btn {
-          width: 28px;
-          height: 28px;
-          border: 1px solid #e5e5e5;
-          background: #fff;
-          border-radius: 5px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .action-btn:hover {
-          background: #f5f5f5;
-        }
-        
-        .action-btn.delete:hover {
-          background: #fef2f2;
-          border-color: #fecaca;
-        }
-        
-        .empty-state {
-          text-align: center;
-          padding: 48px 20px;
-          color: #888;
-        }
-        
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-        
-        .modal {
-          background: #fff;
-          border-radius: 10px;
-          width: 100%;
-          max-width: 480px;
-          max-height: 90vh;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .modal-header {
-          padding: 16px 20px;
-          border-bottom: 1px solid #eaeaea;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .modal-title {
-          font-size: 15px;
-          font-weight: 600;
-        }
-        
-        .modal-close {
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 4px;
-        }
-        
-        .modal-body {
-          padding: 20px;
-          overflow-y: auto;
-        }
-        
-        .modal-footer {
-          padding: 14px 20px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 8px;
-          background: #fafafa;
-        }
-        
-        .contact-actions {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
-        
-        .detail-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 10px 0;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .detail-item:last-child {
-          border-bottom: none;
-        }
-        
-        .detail-label {
-          color: #888;
-          font-size: 13px;
-        }
-        
-        .detail-value {
-          font-weight: 500;
-          text-align: right;
-        }
-        
-        .form-field {
-          margin-bottom: 14px;
-        }
-        
-        .form-field label {
-          display: block;
-          font-size: 13px;
-          font-weight: 500;
-          margin-bottom: 5px;
-        }
-        
-        .form-field select,
-        .form-field input,
-        .form-field textarea {
-          width: 100%;
-          padding: 9px 11px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          font-size: 14px;
-        }
-        
-        .form-field textarea {
-          min-height: 72px;
-          resize: vertical;
-        }
-        
-        @media (max-width: 1024px) {
-          .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          
-          .filters {
-            width: 100%;
-          }
-          
-          .header-actions {
-            width: 100%;
-            justify-content: space-between;
-          }
-        }
+        .badge-waiting_parts { background: #dbeafe; color: #1e40af; }
+        .actions { display: flex; gap: 4px; }
+        .action-btn { width: 28px; height: 28px; border: 1px solid #e5e5e5; background: #fff; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .action-btn:hover { background: #f5f5f5; }
+        .action-btn.delete:hover { background: #fef2f2; border-color: #fecaca; }
+        .empty-state { text-align: center; padding: 48px 20px; color: #888; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 480px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 15px; font-weight: 600; }
+        .modal-close { background: none; border: none; cursor: pointer; padding: 4px; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-footer { padding: 14px 20px; border-top: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fafafa; }
+        .contact-actions { display: flex; gap: 8px; align-items: center; }
+        .detail-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-label { color: #888; font-size: 13px; }
+        .detail-value { font-weight: 500; text-align: right; }
+        .form-field { margin-bottom: 14px; }
+        .form-field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+        .form-field select, .form-field input, .form-field textarea { width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-field textarea { min-height: 72px; resize: vertical; }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .filters { width: 100%; } .header-actions { width: 100%; justify-content: space-between; } }
       `}</style>
 
       <div className="page-header">
@@ -604,7 +277,7 @@ export default function Bookings() {
         <div className="header-actions">
           <div className="rental-toggle">
             <span className="rental-toggle-label">Požičovňa bicyklov</span>
-            <div 
+            <div
               className={`toggle-switch ${rentalEnabled ? 'active' : ''} ${savingRental ? 'disabled' : ''}`}
               onClick={!savingRental ? toggleRental : undefined}
               title={rentalEnabled ? 'Klikni pre vypnutie' : 'Klikni pre zapnutie'}
@@ -645,7 +318,7 @@ export default function Bookings() {
         <div className="card-header">
           <span className="card-title">Zoznam rezervácií</span>
           <div className="filters">
-            <select 
+            <select
               className="filter-select"
               value={filters.location}
               onChange={e => setFilters({...filters, location: e.target.value})}
@@ -664,6 +337,7 @@ export default function Bookings() {
               <option value="pending">Čakajúce</option>
               <option value="confirmed">Potvrdené</option>
               <option value="in_progress">Prebieha</option>
+              <option value="waiting_parts">Čaká sa na komponent</option>
               <option value="completed">Dokončené</option>
               <option value="cancelled">Zrušené</option>
             </select>
@@ -683,11 +357,11 @@ export default function Bookings() {
           <thead>
             <tr>
               <th>Číslo</th>
-              <th>Vytvorené</th>
               <th>Zákazník</th>
               <th>Prevádzka</th>
               <th>Služba</th>
               <th>Termín</th>
+              <th>Vytvorené</th>
               <th>Stav</th>
               <th></th>
             </tr>
@@ -702,16 +376,16 @@ export default function Bookings() {
                 <tr key={b.id}>
                   <td><span className="cell-booking">{b.booking_number}</span></td>
                   <td>
-                    <div>{formatDate(b.created_at)}</div>
-                    <div className="cell-meta">{new Date(b.created_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</div>
-                  </td>
-                  <td>
                     <div className="cell-customer">{b.customer_name}</div>
                     <div className="cell-meta">{b.customer_phone}</div>
                   </td>
                   <td>{b.location_name?.replace('CUBE Store - ', '')}</td>
                   <td>{b.service_name}</td>
                   <td>{formatDate(b.booking_date)}</td>
+                  <td>
+                    <div>{formatDate(b.created_at)}</div>
+                    <div className="cell-meta">{new Date(b.created_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}</div>
+                  </td>
                   <td><span className={`badge badge-${b.status}`}>{statusLabels[b.status]}</span></td>
                   <td>
                     <div className="actions">
@@ -758,7 +432,7 @@ export default function Bookings() {
               <div className="detail-item"><span className="detail-label">Telefón</span><span className="detail-value">{detailModal.customer_phone}</span></div>
               <div className="detail-item"><span className="detail-label">Prevádzka</span><span className="detail-value">{detailModal.location_name}</span></div>
               <div className="detail-item"><span className="detail-label">Služba</span><span className="detail-value">{detailModal.service_name}</span></div>
-              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}</span></div>              
+              <div className="detail-item"><span className="detail-label">Termín</span><span className="detail-value">{formatDate(detailModal.booking_date)}</span></div>
               <div className="detail-item"><span className="detail-label">Popis</span><span className="detail-value">{detailModal.problem_description || '–'}</span></div>
               {detailModal.photos && detailModal.photos.length > 0 && (
                 <div style={{padding: '10px 0', borderBottom: '1px solid #f0f0f0'}}>
@@ -797,24 +471,28 @@ export default function Bookings() {
               <div className="form-field">
                 <label>Stav</label>
                 <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-  <option value="pending">Čakajúce</option>
-  <option value="completed">Dokončené</option>
-</select>
+                  <option value="pending">Čakajúce</option>
+                  <option value="confirmed">Potvrdené</option>
+                  <option value="in_progress">Prebieha</option>
+                  <option value="waiting_parts">Čaká sa na komponent</option>
+                  <option value="completed">Dokončené</option>
+                  <option value="cancelled">Zrušené</option>
+                </select>
               </div>
               <div className="form-field">
                 <label>Finálna cena (€)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   step="0.01"
-                  value={editForm.final_price} 
+                  value={editForm.final_price}
                   onChange={e => setEditForm({...editForm, final_price: e.target.value})}
                   placeholder="Nechajte prázdne ak nie je známa"
                 />
               </div>
               <div className="form-field">
                 <label>Poznámky</label>
-                <textarea 
-                  value={editForm.admin_notes} 
+                <textarea
+                  value={editForm.admin_notes}
                   onChange={e => setEditForm({...editForm, admin_notes: e.target.value})}
                   placeholder="Interné poznámky..."
                 />
