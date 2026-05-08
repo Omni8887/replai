@@ -2043,7 +2043,13 @@ KRITICKÉ PRAVIDLÁ:
       const claudeResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
-        system: systemPrompt + bookingInstructions,
+        system: [
+          {
+            type: "text",
+            text: systemPrompt + bookingInstructions,
+            cache_control: { type: "ephemeral" }
+          }
+        ],
         tools: BOOKING_TOOLS,
         messages: claudeMessages
       });
@@ -2122,7 +2128,13 @@ KRITICKÉ PRAVIDLÁ:
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
-      system: systemPrompt,
+      system: [
+        {
+          type: "text",
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" }
+        }
+      ],
       messages: messages
     });
     
