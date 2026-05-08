@@ -63,7 +63,6 @@ export default function SuperAdmin() {
     if (!confirm(`Naozaj chcete zmazať klienta "${clientName}"? Táto akcia je nevratná!`)) {
       return
     }
-    
     try {
       await axios.delete(`${API_URL}/superadmin/clients/${clientId}`)
       await loadData()
@@ -108,7 +107,6 @@ export default function SuperAdmin() {
 
   const deletePromoCode = async (id, code) => {
     if (!confirm(`Naozaj chcete zmazať promo kód "${code}"?`)) return
-    
     try {
       await axios.delete(`${API_URL}/superadmin/promo-codes/${id}`)
       await loadData()
@@ -137,8 +135,8 @@ export default function SuperAdmin() {
     const styles = {
       free: 'bg-slate-100 text-slate-700',
       starter: 'bg-blue-100 text-blue-700',
-      pro: 'bg-violet-100 text-violet-700',
-      business: 'bg-amber-100 text-amber-700'
+      business: 'bg-violet-100 text-violet-700',
+      enterprise: 'bg-amber-100 text-amber-700'
     }
     return styles[tier] || styles.free
   }
@@ -209,7 +207,7 @@ export default function SuperAdmin() {
               <div>
                 <p className="text-slate-500 text-sm font-medium">Platiacich</p>
                 <p className="text-3xl font-bold text-slate-900 mt-1">
-                  {stats.starterClients + stats.proClients + stats.businessClients}
+                  {(stats.starterClients || 0) + (stats.businessClients || 0) + (stats.enterpriseClients || 0)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
@@ -227,19 +225,22 @@ export default function SuperAdmin() {
           <div className="flex gap-4 flex-wrap">
             <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl">
               <span className="font-semibold text-slate-700">FREE:</span>
-              <span className="text-slate-900">{stats.freeClients}</span>
+              <span className="text-slate-900">{stats.freeClients || 0}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-xl">
-              <span className="font-semibold text-blue-700">STARTER:</span>
-              <span className="text-blue-900">{stats.starterClients}</span>
+              <span className="font-semibold text-blue-700">STARTER</span>
+              <span className="text-blue-900 font-bold">{stats.starterClients || 0}</span>
+              <span className="text-blue-500 text-xs">30€/mes</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-violet-100 rounded-xl">
-              <span className="font-semibold text-violet-700">PRO:</span>
-              <span className="text-violet-900">{stats.proClients}</span>
+              <span className="font-semibold text-violet-700">BUSINESS</span>
+              <span className="text-violet-900 font-bold">{stats.businessClients || 0}</span>
+              <span className="text-violet-500 text-xs">99€/mes</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-xl">
-              <span className="font-semibold text-amber-700">BUSINESS:</span>
-              <span className="text-amber-900">{stats.businessClients}</span>
+              <span className="font-semibold text-amber-700">ENTERPRISE</span>
+              <span className="text-amber-900 font-bold">{stats.enterpriseClients || 0}</span>
+              <span className="text-amber-500 text-xs">na mieru</span>
             </div>
           </div>
         </div>
@@ -327,8 +328,8 @@ export default function SuperAdmin() {
                       <button
                         onClick={() => togglePromoCode(promo.id, promo.is_active)}
                         className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
-                          promo.is_active 
-                            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' 
+                          promo.is_active
+                            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                             : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
@@ -357,7 +358,7 @@ export default function SuperAdmin() {
         <div className="p-6 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">Všetci klienti ({clients.length})</h2>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
@@ -393,9 +394,9 @@ export default function SuperAdmin() {
                   </td>
                   <td className="px-6 py-4">
                     {client.website_url ? (
-                      <a 
-                        href={client.website_url} 
-                        target="_blank" 
+                      <a
+                        href={client.website_url}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-violet-600 hover:underline text-sm"
                       >
@@ -413,9 +414,9 @@ export default function SuperAdmin() {
                       className={`px-3 py-1.5 rounded-lg text-sm font-semibold border-0 cursor-pointer ${getPlanBadge(client.subscription_tier)}`}
                     >
                       <option value="free">FREE</option>
-                      <option value="starter">STARTER</option>
-                      <option value="pro">PRO</option>
-                      <option value="business">BUSINESS</option>
+                      <option value="starter">STARTER — 30€/mes</option>
+                      <option value="business">BUSINESS — 99€/mes</option>
+                      <option value="enterprise">ENTERPRISE — na mieru</option>
                     </select>
                   </td>
                   <td className="px-6 py-4">
@@ -494,8 +495,8 @@ export default function SuperAdmin() {
                     className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                   >
                     <option value="starter">STARTER</option>
-                    <option value="pro">PRO</option>
                     <option value="business">BUSINESS</option>
+                    <option value="enterprise">ENTERPRISE</option>
                   </select>
                 </div>
               </div>
