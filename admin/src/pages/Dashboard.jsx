@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { MessageSquare, Calendar, Target, Mail, ArrowRight, Clock, Coins, Zap, TrendingUp, AlertTriangle, Crown, Pencil, X, User, Building, Globe, Save } from 'lucide-react'
+import { MessageSquare, Calendar, Target, Mail, ArrowRight, Clock, Coins, Zap, TrendingUp, AlertTriangle, Crown, Pencil, X, Building, Globe, Save } from 'lucide-react'
 
 export default function Dashboard() {
   const { client, setClient, API_URL } = useAuth()
@@ -10,9 +10,8 @@ export default function Dashboard() {
   const [usage, setUsage] = useState(null)
   const [subscription, setSubscription] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  
+
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -43,9 +42,7 @@ export default function Dashboard() {
       const response = await axios.get(`${API_URL}/superadmin/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      if (response.status === 200) {
-        setIsAdmin(true)
-      }
+      if (response.status === 200) setIsAdmin(true)
     } catch (error) {
       setIsAdmin(false)
     }
@@ -68,27 +65,11 @@ export default function Dashboard() {
     }
   }
 
-  const handleUpgrade = async (plan) => {
-    setCheckoutLoading(true)
-    try {
-      const response = await axios.post(`${API_URL}/create-checkout-session`, { plan })
-      if (response.data.url) {
-        window.location.href = response.data.url
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Nepodarilo sa vytvoriť platbu. Skúste znova.')
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }
-
   const handleProfileSave = async () => {
     setProfileLoading(true)
     try {
       const response = await axios.put(`${API_URL}/admin/profile`, profileForm)
       if (response.data) {
-        // Update local client state
         const updatedClient = { ...client, ...profileForm }
         setClient(updatedClient)
         localStorage.setItem('client', JSON.stringify(updatedClient))
@@ -104,15 +85,15 @@ export default function Dashboard() {
   }
 
   const today = new Date().toDateString()
-  const todayConversations = conversations.filter(c => 
+  const todayConversations = conversations.filter(c =>
     new Date(c.created_at).toDateString() === today
   )
   const leadsCount = conversations.filter(c => c.has_contact).length
   const unreadCount = conversations.filter(c => !c.is_read).length
 
   const formatCost = (cost) => {
-    return new Intl.NumberFormat('sk-SK', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('sk-SK', {
+      style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 2,
       maximumFractionDigits: 4
@@ -127,8 +108,8 @@ export default function Dashboard() {
     const names = {
       free: 'FREE',
       starter: 'STARTER',
-      pro: 'PRO',
-      business: 'BUSINESS'
+      business: 'BUSINESS',
+      enterprise: 'ENTERPRISE'
     }
     return names[tier] || 'FREE'
   }
@@ -137,8 +118,8 @@ export default function Dashboard() {
     const colors = {
       free: 'from-slate-500 to-slate-600',
       starter: 'from-blue-500 to-indigo-500',
-      pro: 'from-violet-500 to-purple-500',
-      business: 'from-amber-500 to-orange-500'
+      business: 'from-violet-500 to-purple-500',
+      enterprise: 'from-amber-500 to-orange-500'
     }
     return colors[tier] || 'from-slate-500 to-slate-600'
   }
@@ -166,14 +147,14 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <h2 className="text-xl font-bold text-slate-900">Upraviť profil</h2>
-              <button 
+              <button
                 onClick={() => setShowProfileModal(false)}
                 className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition"
               >
                 <X size={20} className="text-slate-500" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -188,7 +169,7 @@ export default function Dashboard() {
                   placeholder="Vaša firma s.r.o."
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   <Mail size={16} className="inline mr-2" />
@@ -202,7 +183,7 @@ export default function Dashboard() {
                   placeholder="vas@email.sk"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   <Globe size={16} className="inline mr-2" />
@@ -217,7 +198,7 @@ export default function Dashboard() {
                 />
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-slate-200 flex gap-3">
               <button
                 onClick={() => setShowProfileModal(false)}
@@ -230,14 +211,7 @@ export default function Dashboard() {
                 disabled={profileLoading}
                 className="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {profileLoading ? (
-                  'Ukladám...'
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Uložiť
-                  </>
-                )}
+                {profileLoading ? 'Ukladám...' : <><Save size={18} />Uložiť</>}
               </button>
             </div>
           </div>
@@ -258,7 +232,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Subscription Alert */}
+      {/* Subscription Alert - limit reached */}
       {subscription && subscription.isLimitReached && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -267,29 +241,19 @@ export default function Dashboard() {
             </div>
             <div>
               <h3 className="font-semibold text-red-800">Dosiahli ste limit správ!</h3>
-              <p className="text-red-600 text-sm">Váš chatbot je offline. Upgradujte plán pre obnovenie služby.</p>
+              <p className="text-red-600 text-sm">Váš chatbot je offline. Kontaktujte nás pre upgrade plánu.</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => handleUpgrade('starter')}
-              disabled={checkoutLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-            >
-              STARTER 29€
-            </button>
-            <button 
-              onClick={() => handleUpgrade('pro')}
-              disabled={checkoutLoading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-            >
-              PRO 59€
-            </button>
-          </div>
+          <a
+            href="mailto:info@replai.sk"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition"
+          >
+            Kontaktovať
+          </a>
         </div>
       )}
 
-      {/* Warning when close to limit */}
+      {/* Warning - close to limit */}
       {subscription && !subscription.isLimitReached && subscription.percentage >= 80 && (
         <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -301,22 +265,12 @@ export default function Dashboard() {
               <p className="text-amber-600 text-sm">Zostáva vám {subscription.messagesRemaining} správ z {subscription.messagesLimit}.</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => handleUpgrade('starter')}
-              disabled={checkoutLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-            >
-              STARTER 29€
-            </button>
-            <button 
-              onClick={() => handleUpgrade('pro')}
-              disabled={checkoutLoading}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-semibold transition disabled:opacity-50"
-            >
-              PRO 59€
-            </button>
-          </div>
+          <a
+            href="mailto:info@replai.sk"
+            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl font-semibold transition"
+          >
+            Kontaktovať
+          </a>
         </div>
       )}
 
@@ -345,55 +299,26 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
-          {/* Upgrade options */}
-          {(subscription.tier === 'free' || subscription.tier === 'starter') && (
-            <div className="mb-6 pt-4 border-t border-slate-100">
-              <p className="text-sm text-slate-500 mb-4">Upgradujte pre viac správ a funkcií</p>
-              <div className="flex gap-3">
-                {subscription.tier === 'free' && (
-                  <button 
-                    onClick={() => handleUpgrade('starter')}
-                    disabled={checkoutLoading}
-                    className="flex-1 group relative bg-white border-2 border-slate-200 hover:border-blue-500 rounded-xl p-4 transition-all disabled:opacity-50"
-                  >
-                    <div className="text-left">
-                      <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Starter</span>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-2xl font-bold text-slate-900">29€</span>
-                        <span className="text-slate-500 text-sm">/mesiac</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-2">500 správ/mesiac</p>
-                    </div>
-                    <div className="absolute top-4 right-4 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center group-hover:bg-blue-100 transition">
-                      <ArrowRight size={16} className="text-blue-600" />
-                    </div>
-                  </button>
-                )}
-                <button 
-                  onClick={() => handleUpgrade('pro')}
-                  disabled={checkoutLoading}
-                  className="flex-1 group relative bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl p-4 transition-all hover:shadow-lg hover:shadow-violet-200 disabled:opacity-50"
+
+          {/* Upgrade CTA pre free plán */}
+          {subscription.tier === 'free' && (
+            <div className="mb-4 pt-4 border-t border-slate-100">
+              <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-violet-800">Chcete aktivovať platený plán?</p>
+                  <p className="text-xs text-violet-600 mt-0.5">Starter od 30€/mes · Business od 99€/mes</p>
+                </div>
+                <a
+                  href="mailto:info@replai.sk"
+                  className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"
                 >
-                  <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full">
-                    OBĽÚBENÝ
-                  </div>
-                  <div className="text-left">
-                    <span className="text-xs font-semibold text-violet-200 uppercase tracking-wide">Pro</span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-2xl font-bold text-white">59€</span>
-                      <span className="text-violet-200 text-sm">/mesiac</span>
-                    </div>
-                    <p className="text-xs text-violet-200 mt-2">2 000 správ/mesiac</p>
-                  </div>
-                  <div className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition">
-                    <Crown size={16} className="text-white" />
-                  </div>
-                </button>
+                  <Mail size={15} />
+                  Kontaktovať
+                </a>
               </div>
             </div>
           )}
-          
+
           {/* Progress bar */}
           {subscription.messagesLimit !== 'Neobmedzené' && (
             <div>
@@ -404,7 +329,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-3">
-                <div 
+                <div
                   className={`h-3 rounded-full transition-all duration-500 ${
                     subscription.percentage >= 90 ? 'bg-red-500' :
                     subscription.percentage >= 70 ? 'bg-amber-500' :
@@ -418,7 +343,7 @@ export default function Dashboard() {
               </p>
             </div>
           )}
-          
+
           {subscription.messagesLimit === 'Neobmedzené' && (
             <p className="text-emerald-600 font-medium">✓ Neobmedzený počet správ</p>
           )}
@@ -442,7 +367,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Spotreba Stats - len pre admina */}
+      {/* Spotreba Stats - len pre superadmina */}
       {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {usageStats.map((stat, i) => (
@@ -461,15 +386,12 @@ export default function Dashboard() {
         </div>
       )}
 
-
-
-
       {/* Posledné konverzácie */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
         <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-slate-900">Posledné konverzácie</h2>
-          <Link 
-            to="/conversations" 
+          <Link
+            to="/conversations"
             className="text-sm text-violet-600 hover:text-violet-700 transition font-medium flex items-center gap-1"
           >
             Zobraziť všetky
@@ -496,8 +418,8 @@ export default function Dashboard() {
                 <div className="flex justify-between items-start">
                   <div className="flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      conv.has_contact 
-                        ? 'bg-emerald-100 text-emerald-600' 
+                      conv.has_contact
+                        ? 'bg-emerald-100 text-emerald-600'
                         : 'bg-slate-100 text-slate-600'
                     }`}>
                       <MessageSquare size={18} />
