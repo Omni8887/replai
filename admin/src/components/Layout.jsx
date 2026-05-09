@@ -12,6 +12,7 @@ export default function Layout() {
 
   const tier = client?.subscription_tier || 'free'
   const isFree = tier === 'free'
+  const hasBooking = client?.booking_enabled || false
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -38,17 +39,17 @@ export default function Layout() {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/conversations', label: 'Konverzácie', icon: MessageSquare },
-    { to: '/bookings', label: 'Rezervácie', icon: Calendar, paidOnly: true },
-    { to: '/rental', label: 'Požičovňa', icon: Bike, paidOnly: true },
+    { to: '/bookings', label: 'Rezervácie', icon: Calendar, requiresBooking: true },
+    { to: '/rental', label: 'Požičovňa', icon: Bike, requiresBooking: true },
     { to: '/products', label: 'Produkty', icon: Package, paidOnly: true },
     { to: '/analytics', label: 'Analytika', icon: BarChart3, paidOnly: true },
     { to: '/usage', label: 'Spotreba', icon: Coins, adminOnly: true },
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
-    { to: '/services', label: 'Cenník', icon: Wrench, paidOnly: true },
+    { to: '/services', label: 'Cenník', icon: Wrench, requiresBooking: true },
   ]
 
-  const handleLockedClick = (e, label) => {
+  const handleLockedClick = (e) => {
     e.preventDefault()
     navigate('/settings', { state: { showUpgrade: true } })
   }
@@ -69,6 +70,7 @@ export default function Layout() {
         <nav className="flex-1 p-4">
           {navItems
             .filter(item => !item.adminOnly || isAdmin)
+            .filter(item => !item.requiresBooking || hasBooking)
             .map(item => {
               const isLocked = isFree && item.paidOnly
 
@@ -77,7 +79,7 @@ export default function Layout() {
                   <a
                     key={item.to}
                     href={item.to}
-                    onClick={(e) => handleLockedClick(e, item.label)}
+                    onClick={handleLockedClick}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium text-slate-400 hover:bg-slate-50 cursor-pointer"
                     title={`${item.label} – dostupné od Starter plánu`}
                   >
