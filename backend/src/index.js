@@ -2426,7 +2426,7 @@ app.post('/auth/login', async (req, res) => {
     // 1. Skús hlavný účet (clients tabuľka)
     const { data: client, error } = await supabase
       .from('clients')
-      .select('id, name, email, api_key, system_prompt, widget_settings, website_url, email_verified, subscription_tier, booking_enabled')
+      .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified, subscription_tier, booking_enabled')
       .eq('email', email)
       .single();
     
@@ -2463,7 +2463,7 @@ app.post('/auth/login', async (req, res) => {
     // Načítaj klientský účet
     const { data: parentClient } = await supabase
       .from('clients')
-      .select('id, name, email, api_key, system_prompt, widget_settings, website_url, email_verified, subscription_tier, booking_enabled')
+      .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified, subscription_tier, booking_enabled')
       .eq('id', clientUser.client_id)
       .single();
     
