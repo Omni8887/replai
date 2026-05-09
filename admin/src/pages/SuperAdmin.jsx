@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Users, CreditCard, MessageSquare, TrendingUp, Trash2, Shield, Plus, Tag, X, Eye, Copy, Check } from 'lucide-react'
+import { Users, CreditCard, MessageSquare, TrendingUp, Trash2, Shield, Plus, Tag, X, Eye, Copy, Check, Calendar } from 'lucide-react'
 
 export default function SuperAdmin() {
   const { API_URL } = useAuth()
@@ -366,6 +366,7 @@ export default function SuperAdmin() {
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Klient</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Web</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Plán</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Booking</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Správy</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Registrácia</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">Akcie</th>
@@ -418,6 +419,21 @@ export default function SuperAdmin() {
                       <option value="business">BUSINESS — 99€/mes</option>
                       <option value="enterprise">ENTERPRISE — na mieru</option>
                     </select>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => updateClient(client.id, { booking_enabled: !client.booking_enabled })}
+                      disabled={updating === client.id}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition cursor-pointer ${
+                        client.booking_enabled
+                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                      title={client.booking_enabled ? 'Klikni pre vypnutie booking systému' : 'Klikni pre zapnutie booking systému'}
+                    >
+                      <Calendar size={14} />
+                      {client.booking_enabled ? 'Aktívny' : 'Vypnutý'}
+                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-slate-900">{client.messages_this_month || 0}</span>

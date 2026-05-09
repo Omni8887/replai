@@ -3687,7 +3687,7 @@ app.get('/superadmin/clients', authMiddleware, adminMiddleware, async (req, res)
   try {
     const { data: clients, error } = await supabase
       .from('clients')
-      .select('id, name, email, website_url, subscription_tier, messages_this_month, created_at, email_verified')
+      .select('id, name, email, website_url, subscription_tier, messages_this_month, created_at, email_verified, booking_enabled')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -3703,11 +3703,12 @@ app.get('/superadmin/clients', authMiddleware, adminMiddleware, async (req, res)
 app.put('/superadmin/clients/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { subscription_tier, is_admin } = req.body;
+    const { subscription_tier, is_admin, booking_enabled } = req.body;
     
     const updateData = {};
     if (subscription_tier) updateData.subscription_tier = subscription_tier;
     if (typeof is_admin === 'boolean') updateData.is_admin = is_admin;
+    if (typeof booking_enabled === 'boolean') updateData.booking_enabled = booking_enabled;
     
     const { data, error } = await supabase
       .from('clients')
