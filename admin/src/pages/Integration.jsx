@@ -33,6 +33,8 @@ export default function Integration() {
     setTimeout(() => setCopied(''), 2000)
   }
 
+  const hasBooking = client?.booking_enabled || false
+
   return (
     <div>
       <div className="mb-8">
@@ -93,116 +95,118 @@ export default function Integration() {
           </div>
         </div>
 
-        {/* Booking Widget Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-              <Calendar size={20} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Rezervačný Widget - Embed kód</h2>
-              <p className="text-sm text-slate-500">Online rezervácie priamo na vašom webe</p>
-            </div>
-          </div>
-
-          {/* Konfigurácia */}
-          <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Settings size={16} className="text-slate-500" />
-              <span className="text-sm font-medium text-slate-700">Konfigurácia (voliteľné)</span>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-4">
+        {/* Booking Widget Section - len ak má booking */}
+        {hasBooking && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                <Calendar size={20} className="text-white" />
+              </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                  <Palette size={12} className="inline mr-1" />
-                  Farba widgetu
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={bookingColor}
-                    onChange={(e) => setBookingColor(e.target.value)}
-                    className="w-10 h-9 rounded border border-slate-300 cursor-pointer"
-                  />
+                <h2 className="text-lg font-semibold text-slate-900">Rezervačný Widget - Embed kód</h2>
+                <p className="text-sm text-slate-500">Online rezervácie priamo na vašom webe</p>
+              </div>
+            </div>
+
+            {/* Konfigurácia */}
+            <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Settings size={16} className="text-slate-500" />
+                <span className="text-sm font-medium text-slate-700">Konfigurácia (voliteľné)</span>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                    <Palette size={12} className="inline mr-1" />
+                    Farba widgetu
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={bookingColor}
+                      onChange={(e) => setBookingColor(e.target.value)}
+                      className="w-10 h-9 rounded border border-slate-300 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={bookingColor}
+                      onChange={(e) => setBookingColor(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+                      placeholder="#111111"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                    Vlastné tlačidlo (CSS selektor)
+                  </label>
                   <input
                     type="text"
-                    value={bookingColor}
-                    onChange={(e) => setBookingColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
-                    placeholder="#111111"
+                    value={bookingTrigger}
+                    onChange={(e) => setBookingTrigger(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    placeholder="#servis-btn alebo .booking-btn"
                   />
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                  Vlastné tlačidlo (CSS selektor)
-                </label>
-                <input
-                  type="text"
-                  value={bookingTrigger}
-                  onChange={(e) => setBookingTrigger(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                  placeholder="#servis-btn alebo .booking-btn"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                  Plávajúce tlačidlo
-                </label>
-                <div className="flex items-center gap-3 mt-2">
-                  <button
-                    onClick={() => setShowFloating(true)}
-                    className={`px-3 py-1.5 text-sm rounded-lg border transition ${
-                      showFloating 
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
-                        : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Zobraziť
-                  </button>
-                  <button
-                    onClick={() => setShowFloating(false)}
-                    className={`px-3 py-1.5 text-sm rounded-lg border transition ${
-                      !showFloating 
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
-                        : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Skryť
-                  </button>
+                
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                    Plávajúce tlačidlo
+                  </label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={() => setShowFloating(true)}
+                      className={`px-3 py-1.5 text-sm rounded-lg border transition ${
+                        showFloating 
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
+                          : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      Zobraziť
+                    </button>
+                    <button
+                      onClick={() => setShowFloating(false)}
+                      className={`px-3 py-1.5 text-sm rounded-lg border transition ${
+                        !showFloating 
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
+                          : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      Skryť
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="relative">
-            <pre className="bg-slate-900 text-cyan-400 p-5 rounded-xl overflow-x-auto text-sm font-mono">
-              {bookingEmbedCode}
-            </pre>
-            <button
-              onClick={() => copyToClipboard(bookingEmbedCode, 'booking')}
-              className="absolute top-3 right-3 px-3 py-1.5 bg-white text-slate-800 rounded-lg hover:bg-slate-100 transition text-sm font-medium flex items-center gap-1"
-            >
-              {copied === 'booking' ? <Check size={16} /> : <Copy size={16} />}
-              {copied === 'booking' ? 'Skopírované' : 'Kopírovať'}
-            </button>
-          </div>
-
-          {/* Príklad s vlastným tlačidlom */}
-          {bookingTrigger && (
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> Na vašej stránke pridajte element s atribútom <code className="bg-amber-200 px-1 rounded">{bookingTrigger}</code>:
-              </p>
-              <pre className="mt-2 bg-amber-100 text-amber-900 p-3 rounded-lg text-sm font-mono overflow-x-auto">
-{`<a href="#" ${bookingTrigger.startsWith('#') ? `id="${bookingTrigger.slice(1)}"` : `class="${bookingTrigger.slice(1)}"`}>Rezervovať servis</a>`}
+            
+            <div className="relative">
+              <pre className="bg-slate-900 text-cyan-400 p-5 rounded-xl overflow-x-auto text-sm font-mono">
+                {bookingEmbedCode}
               </pre>
+              <button
+                onClick={() => copyToClipboard(bookingEmbedCode, 'booking')}
+                className="absolute top-3 right-3 px-3 py-1.5 bg-white text-slate-800 rounded-lg hover:bg-slate-100 transition text-sm font-medium flex items-center gap-1"
+              >
+                {copied === 'booking' ? <Check size={16} /> : <Copy size={16} />}
+                {copied === 'booking' ? 'Skopírované' : 'Kopírovať'}
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Príklad s vlastným tlačidlom */}
+            {bookingTrigger && (
+              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>Tip:</strong> Na vašej stránke pridajte element s atribútom <code className="bg-amber-200 px-1 rounded">{bookingTrigger}</code>:
+                </p>
+                <pre className="mt-2 bg-amber-100 text-amber-900 p-3 rounded-lg text-sm font-mono overflow-x-auto">
+{`<a href="#" ${bookingTrigger.startsWith('#') ? `id="${bookingTrigger.slice(1)}"` : `class="${bookingTrigger.slice(1)}"`}>Rezervovať servis</a>`}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Installation Guide */}
         <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-6">
@@ -259,7 +263,28 @@ export default function Integration() {
             <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
               <h3 className="font-semibold text-slate-900 mb-2">Shopify</h3>
               <p className="text-sm text-slate-500">
-                Online Store → Themes → Edit code → theme.liquid
+                Online Store → Themes → Edit code → theme.liquid → pred &lt;/body&gt;
+              </p>
+            </div>
+            
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">Magento 2</h3>
+              <p className="text-sm text-slate-500">
+                Content → Configuration → Footer → Miscellaneous HTML, alebo cez layout XML v téme
+              </p>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">WooCommerce</h3>
+              <p className="text-sm text-slate-500">
+                Appearance → Theme Editor → footer.php pred &lt;/body&gt;, alebo plugin "WPCode"
+              </p>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">PrestaShop</h3>
+              <p className="text-sm text-slate-500">
+                Design → Theme & Logo → Pages Configuration → vložiť do "displayFooter" hook
               </p>
             </div>
             
@@ -271,9 +296,30 @@ export default function Integration() {
             </div>
             
             <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">Squarespace</h3>
+              <p className="text-sm text-slate-500">
+                Settings → Advanced → Code Injection → Footer
+              </p>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
               <h3 className="font-semibold text-slate-900 mb-2">Webflow</h3>
               <p className="text-sm text-slate-500">
                 Project Settings → Custom Code → Footer Code
+              </p>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">Google Tag Manager</h3>
+              <p className="text-sm text-slate-500">
+                Tags → New → Custom HTML → vložte kód → Trigger: All Pages
+              </p>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-5 hover:border-violet-300 hover:bg-violet-50 transition">
+              <h3 className="font-semibold text-slate-900 mb-2">Vlastný web (HTML)</h3>
+              <p className="text-sm text-slate-500">
+                Vložte embed kód pred &lt;/body&gt; tag v každom HTML súbore
               </p>
             </div>
           </div>
