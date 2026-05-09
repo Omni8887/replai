@@ -2426,7 +2426,7 @@ app.post('/auth/login', async (req, res) => {
     // 1. Skús hlavný účet (clients tabuľka)
     const { data: client, error } = await supabase
       .from('clients')
-      .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified')
+      .select('id, name, email, api_key, password_hash, system_prompt, widget_settings, website_url, email_verified, subscription_tier')
       .eq('email', email)
       .single();
     
@@ -2446,7 +2446,7 @@ app.post('/auth/login', async (req, res) => {
     // 2. Skús client_users tabuľku
     const { data: clientUser } = await supabase
       .from('client_users')
-      .select('id, client_id, email, password_hash, name, role')
+      .select('id, name, email, api_key, system_prompt, widget_settings, website_url, email_verified, subscription_tier')
       .eq('email', email)
       .eq('is_active', true)
       .single();

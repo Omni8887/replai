@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench, Lock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Logo from './Logo.jsx'
@@ -10,8 +10,10 @@ export default function Layout() {
   const navigate = useNavigate()
   const [isAdmin, setIsAdmin] = useState(false)
 
+  const tier = client?.subscription_tier || 'free'
+  const isFree = tier === 'free'
+
   useEffect(() => {
-    // Skontroluj či je používateľ admin
     const checkAdmin = async () => {
       try {
         const token = localStorage.getItem('token')
@@ -36,15 +38,20 @@ export default function Layout() {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/conversations', label: 'Konverzácie', icon: MessageSquare },
-    { to: '/bookings', label: 'Rezervácie', icon: Calendar },
-    { to: '/rental', label: 'Požičovňa', icon: Bike },
-    { to: '/products', label: 'Produkty', icon: Package },
-    { to: '/analytics', label: 'Analytika', icon: BarChart3 },
+    { to: '/bookings', label: 'Rezervácie', icon: Calendar, paidOnly: true },
+    { to: '/rental', label: 'Požičovňa', icon: Bike, paidOnly: true },
+    { to: '/products', label: 'Produkty', icon: Package, paidOnly: true },
+    { to: '/analytics', label: 'Analytika', icon: BarChart3, paidOnly: true },
     { to: '/usage', label: 'Spotreba', icon: Coins, adminOnly: true },
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
-    { to: '/services', label: 'Cenník', icon: Wrench },
+    { to: '/services', label: 'Cenník', icon: Wrench, paidOnly: true },
   ]
+
+  const handleLockedClick = (e, label) => {
+    e.preventDefault()
+    navigate('/settings', { state: { showUpgrade: true } })
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -62,25 +69,44 @@ export default function Layout() {
         <nav className="flex-1 p-4">
           {navItems
             .filter(item => !item.adminOnly || isAdmin)
-            .map(item => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200' 
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`
-                }
-              >
-                <item.icon size={20} />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+            .map(item => {
+              const isLocked = isFree && item.paidOnly
+
+              if (isLocked) {
+                return (
+                  <a
+                    key={item.to}
+                    href={item.to}
+                    onClick={(e) => handleLockedClick(e, item.label)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium text-slate-400 hover:bg-slate-50 cursor-pointer"
+                    title={`${item.label} – dostupné od Starter plánu`}
+                  >
+                    <item.icon size={20} />
+                    <span>{item.label}</span>
+                    <Lock size={14} className="ml-auto text-slate-300" />
+                  </a>
+                )
+              }
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all font-medium ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-200' 
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`
+                  }
+                >
+                  <item.icon size={20} />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
+            })}
           
-          {/* Super Admin - len pre adminov */}
           {isAdmin && (
             <NavLink
               to="/superadmin"
