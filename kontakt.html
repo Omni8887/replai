@@ -1,10 +1,57 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
+  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1P1Y7EL08"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D1P1Y7EL08');
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kontakt – Replai</title>
-  <meta name="description" content="Objednajte si bezplatnú konzultáciu. Ukážeme vám, ako AI agent pomôže práve vašej firme.">
+
+  <!-- Primary SEO -->
+  <title>Kontakt – Replai | Bezplatná konzultácia AI chatbota</title>
+  <meta name="description" content="Dohodnite si bezplatnú konzultáciu. Ukážeme vám presne, ako AI chatbot pomôže vášmu webu alebo e-shopu. Odpoveď do 24 hodín.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://replai.sk/kontakt.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Kontakt – Replai | Bezplatná konzultácia">
+  <meta property="og:description" content="Dohodnite si bezplatnú konzultáciu AI chatbota. Ukážeme vám konkrétne výsledky pre váš biznis. Odpoveď do 24 hodín.">
+  <meta property="og:image" content="https://replai.sk/images/og-image.png">
+  <meta property="og:url" content="https://replai.sk/kontakt.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sk_SK">
+  <meta property="og:site_name" content="Replai">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kontakt – Replai | Bezplatná konzultácia">
+  <meta name="twitter:description" content="Dohodnite si bezplatnú konzultáciu AI chatbota. Odpoveď do 24 hodín.">
+  <meta name="twitter:image" content="https://replai.sk/images/og-image.png">
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Kontakt – Replai",
+    "url": "https://replai.sk/kontakt.html",
+    "description": "Kontaktná stránka Replai. Dohodnite si bezplatnú konzultáciu AI chatbota pre váš web alebo e-shop.",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Ján Urbánek",
+      "email": "info@replai.sk",
+      "telephone": "+421911415288",
+      "url": "https://replai.sk"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -46,28 +93,13 @@
       line-height: 1.6;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
-      cursor: none;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto;
     }
     @media (pointer: coarse) {
       body, a, button, [role="button"] { cursor: auto !important; }
-      #cursor-dot, #cursor-ring { display: none !important; }
-    }
+      }
     ::selection { background: var(--a-dim); color: var(--a); }
     .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
-
-    /* CURSOR */
-    #cursor-dot {
-      width: 5px; height: 5px; background: var(--a); border-radius: 50%;
-      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999;
-      will-change: transform; box-shadow: 0 0 8px var(--a);
-    }
-    #cursor-ring {
-      width: 34px; height: 34px; border: 1.5px solid rgba(11,184,120,0.45); border-radius: 50%;
-      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998;
-      will-change: transform;
-      transition: width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, background 0.3s;
-    }
-    #cursor-ring.hover { width: 54px; height: 54px; border-color: var(--a); background: rgba(11,184,120,0.06); }
 
     /* REVEAL */
     .r { opacity: 0; transform: translateY(24px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
@@ -114,7 +146,7 @@
     .btn-nav {
       font-family: var(--font); font-size: 13.5px; font-weight: 600;
       color: #FFFFFF; background: var(--a); border: none;
-      border-radius: var(--r-sm); padding: 8px 18px; cursor: none; transition: all 0.25s;
+      border-radius: var(--r-sm); padding: 8px 18px; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto; transition: all 0.25s;
     }
     .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--a-glow); }
 
@@ -129,7 +161,7 @@
     .btn {
       font-family: var(--font); font-weight: 600; font-size: 14px;
       padding: 13px 26px; border-radius: var(--r-sm); border: none;
-      cursor: none; text-decoration: none;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto; text-decoration: none;
       display: inline-flex; align-items: center; gap: 7px;
       transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s, background 0.2s;
       letter-spacing: -0.1px;
@@ -401,8 +433,8 @@
 </head>
 <body>
 
-<div id="cursor-dot"></div>
-<div id="cursor-ring"></div>
+
+
 
 <!-- NAV -->
 <nav id="navbar">
@@ -427,6 +459,7 @@
       <a href="index.html#why">Prečo AI agent</a>
       <a href="index.html#solutions">Riešenia</a>
       <a href="o-nas.html">O nás</a>
+      <a href="cennik.html">Cenník</a>
       <a href="kontakt.html">Kontakt</a>
       <button class="btn-nav" onclick="openLogin()">Prihlásiť sa</button>
     </div>
@@ -534,7 +567,7 @@
                 Odoslať a dohodnúť konzultáciu
               </button>
             </div>
-            <p class="form-note">Odoslaním súhlasíte so spracovaním osobných údajov.</p>
+            <p class="form-note">Odoslaním súhlasíte so spracovaním osobných údajov podľa <a href="privacy-policy.html" style="color:var(--a-2);text-decoration:none;font-weight:500" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">zásad ochrany údajov</a>.</p>
           </form>
         </div>
 
@@ -563,7 +596,7 @@
       <div class="faq-card r">
         <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <h4>Ako dlho trvá vývoj agenta?</h4>
-        <p>Závisí od komplexnosti. Jednoduchý AI chat zvládneme za 1–2 týždne, rezervačný systém alebo agent na mieru za 3–6 týždňov.</p>
+        <p>Závisí od komplexnosti. Jednoduchý AI chat zvládneme za 3–5 dní, rezervačný systém alebo agent na mieru za 7–14 dní.</p>
       </div>
       <div class="faq-card r rd1">
         <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
@@ -578,7 +611,7 @@
       <div class="faq-card r rd3">
         <div class="faq-q-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <h4>Na aké systémy sa agent napojí?</h4>
-        <p>Väčšinu bežných systémov — Google Kalendár, CRM, Shopify, WooCommerce, platobné brány, email a ďalšie cez API.</p>
+        <p>Väčšinu bežných systémov — Magento, WooCommerce, CRM, ERP (POHODA, Money S3), Google Kalendár, email marketing, dopravné notifikácie (Packeta, GLS) a ďalšie cez API.</p>
       </div>
     </div>
   </div>
@@ -608,8 +641,9 @@
       <a href="index.html#solutions">Riešenia</a>
       <a href="o-nas.html">O nás</a>
       <a href="kontakt.html">Kontakt</a>
+      <a href="privacy-policy.html">Ochrana údajov</a>
     </div>
-    <p class="fcopy">© 2025 Replai</p>
+    <p class="fcopy">© 2026 Replai</p>
   </div>
 </footer>
 

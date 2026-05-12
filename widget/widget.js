@@ -52,12 +52,40 @@
 .replai-widget.open .replai-button {
   display: none;
 }
+
+/* === DEFAULT (COMPACT) MODE === */
 .replai-widget.open {
   width: 400px;
   height: 560px;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 48px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* === EXPANDED MODE === */
+.replai-widget.open.expanded {
+  width: 700px;
+  height: 680px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+}
+
+/* === MOBILE: expanded = fullscreen === */
+@media (max-width: 768px) {
+  .replai-widget.open.expanded {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+  }
+  .replai-widget.open.expanded .replai-container {
+    border-radius: 0;
+  }
+}
+
 .replai-container {
   display: none;
   flex-direction: column;
@@ -68,6 +96,7 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  transition: border-radius 0.3s ease;
 }
 .replai-widget.open .replai-container {
   display: flex;
@@ -410,6 +439,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
           </button>
+          <button class="replai-header-btn" id="replaiExpand" title="Zväčšiť">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          </button>
           <button class="replai-header-btn" id="replaiClose" title="Zavrieť">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -459,6 +493,7 @@
       this.button = document.getElementById('replaiButton');
       this.buttonStatus = document.getElementById('replaiButtonStatus');
       this.closeBtn = document.getElementById('replaiClose');
+      this.expandBtn = document.getElementById('replaiExpand');
       this.newThreadBtn = document.getElementById('replaiNewThread');
       this.messagesContainer = document.getElementById('replaiMessages');
       this.input = document.getElementById('replaiInput');
@@ -471,6 +506,7 @@
       this.quickRepliesContainer = document.getElementById('replaiQuickReplies');
 
       this.isOpen = false;
+      this.isExpanded = false;
       this.isOnline = false;
       this.currentThreadId = localStorage.getItem('replai_thread_id') || null;
       this.messages = [];
@@ -610,6 +646,7 @@
     initializeEventListeners() {
       this.button.addEventListener('click', () => this.openChat());
       this.closeBtn.addEventListener('click', () => this.closeChat());
+      this.expandBtn.addEventListener('click', () => this.toggleExpand());
       this.newThreadBtn.addEventListener('click', () => this.createNewThread());
       this.input.addEventListener('input', () => this.adjustTextareaHeight());
       this.input.addEventListener('keypress', (e) => {
@@ -634,7 +671,38 @@
 
     closeChat() {
       this.isOpen = false;
-      this.widget.classList.remove('open');
+      this.isExpanded = false;
+      this.widget.classList.remove('open', 'expanded');
+      this.updateExpandIcon();
+    }
+
+    toggleExpand() {
+      this.isExpanded = !this.isExpanded;
+      this.widget.classList.toggle('expanded', this.isExpanded);
+      this.updateExpandIcon();
+      // Scroll to bottom after resize transition
+      setTimeout(() => {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      }, 300);
+    }
+
+    updateExpandIcon() {
+      // Swap between expand and collapse icons
+      if (this.isExpanded) {
+        this.expandBtn.title = 'Zmenšiť';
+        this.expandBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
+          </svg>
+        `;
+      } else {
+        this.expandBtn.title = 'Zväčšiť';
+        this.expandBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        `;
+      }
     }
 
     // Quick Replies
@@ -665,7 +733,8 @@
 
       let formattedContent = message
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')        .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+        .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+        .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
 
       messageDiv.innerHTML = `<div class="replai-message-bubble">${formattedContent}</div>`;
       this.messagesContainer.appendChild(messageDiv);
@@ -775,7 +844,8 @@
 
                   let formattedContent = aiResponse
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
+                    .replace(/\[([^\]]+)\]\s*\(((https?:\/\/|tel:|mailto:)[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$1</a>')
+                    .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="replai-link">$2</a>');
 
                   responseDiv.querySelector('.replai-message-bubble').innerHTML = formattedContent;
                   this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;

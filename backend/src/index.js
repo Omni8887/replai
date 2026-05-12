@@ -632,6 +632,77 @@ async function handleBookingTool(toolName, toolInput, clientId) {
   }
 }
 
+// ============================================
+// MAGENTO PRODUCT SEARCH
+// ============================================
+async function searchMagentoProducts(magentoUrl, magentoToken, authType, searchTerm, maxPrice, minPrice, pageSize = 10) {
+  try {
+    let url = `${magentoUrl}/rest/V1/products?searchCriteria[pageSize]=${pageSize}`;
+    let filterIndex = 0;
+
+    if (searchTerm) {
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][field]=name`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][value]=%25${encodeURIComponent(searchTerm)}%25`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][condition_type]=like`;
+      filterIndex++;
+    }
+
+    if (minPrice) {
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][field]=price`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][value]=${minPrice}`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][condition_type]=gteq`;
+      filterIndex++;
+    }
+    if (maxPrice) {
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][field]=price`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][value]=${maxPrice}`;
+      url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][condition_type]=lteq`;
+      filterIndex++;
+    }
+
+    url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][field]=status`;
+    url += `&searchCriteria[filter_groups][${filterIndex}][filters][0][value]=1`;
+    url += `&fields=items[sku,name,price,custom_attributes,media_gallery_entries],total_count`;
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (authType === 'bearer' && magentoToken) {
+      headers['Authorization'] = `Bearer ${magentoToken}`;
+    }
+
+    console.log('🛒 Magento API:', url.substring(0, 150));
+    const response = await fetch(url, { headers, timeout: 8000 });
+    const data = await response.json();
+
+    if (!data.items) {
+      console.log('🛒 Magento: žiadne výsledky');
+      return [];
+    }
+
+    console.log(`🛒 Magento: ${data.items.length} z ${data.total_count} produktov`);
+
+    const baseUrl = magentoUrl.replace(/\/+$/, '');
+
+    return data.items.map(item => {
+      const urlKey = item.custom_attributes?.find(a => a.attribute_code === 'url_key')?.value;
+      const desc = item.custom_attributes?.find(a => a.attribute_code === 'description')?.value || '';
+      const image = item.media_gallery_entries?.[0]?.file;
+
+      return {
+        name: item.name,
+        price: item.price,
+        description: desc.replace(/<[^>]*>/g, '').substring(0, 200),
+        url: urlKey ? `${baseUrl}/${urlKey}.html` : '',
+        image: image ? `${baseUrl}/media/catalog/product${image}` : null,
+        category: '',
+        sku: item.sku
+      };
+    });
+  } catch (error) {
+    console.error('🛒 Magento API error:', error.message);
+    return [];
+  }
+}
+
 // Limity pre jednotlivé plány
 const PLAN_LIMITS = {
   free: { messages: 50, products: 0 },
@@ -797,7 +868,7 @@ app.post('/chat', async (req, res) => {
     // Nájdi klienta
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id, system_prompt')
+      .select('id, system_prompt, magento_api_url, magento_api_token, magento_auth_type')
       .eq('api_key', apiKey)
       .eq('is_active', true)
       .single();
@@ -1358,6 +1429,26 @@ let productsContext = '';
 if (skipProductSearch) {
   products = [];
   productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
+}
+// === MAGENTO KLIENT ===
+if (client.magento_api_url && !skipProductSearch) {
+  const searchWords = msgNorm.split(/\s+/).filter(w => w.length > 3).slice(0, 3);
+  const searchTerm = searchWords.join(' ');
+  
+  if (searchTerm) {
+    products = await searchMagentoProducts(
+      client.magento_api_url,
+      client.magento_api_token,
+      client.magento_auth_type || 'guest',
+      searchTerm,
+      maxPrice,
+      minPrice
+    );
+    console.log(`🛒 Magento výsledky: ${products.length}`);
+  }
+  
+  // Preskočí Supabase product search
+  skipProductSearch = true;
 }
 
 if (!skipProductSearch) {

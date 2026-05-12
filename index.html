@@ -1,10 +1,63 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
+  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1P1Y7EL08"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D1P1Y7EL08');
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Replai – AI Agenti a Rezervačné Systémy na mieru</title>
-  <meta name="description" content="Inteligentní AI agenti a rezervačné systémy šité na mieru vašej firme. Automatizujte komunikáciu, rezervácie a predaj. 24/7 bez prestávky.">
+
+  <!-- Primary SEO -->
+  <title>Replai – AI Chatbot pre weby a e-shopy | Zákaznícka podpora 24/7</title>
+  <meta name="description" content="AI chatbot natrénovaný na vašich dátach. Odpovedá zákazníkom 24/7, zbiera leady a zvyšuje predaj. Spustenie do 48 hodín od 30€/mesiac.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://replai.sk/">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Replai – AI Chatbot pre váš web">
+  <meta property="og:description" content="AI chatbot natrénovaný na vašich produktoch. Funguje 24/7, zbiera leady, zvyšuje predaj. Od 30€/mesiac, spustenie do 48 hodín.">
+  <meta property="og:image" content="https://replai.sk/images/og-image.png">
+  <meta property="og:url" content="https://replai.sk">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sk_SK">
+  <meta property="og:site_name" content="Replai">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Replai – AI Chatbot pre váš web">
+  <meta name="twitter:description" content="AI chatbot natrénovaný na vašich produktoch. Funguje 24/7, zbiera leady, zvyšuje predaj. Od 30€/mesiac.">
+  <meta name="twitter:image" content="https://replai.sk/images/og-image.png">
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Replai",
+    "url": "https://replai.sk",
+    "description": "AI chatbot natrénovaný na dátach firmy. Odpovedá zákazníkom 24/7, zbiera leady a zvyšuje predaj.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "30",
+      "priceCurrency": "EUR"
+    },
+    "provider": {
+      "@type": "Person",
+      "name": "Ján Urbánek",
+      "email": "info@replai.sk",
+      "url": "https://replai.sk"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -48,29 +101,13 @@
       line-height: 1.6;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
-      cursor: none;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto;
     }
     @media (pointer: coarse) {
       body, a, button, [role="button"] { cursor: auto !important; }
-      #cursor-dot, #cursor-ring { display: none !important; }
-    }
+      }
     ::selection { background: var(--a-dim); color: var(--a); }
     .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
-
-    /* CURSOR */
-    #cursor-dot {
-      width: 5px; height: 5px; background: var(--a); border-radius: 50%;
-      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999;
-      will-change: transform; box-shadow: 0 0 8px var(--a); transition: opacity 0.3s;
-    }
-    #cursor-ring {
-      width: 34px; height: 34px; border: 1.5px solid rgba(11,184,120,0.45); border-radius: 50%;
-      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998;
-      will-change: transform;
-      transition: width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1),
-                  border-color 0.3s, background 0.3s, opacity 0.3s;
-    }
-    #cursor-ring.hover { width: 54px; height: 54px; border-color: var(--a); background: rgba(11,184,120,0.06); }
 
     /* REVEAL */
     .r { opacity: 0; transform: translateY(30px); transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1); }
@@ -118,7 +155,7 @@
     .btn-nav {
       font-family: var(--font); font-size: 13.5px; font-weight: 600;
       color: #FFFFFF; background: var(--a); border: none;
-      border-radius: var(--r-sm); padding: 8px 18px; cursor: none; transition: all 0.25s;
+      border-radius: var(--r-sm); padding: 8px 18px; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto; transition: all 0.25s;
     }
     .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--a-glow); }
 
@@ -133,7 +170,7 @@
     .btn {
       font-family: var(--font); font-weight: 600; font-size: 14px;
       padding: 13px 26px; border-radius: var(--r-sm); border: none;
-      cursor: none; text-decoration: none;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto; text-decoration: none;
       display: inline-flex; align-items: center; gap: 7px;
       transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s, background 0.2s, border-color 0.2s;
       letter-spacing: -0.1px; position: relative;
@@ -248,6 +285,54 @@
     .hero .btn-ghost:hover {
       border-color: rgba(255,255,255,0.45);
       background: rgba(255,255,255,0.07);
+    }
+
+    /* FREE BANNER */
+    .free-banner {
+      background: linear-gradient(135deg, #0a0f2e 0%, #0d1a14 100%);
+      border-top: 1px solid rgba(11,184,120,0.2);
+      border-bottom: 1px solid rgba(11,184,120,0.2);
+      padding: 0;
+    }
+    .free-banner-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 0; gap: 24px; text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .free-banner-inner:hover { opacity: 0.85; }
+    .free-banner-items {
+      display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    }
+    .free-banner-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: clamp(15px, 1.6vw, 19px); font-weight: 600;
+      color: rgba(255,255,255,0.9); padding: 6px 32px 6px 0;
+    }
+    .free-banner-item:first-child { padding-left: 0; }
+    .free-banner-item svg { color: #0BB878; flex-shrink: 0; }
+    .free-banner-item strong { color: #0BB878; font-weight: 800; }
+    .free-banner-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); flex-shrink: 0; margin-right: 32px;
+    }
+    .free-banner-cta {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      font-size: 15px; font-weight: 700; color: #0BB878;
+      white-space: nowrap;
+      padding: 10px 22px; border: 1.5px solid rgba(11,184,120,0.5);
+      border-radius: 10px; transition: all 0.25s;
+      background: rgba(11,184,120,0.08);
+    }
+    .free-banner-inner:hover .free-banner-cta {
+      background: rgba(11,184,120,0.18); border-color: #0BB878;
+      box-shadow: 0 0 20px rgba(11,184,120,0.25);
+    }
+    @media (max-width: 768px) {
+      .free-banner-inner { flex-direction: column; align-items: flex-start; padding: 20px 0; }
+      .free-banner-items { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .free-banner-item { padding: 0; font-size: 16px; }
+      .free-banner-dot { display: none; }
+      .free-banner-cta { width: 100%; justify-content: center; margin-top: 8px; }
     }
 
     .hero-stack {
@@ -395,6 +480,58 @@
     .metric:last-child { border: none; }
     .metric-num { font-family: var(--display); font-size: 56px; font-weight: 900; letter-spacing: -3.5px; color: var(--t); line-height: 1; }
     .metric-label { font-size: 11px; font-weight: 500; color: var(--t-3); text-transform: uppercase; letter-spacing: 2px; margin-top: 8px; }
+
+    /* CLIENTS */
+    .clients {
+      padding: 44px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .clients-label {
+      text-align: center; margin-bottom: 28px;
+      font-size: 11px; font-weight: 500; color: var(--t-3);
+      text-transform: uppercase; letter-spacing: 2.5px;
+    }
+    .clients-track-wrap {
+      position: relative; overflow: hidden;
+    }
+    .clients-track-wrap::before,
+    .clients-track-wrap::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 160px;
+      z-index: 2; pointer-events: none;
+    }
+    .clients-track-wrap::before {
+      left: 0;
+      background: linear-gradient(to right, var(--bg) 20%, transparent);
+    }
+    .clients-track-wrap::after {
+      right: 0;
+      background: linear-gradient(to left, var(--bg) 20%, transparent);
+    }
+    .clients-track {
+      display: flex; align-items: center; gap: 80px;
+      width: max-content;
+      will-change: transform;
+      animation: marquee 14s linear infinite;
+    }
+    .clients-track:hover { animation-play-state: paused; }
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-12.5%); }
+    }
+    .client-logo {
+      height: 52px; width: auto; flex-shrink: 0;
+      opacity: 0.72; transition: opacity 0.25s;
+      object-fit: contain;
+    }
+    .client-logo:hover { opacity: 1; }
+    .client-logo-dark {
+      height: 48px; width: auto; border-radius: 10px;
+      flex-shrink: 0; opacity: 0.82; transition: opacity 0.25s;
+      object-fit: contain;
+    }
+    .client-logo-dark:hover { opacity: 1; }
 
     /* SECTION COMMON */
     .sec-tag {
@@ -703,8 +840,7 @@
 </head>
 <body>
 
-<div id="cursor-dot"></div>
-<div id="cursor-ring"></div>
+
 
 <!-- NAV -->
 <nav id="navbar">
@@ -729,6 +865,7 @@
       <a href="#why">Prečo AI agent</a>
       <a href="#solutions">Riešenia</a>
       <a href="o-nas.html">O nás</a>
+      <a href="cennik.html">Cenník</a>
       <a href="kontakt.html">Kontakt</a>
       <button class="btn-nav" onclick="openLogin()">Prihlásiť sa</button>
     </div>
@@ -758,10 +895,10 @@
         </h1>
         <p class="hero-sub r rd2">Rezervačné systémy, zákaznícka podpora a predaj — automatizované, inteligentné a aktívne 24 hodín denne. Šité presne pre váš biznis.</p>
         <div class="hero-btns r rd3">
-          <a href="kontakt.html" class="btn btn-primary mag">Získať AI agenta</a>
-          <a href="#solutions" class="btn btn-ghost mag">
+          <a href="https://replai-chi.vercel.app/register" class="btn btn-primary mag">Vyskúšať zadarmo</a>
+          <a href="kontakt.html" class="btn btn-ghost mag">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
-            Pozrieť riešenia
+            Dohodnúť konzultáciu
           </a>
         </div>
         <div class="hero-stack r rd4">
@@ -824,6 +961,34 @@
   </div>
 </section>
 
+<!-- FREE BANNER -->
+<section class="free-banner">
+  <div class="container">
+    <a href="https://replai-chi.vercel.app/register" class="free-banner-inner">
+      <div class="free-banner-items">
+        <div class="free-banner-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Registrácia <strong>zadarmo</strong>
+        </div>
+        <div class="free-banner-dot"></div>
+        <div class="free-banner-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Základná verzia <strong>na vyskúšanie</strong>
+        </div>
+        <div class="free-banner-dot"></div>
+        <div class="free-banner-item">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Bez záväzkov
+        </div>
+      </div>
+      <div class="free-banner-cta">
+        Začať teraz
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+    </a>
+  </div>
+</section>
+
 <!-- METRICS -->
 <section class="metrics">
   <div class="container">
@@ -832,6 +997,39 @@
       <div class="metric r rd1"><div class="metric-num" data-c="0.9" data-s="s">0s</div><div class="metric-label">Čas odpovede</div></div>
       <div class="metric r rd2"><div class="metric-num" data-c="3" data-s="×">0×</div><div class="metric-label">Rast konverzií</div></div>
       <div class="metric r rd3"><div class="metric-num" data-c="24" data-s="/7">0</div><div class="metric-label">Dostupnosť</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENTS -->
+<section class="clients">
+  <p class="clients-label r">Naši klienti</p>
+  <div class="clients-track-wrap">
+    <div class="clients-track">
+      <img src="images/logo-psych-harmony.png" alt="Psych-Harmony" class="client-logo" style="height:54px">
+      <img src="images/logo-viva.png" alt="Viva" class="client-logo-dark" style="height:44px">
+      <img src="images/logo-cube-store-black.jpeg" alt="Cube Store Bratislava" class="client-logo-dark" style="height:50px">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
     </div>
   </div>
 </section>
@@ -1112,8 +1310,9 @@
       <a href="#solutions">Riešenia</a>
       <a href="#how">Ako to funguje</a>
       <a href="kontakt.html">Kontakt</a>
+      <a href="privacy-policy.html">Ochrana údajov</a>
     </div>
-    <p class="fcopy">© 2025 Replai</p>
+    <p class="fcopy">© 2026 Replai</p>
   </div>
 </footer>
 
@@ -1227,28 +1426,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   } catch(err) { alert('Chyba servera'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
 });
 
-// CUSTOM CURSOR
-(function() {
-  if (window.matchMedia('(pointer: coarse)').matches) return;
-  const dot = document.getElementById('cursor-dot');
-  const ring = document.getElementById('cursor-ring');
-  let mx = -100, my = -100, rx = -100, ry = -100;
-  dot.style.cssText += 'left:0;top:0;will-change:transform;';
-  ring.style.cssText += 'left:0;top:0;will-change:transform;';
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    dot.style.transform = `translate(${mx - 2.5}px,${my - 2.5}px)`;
-  }, { passive: true });
-  (function animRing() {
-    rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
-    ring.style.transform = `translate(${rx - 17}px,${ry - 17}px)`;
-    requestAnimationFrame(animRing);
-  })();
-  document.querySelectorAll('a, button, .feat, .step-card, .why-card, .sol-card, .agent-card, .ind-pill, .fbadge').forEach(el => {
-    el.addEventListener('mouseenter', () => ring.classList.add('hover'));
-    el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
-  });
-})();
 
 // HERO PARTICLE NETWORK
 (function() {
@@ -1343,22 +1520,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 })();
 
 // MAGNETIC BUTTONS
-document.querySelectorAll('.mag').forEach(btn => {
-  btn.addEventListener('mousemove', e => {
-    const r = btn.getBoundingClientRect();
-    const x = (e.clientX - r.left - r.width / 2) * 0.28;
-    const y = (e.clientY - r.top - r.height / 2) * 0.28;
-    btn.style.transform = `translate(${x}px, ${y}px)`;
-  });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.transform = '';
-    btn.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s, background 0.2s, border-color 0.2s';
-    setTimeout(() => { btn.style.transition = ''; }, 500);
-  });
-  btn.addEventListener('mouseenter', () => {
-    btn.style.transition = 'transform 0.15s ease, box-shadow 0.25s, background 0.2s, border-color 0.2s';
-  });
-});
 </script>
 
 <script src="https://replai-backend.onrender.com/static/widget.js" data-api-key="d735d9fa298dd94e4f106f93ac538c7ae7f87acd53ebffd19feef811405f08d3" data-backend-url="https://replai-backend.onrender.com"></script>
