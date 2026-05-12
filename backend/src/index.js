@@ -1430,9 +1430,7 @@ if (skipProductSearch) {
   products = [];
   productsContext = '\nZákazník zadal všeobecný dotaz. NEHĽADAJ produkty. Postupuj podľa POSTUPNOSTI OTÁZOK - opýtaj sa na typ, rozpočet a výšku.\n';
 }
-
-  
-  // === MAGENTO KLIENT ===
+// === MAGENTO KLIENT ===
 if (client.magento_api_url && !skipProductSearch) {
   const skipWordsM = ['mate', 'mame', 'chcem', 'chcel', 'hladam', 'prosim', 'nieco', 'doporucte', 'chcela', 'dobry', 'vedeli', 'odporucit', 'preferujem', 'farba'];
   const searchWords = msgNorm.split(/\s+/).filter(w => w.length > 3 && !skipWordsM.includes(w));
@@ -1455,22 +1453,6 @@ if (client.magento_api_url && !skipProductSearch) {
   // Pre Magento klientov preskočí FenixBike logiku
   wantsElektro = false;
   targetCategories = [];
-  skipProductSearch = true;
-}
-  
-  if (searchTerm) {
-    products = await searchMagentoProducts(
-      client.magento_api_url,
-      client.magento_api_token,
-      client.magento_auth_type || 'guest',
-      searchTerm,
-      maxPrice,
-      minPrice
-    );
-    console.log(`🛒 Magento výsledky: ${products.length}`);
-  }
-  
-  // Preskočí Supabase product search
   skipProductSearch = true;
 }
 
