@@ -3,183 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test – Booking Widget</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <title>ViVa E-Shop — Test Chatbot</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0f;
-      --accent: #c8f135;
-      --text: #f0efea;
-      --muted: #6b6b7a;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    /* Background grain */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
-    }
-
-    /* Glowing blob */
-    .blob {
-      position: fixed;
-      width: 600px;
-      height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(200,241,53,0.12) 0%, transparent 70%);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: pulse 4s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-      50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.7; }
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 2rem;
-      max-width: 640px;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(200,241,53,0.1);
-      border: 1px solid rgba(200,241,53,0.25);
-      color: var(--accent);
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      padding: 0.4rem 1rem;
-      border-radius: 100px;
-      margin-bottom: 2rem;
-      animation: fadeUp 0.6s ease both;
-    }
-
-    h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(2.8rem, 7vw, 5rem);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.25rem;
-      animation: fadeUp 0.6s 0.1s ease both;
-    }
-
-    h1 span {
-      color: var(--accent);
-    }
-
-    p {
-      color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.65;
-      margin-bottom: 2.5rem;
-      animation: fadeUp 0.6s 0.2s ease both;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: var(--accent);
-      color: #0a0a0f;
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
-      padding: 1rem 2.2rem;
-      border: none;
-      border-radius: 100px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 40px rgba(200,241,53,0.25);
-      animation: fadeUp 0.6s 0.3s ease both;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 0 60px rgba(200,241,53,0.45);
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    .note {
-      margin-top: 1.5rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      animation: fadeUp 0.6s 0.4s ease both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+    header { background: #003366; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { color: #fff; font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+    header span { color: #ccc; font-size: 13px; }
+    nav { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 40px; display: flex; gap: 24px; }
+    nav a { text-decoration: none; color: #555; font-size: 14px; font-weight: 500; }
+    nav a:hover { color: #003366; }
+    .hero { background: linear-gradient(135deg, #003366 0%, #005599 100%); color: #fff; padding: 60px 40px; text-align: center; }
+    .hero h2 { font-size: 32px; margin-bottom: 12px; }
+    .hero p { font-size: 16px; opacity: 0.85; max-width: 600px; margin: 0 auto; }
+    .products { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .products h3 { font-size: 20px; margin-bottom: 20px; color: #003366; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; }
+    .card .placeholder { width: 100%; height: 160px; background: #e8eef4; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #99aabb; font-size: 40px; margin-bottom: 14px; }
+    .card h4 { font-size: 14px; color: #333; margin-bottom: 6px; }
+    .card .price { font-size: 18px; font-weight: 700; color: #003366; }
+    .card .brand { font-size: 12px; color: #888; margin-top: 4px; }
+    footer { background: #222; color: #888; text-align: center; padding: 24px; margin-top: 60px; font-size: 13px; }
+    .info-bar { background: #e8eef4; padding: 16px 40px; display: flex; justify-content: center; gap: 40px; font-size: 13px; color: #555; }
+    .info-bar span { display: flex; align-items: center; gap: 6px; }
   </style>
 </head>
 <body>
 
-<div class="blob"></div>
+  <header>
+    <h1>VIVA E-SHOP</h1>
+    <span>Prémiové kúpeľňové vybavenie od roku 1998</span>
+  </header>
 
-<div class="container">
-  <div class="badge">🧪 Test stránka · Replai Widget</div>
+  <nav>
+    <a href="#">Batérie</a>
+    <a href="#">Sprchy</a>
+    <a href="#">Vane</a>
+    <a href="#">WC & Bidety</a>
+    <a href="#">Umývadlá</a>
+    <a href="#">Nábytok</a>
+    <a href="#">Kuchynské drezy</a>
+    <a href="#">Značky</a>
+  </nav>
 
-  <h1>Rezervujte si <span>termín</span> online</h1>
+  <div class="info-bar">
+    <span>📍 Showroom: Rožňavská 8, Bratislava</span>
+    <span>🕐 Po–Pia 08:00 – 17:00</span>
+    <span>📞 +421 2 32 20 26 33</span>
+  </div>
 
-  <p>Toto je testovacia landing page pre booking widget.<br>Kliknite na tlačidlo nižšie a widget sa otvorí.</p>
+  <div class="hero">
+    <h2>Kúpeľňa vašich snov</h2>
+    <p>Prémiové značky Hansgrohe, GROHE, Villeroy & Boch, Kaldewei a ďalšie. Odborné poradenstvo a showroom v Bratislave.</p>
+  </div>
 
-  <button class="btn" data-fenix-booking>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2"/>
-      <line x1="16" y1="2" x2="16" y2="6"/>
-      <line x1="8" y1="2" x2="8" y2="6"/>
-      <line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-    Rezervovať termín
-  </button>
+  <div class="products">
+    <h3>Populárne produkty</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="placeholder">🚿</div>
+        <h4>Hansgrohe Croma Select S 180</h4>
+        <div class="price">289 €</div>
+        <div class="brand">Hansgrohe</div>
+      </div>
+      <div class="card">
+        <div class="placeholder">🛁</div>
+        <h4>Kaldewei Saniform Plus 170x75</h4>
+        <div class="price">445 €</div>
+        <div class="brand">Kaldewei</div>
+      </div>
+      <div class="card">
+        <div class="placeholder">🪥</div>
+        <h4>Villeroy & Boch Subway 3.0</h4>
+        <div class="price">620 €</div>
+        <div class="brand">Villeroy & Boch</div>
+      </div>
+      <div class="card">
+        <div class="placeholder">🔧</div>
+        <h4>GROHE Eurosmart batéria</h4>
+        <div class="price">165 €</div>
+        <div class="brand">GROHE</div>
+      </div>
+      <div class="card">
+        <div class="placeholder">🚽</div>
+        <h4>Ideal Standard Connect Air WC</h4>
+        <div class="price">380 €</div>
+        <div class="brand">Ideal Standard</div>
+      </div>
+      <div class="card">
+        <div class="placeholder">🪞</div>
+        <h4>Keuco Royal Match zrkadlová skrinka</h4>
+        <div class="price">890 €</div>
+        <div class="brand">Keuco</div>
+      </div>
+    </div>
+  </div>
 
-  <div class="note">Powered by Replai · booking-widget.js</div>
-</div>
+  <footer>
+    <p>© 2026 VIVA - SK s.r.o. | Rožňavská 8, 821 04 Bratislava | vivaeshop@viva-sk.sk</p>
+    <p style="margin-top: 8px; color: #555;">Toto je testovacia stránka pre chatbot widget</p>
+  </footer>
 
-<script
-  src="https://replai-backend.onrender.com/static/booking-widget.js"
-  data-client-id="fa961f37-48c7-40a5-95d5-0bd8cdbbe5d4"
-  data-backend-url="https://replai-backend.onrender.com">
-</script>
-
-<!-- Booking widget container – widget si ho vyžaduje -->
-<div id="fenix-booking-widget"></div>
-
-<script>
-</script>
+  <!-- REPLAI CHATBOT WIDGET -->
+  <script 
+    src="https://replai-backend.onrender.com/static/widget.js" 
+    data-api-key="97243d0258a3b9d70ef948f56489fd01e5b8fbdec8391a8a764257055816fdbd"
+    data-backend-url="https://replai-backend.onrender.com">
+  </script>
 
 </body>
 </html>

@@ -1432,8 +1432,24 @@ if (skipProductSearch) {
 }
 // === MAGENTO KLIENT ===
 if (client.magento_api_url && !skipProductSearch) {
-  const searchWords = msgNorm.split(/\s+/).filter(w => w.length > 3).slice(0, 3);
-  const searchTerm = searchWords.join(' ');
+  const skipWordsM = ['mate', 'mame', 'chcem', 'chcel', 'hladam', 'prosim', 'nieco', 'bateria', 'sprcha', 'vana', 'umyvadlo', 'kupelna', 'doporucte', 'chcela'];
+  const searchWords = msgNorm.split(/\s+/).filter(w => w.length > 3 && !skipWordsM.includes(w));
+  
+  // Hľadaj každé slovo zvlášť a spoj výsledky
+  for (const word of searchWords.slice(0, 2)) {
+    const results = await searchMagentoProducts(
+      client.magento_api_url,
+      client.magento_api_token,
+      client.magento_auth_type || 'guest',
+      word,
+      maxPrice,
+      minPrice
+    );
+    if (results.length > 0) {
+      products.push(...results);
+      console.log(`🛒 Magento "${word}": ${results.length} produktov`);
+    }
+  }
   
   if (searchTerm) {
     products = await searchMagentoProducts(
