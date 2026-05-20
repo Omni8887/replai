@@ -47,7 +47,7 @@ export default function Layout() {
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
     { to: '/services', label: 'Cenník', icon: Wrench, requiresBooking: true },
-    { to: '/pieniny', label: 'Pieniny', icon: Mountain, requiresBooking: true },
+    { to: '/pieniny', label: 'Pieniny', icon: Mountain, showForTenants: ['e8f3937e-d56f-401b-b7c0-a90fb7654503'] },
   ]
 
   const handleLockedClick = (e) => {
@@ -72,6 +72,7 @@ export default function Layout() {
           {navItems
             .filter(item => !item.adminOnly || isAdmin)
             .filter(item => !item.requiresBooking || hasBooking)
+            .filter(item => !item.showForTenants || item.showForTenants.includes(client?.id))
             .map(item => {
               const isLocked = isFree && item.paidOnly
 
