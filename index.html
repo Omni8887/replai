@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
+  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" defer src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1P1Y7EL08"></script>
   <script>
@@ -60,7 +60,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap"></noscript>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -237,6 +238,10 @@
     @keyframes orbDrift1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,35px) scale(1.06)} 66%{transform:translate(25px,-25px) scale(0.94)} }
     @keyframes orbDrift2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-25px) scale(1.04)} 66%{transform:translate(-30px,35px) scale(0.97)} }
     @keyframes orbDrift3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-35px,22px) scale(1.08)} }
+    @media (max-width: 767px) {
+      .hero-orb { display: none; }
+      #hero-canvas { display: none; }
+    }
 
     .hero-inner {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -1006,30 +1011,41 @@
   <p class="clients-label r">Naši klienti</p>
   <div class="clients-track-wrap">
     <div class="clients-track">
-      <img src="images/logo-psych-harmony.png" alt="Psych-Harmony" class="client-logo" style="height:54px">
-      <img src="images/logo-viva.png" alt="Viva" class="client-logo-dark" style="height:44px">
-      <img src="images/logo-cube-store-black.jpeg" alt="Cube Store Bratislava" class="client-logo-dark" style="height:50px">
+      <img src="images/logo-psych-harmony.png" alt="Psych-Harmony" class="client-logo" style="height:54px" loading="lazy">
+      <img src="images/logo-viva.png" alt="Viva" class="client-logo-dark" style="height:44px" loading="lazy">
+      <img src="images/logo-cube-store-black.jpeg" alt="Cube Store Bratislava" class="client-logo-dark" style="height:50px" loading="lazy">
+      <img src="images/logo-national-health-clinic.jpg" alt="National Health Clinic" class="client-logo-dark" style="height:50px" loading="lazy">
+      <img src="images/logo-physioandcare.svg" alt="Physio & Care" class="client-logo-dark" style="height:48px" loading="lazy">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true" loading="lazy">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true" loading="lazy">
       <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
       <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
       <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true">
       <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
       <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
       <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
-      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
-      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
-      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
-      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
-      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
-      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
-      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
-      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
-      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
-      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
-      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
-      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
-      <img src="images/logo-psych-harmony.png" alt="" class="client-logo" style="height:54px" aria-hidden="true">
-      <img src="images/logo-viva.png" alt="" class="client-logo-dark" style="height:44px" aria-hidden="true">
-      <img src="images/logo-cube-store-black.jpeg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-national-health-clinic.jpg" alt="" class="client-logo-dark" style="height:50px" aria-hidden="true">
+      <img src="images/logo-physioandcare.svg" alt="" class="client-logo-dark" style="height:48px" aria-hidden="true">
     </div>
   </div>
 </section>
@@ -1040,7 +1056,7 @@
   <div class="container">
     <div class="why-header r">
       <div class="sec-tag">Prečo AI agent</div>
-      <h2 class="sec-title">6 dôvodov, prečo firmy<br>nedokážu bez AI agenta žiť</h2>
+      <h2 class="sec-title">6 dôvodov, prečo firmy<br>nedokážu bez AI agenta rásť</h2>
       <p class="sec-desc">Každý deň bez agenta je deň, keď konkurencia automatizuje a šetrí. Tu je to, čo agent mení.</p>
     </div>
     <div class="why-grid">
@@ -1431,6 +1447,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 (function() {
   const canvas = document.getElementById('hero-canvas');
   if (!canvas) return;
+  if (window.innerWidth < 768) return;
   const ctx = canvas.getContext('2d');
   const GREEN = [11, 184, 120];
   const PURPLE = [107, 95, 237];

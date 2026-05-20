@@ -7,7 +7,8 @@
   <meta name="description" content="Transparentné ceny AI agentov. Starter od 30 € mesačne, Business od 99 €, alebo riešenie na mieru.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap"></noscript>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -150,6 +151,10 @@
       -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%);
     }
     .hero-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+    @media (max-width: 767px) {
+      .hero-orb { display: none; }
+      #hero-canvas { display: none; }
+    }
     .orb-a {
       width: 700px; height: 700px;
       background: radial-gradient(circle, rgba(11,184,120,0.18), transparent 60%);
@@ -515,6 +520,67 @@
     .login-div span { background: var(--bg-white); padding: 0 14px; position: relative; color: var(--t-dark-2); font-size: 13px; }
     .reg-btn { width: 100%; justify-content: center; }
 
+    /* FREE TRIAL BANNER */
+    .trial-section { padding: 0 0 80px; }
+    .trial-card {
+      background: var(--bg-2);
+      border-radius: var(--r-lg);
+      border: 1px solid rgba(11,184,120,0.22);
+      padding: 56px 64px;
+      position: relative; overflow: hidden;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+      display: flex; align-items: center; gap: 60px;
+    }
+    .trial-orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px); }
+    .trial-orb-a { width: 500px; height: 500px; background: radial-gradient(circle, rgba(11,184,120,0.22), transparent 65%); top: -180px; right: 60px; }
+    .trial-orb-b { width: 350px; height: 350px; background: radial-gradient(circle, rgba(107,95,237,0.16), transparent 65%); bottom: -120px; left: 180px; }
+    .trial-left { flex: 1; position: relative; z-index: 1; min-width: 0; }
+    .trial-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(11,184,120,0.12); border: 1px solid rgba(11,184,120,0.28);
+      border-radius: 100px; padding: 6px 16px; margin-bottom: 22px;
+      font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--a);
+    }
+    .trial-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--a); box-shadow: 0 0 8px var(--a); animation: resDot 2s ease-in-out infinite; flex-shrink: 0; }
+    .trial-left h2 {
+      font-family: var(--display); font-size: clamp(28px, 3vw, 42px);
+      font-weight: 900; letter-spacing: -2px; color: rgba(255,255,255,0.95);
+      line-height: 1.08; margin-bottom: 16px;
+    }
+    .trial-left h2 em {
+      background: linear-gradient(125deg, var(--a), var(--a-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; font-style: normal;
+    }
+    .trial-left p { font-size: 15.5px; color: rgba(255,255,255,0.48); line-height: 1.72; max-width: 430px; margin-bottom: 30px; }
+    .trial-items { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+    .trial-item {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13.5px; color: rgba(255,255,255,0.72); font-weight: 500;
+    }
+    .trial-item svg { color: var(--a); flex-shrink: 0; }
+    .trial-right { position: relative; z-index: 1; flex-shrink: 0; text-align: center; width: 290px; }
+    .trial-price-box {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px; padding: 32px 28px; margin-bottom: 14px;
+    }
+    .trial-price-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 10px; }
+    .trial-price-value { font-family: var(--display); font-size: 58px; font-weight: 900; letter-spacing: -3px; color: var(--a); line-height: 1; margin-bottom: 6px; }
+    .trial-price-sub { font-size: 12.5px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+    .btn-trial {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; background: linear-gradient(135deg, var(--a), #09a069);
+      color: #fff; font-family: var(--font); font-weight: 700;
+      font-size: 15px; padding: 16px 20px; border-radius: var(--r-sm); border: none;
+      text-decoration: none; letter-spacing: -0.2px;
+      transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s;
+      box-shadow: 0 4px 24px rgba(11,184,120,0.4); margin-bottom: 12px;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cdefs%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='0' dy='1' stdDeviation='1.5' flood-color='rgba(0,0,0,0.22)'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M3 1 L3 18 L7.2 13.4 L10.8 20.5 L13.4 19.3 L9.8 12.2 L16 12.2 Z' fill='white' stroke='%230C0C1A' stroke-width='0.9' stroke-linejoin='round' stroke-linecap='round' filter='url(%23s)'/%3E%3C/svg%3E") 3 1, auto;
+    }
+    .btn-trial:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(11,184,120,0.52); }
+    .trial-note { font-size: 11.5px; color: rgba(255,255,255,0.28); font-family: var(--mono); letter-spacing: 0.5px; }
+
     /* RESPONSIVE */
     @media (max-width: 1024px) {
       .pricing-grid { grid-template-columns: 1fr 1fr; }
@@ -527,7 +593,12 @@
       .res-feat:last-child { padding-left: 0; }
       .res-tags-row { padding: 24px 44px 40px; }
     }
+    @media (max-width: 1024px) {
+      .trial-card { padding: 44px 44px; gap: 40px; }
+    }
     @media (max-width: 768px) {
+      .trial-card { flex-direction: column; gap: 32px; padding: 36px 28px; }
+      .trial-right { width: 100%; }
       .mobile-btn { display: block; }
       .nav-links {
         position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
@@ -550,6 +621,7 @@
 <body>
 
 
+  
 
 
 <!-- NAV -->
@@ -751,6 +823,56 @@
       <p class="setup-strip-text">Ku každému plánu sa pripočítava <strong>jednorazový poplatok za nastavenie 100 €</strong> — zahŕňa konfiguráciu agenta, napojenie na web a odovzdanie do prevádzky.</p>
     </div>
 
+  </div>
+</section>
+
+<!-- FREE TRIAL -->
+<section class="trial-section">
+  <div class="container">
+    <div class="trial-card r">
+      <div class="trial-orb trial-orb-a"></div>
+      <div class="trial-orb trial-orb-b"></div>
+
+      <div class="trial-left">
+        <div class="trial-tag">
+          <div class="trial-dot"></div>
+          Začnite ešte dnes
+        </div>
+        <h2>Vyskúšajte Replai<br><em>úplne zadarmo.</em></h2>
+        <p>Žiadna kreditná karta. Žiadne záväzky. Zaregistrujte sa za 2 minúty a presvedčte sa na vlastné oči, čo AI agent urobí pre váš biznis.</p>
+        <div class="trial-items">
+          <div class="trial-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Registrácia zadarmo
+          </div>
+          <div class="trial-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Bez kreditnej karty
+          </div>
+          <div class="trial-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Zrušiť kedykoľvek
+          </div>
+          <div class="trial-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Nasadenie do 24 hodín
+          </div>
+        </div>
+      </div>
+
+      <div class="trial-right">
+        <div class="trial-price-box">
+          <div class="trial-price-label">Cena za registráciu</div>
+          <div class="trial-price-value">0 €</div>
+          <div class="trial-price-sub">základná verzia<br>navždy zadarmo</div>
+        </div>
+        <a href="https://replai-chi.vercel.app/register" class="btn-trial">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Začať zadarmo
+        </a>
+        <div class="trial-note">Žiadna kreditná karta · Bez záväzkov</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -969,6 +1091,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 (function() {
   const canvas = document.getElementById('hero-canvas');
   if (!canvas) return;
+  if (window.innerWidth < 768) return;
   const ctx = canvas.getContext('2d');
   const GREEN = [11, 184, 120], PURPLE = [107, 95, 237];
   function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }

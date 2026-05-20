@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
+  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" defer src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1P1Y7EL08"></script>
   <script>
@@ -14,9 +14,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>O nás – Replai</title>
   <meta name="description" content="Sme slovenský tím, ktorý buduje inteligentných AI agentov pre firmy. Zoznámte sa s nami.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://replai.sk/o-nas.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="O nás – Replai | Slovenský AI expert">
+  <meta property="og:description" content="Sme slovenský tím, ktorý buduje inteligentných AI agentov pre firmy. Zoznámte sa s nami.">
+  <meta property="og:image" content="https://replai.sk/images/og-image.png">
+  <meta property="og:url" content="https://replai.sk/o-nas.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sk_SK">
+  <meta property="og:site_name" content="Replai">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="O nás – Replai | Slovenský AI expert">
+  <meta name="twitter:description" content="Sme slovenský tím, ktorý buduje inteligentných AI agentov pre firmy. Zoznámte sa s nami.">
+  <meta name="twitter:image" content="https://replai.sk/images/og-image.png">
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "O nás – Replai",
+    "url": "https://replai.sk/o-nas.html",
+    "description": "Slovenský expert na AI agentov pre firmy. Riešenia na mieru, rýchle nasadenie, priama komunikácia.",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Peter Urbánek",
+      "jobTitle": "Zakladateľ & AI špecialista",
+      "email": "info@replai.sk",
+      "url": "https://replai.sk"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap"></noscript>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -106,7 +143,11 @@
     .page-hero { padding: 160px 0 110px; position: relative; overflow: hidden; text-align: center; background: var(--bg-2); }
     #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
     .hero-grid-bg { position: absolute; inset: 0; z-index: 0; background-image: linear-gradient(rgba(107,95,237,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(107,95,237,0.07) 1px, transparent 1px); background-size: 72px 72px; mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%); -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 0%, black 20%, transparent 80%); }
-    .hero-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+    .hero-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; will-change: transform; z-index: 0; }
+    @media (max-width: 767px) {
+      .hero-orb { display: none; }
+      #hero-canvas { display: none; }
+    }
     .orb-a { width: 700px; height: 700px; background: radial-gradient(circle, rgba(107,95,237,0.18), transparent 60%); top: -300px; left: 50%; transform: translateX(-50%); }
     .orb-b { width: 450px; height: 450px; background: radial-gradient(circle, rgba(11,184,120,0.14), transparent 60%); top: -80px; right: -100px; }
     .page-hero .container { position: relative; z-index: 1; }
@@ -628,33 +669,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   } catch(err) { alert('Chyba servera'); btn.disabled = false; btn.textContent = 'Prihlásiť'; }
 });
 
-// CURSOR
-(function() {
-  if (window.matchMedia('(pointer: coarse)').matches) return;
-  const dot = document.getElementById('cursor-dot');
-  const ring = document.getElementById('cursor-ring');
-  let mx = -100, my = -100, rx = -100, ry = -100;
-  dot.style.cssText += 'left:0;top:0;will-change:transform;';
-  ring.style.cssText += 'left:0;top:0;will-change:transform;';
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    dot.style.transform = `translate(${mx - 2.5}px,${my - 2.5}px)`;
-  }, { passive: true });
-  (function animRing() {
-    rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
-    ring.style.transform = `translate(${rx - 17}px,${ry - 17}px)`;
-    requestAnimationFrame(animRing);
-  })();
-  document.querySelectorAll('a, button, .val-card, .team-card, .why-us-item, .tl-item, .mission-stat').forEach(el => {
-    el.addEventListener('mouseenter', () => ring.classList.add('hover'));
-    el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
-  });
-})();
 
 // HERO PARTICLE NETWORK
 (function() {
   const canvas = document.getElementById('hero-canvas');
   if (!canvas) return;
+  if (window.innerWidth < 768) return;
   const ctx = canvas.getContext('2d');
   const GREEN = [11, 184, 120], PURPLE = [107, 95, 237];
   function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
@@ -698,9 +718,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
       ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${n.color[0]},${n.color[1]},${n.color[2]},${alpha})`; ctx.fill();
     });
-    requestAnimationFrame(tick);
+    if (!document.hidden) requestAnimationFrame(tick);
   }
   tick();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 })();
 </script>
 
