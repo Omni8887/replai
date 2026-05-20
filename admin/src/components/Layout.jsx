@@ -47,7 +47,7 @@ export default function Layout() {
     { to: '/settings', label: 'Nastavenia', icon: Settings },
     { to: '/integration', label: 'Integrácia', icon: Code },
     { to: '/services', label: 'Cenník', icon: Wrench, requiresBooking: true },
-    { to: '/pieniny', label: 'Pieniny', icon: Mountain, adminOnly: true },
+    { to: '/pieniny', label: 'Pieniny', icon: Mountain, requiresBooking: true },
   ]
 
   const handleLockedClick = (e) => {
