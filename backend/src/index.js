@@ -5708,6 +5708,377 @@ app.get('/public/booking/widget-settings', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+// ============================================
+// NHC PIENINY — RESERVATION SYSTEM
+// ============================================
+
+// GET /nhc/rooms — Zoznam izieb s cenami
+app.get('/nhc/rooms', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_rooms')
+      .select('*')
+      .eq('tenant_id', req.clientId)
+      .order('sort_order');
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC rooms error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /nhc/rooms/:id — Upraviť izbu (cena, počet, aktívna)
+app.put('/nhc/rooms/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price_per_night, total_count, is_active } = req.body;
+
+    const updates = { updated_at: new Date().toISOString() };
+    if (price_per_night !== undefined) updates.price_per_night = price_per_night;
+    if (total_count !== undefined) updates.total_count = total_count;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    const { data, error } = await supabase
+      .from('nhc_rooms')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', req.clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC room update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /nhc/bookings — Zoznam rezervácií
+app.get('/nhc/bookings', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_bookings')
+      .select('*')
+      .eq('tenant_id', req.clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC bookings error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /nhc/bookings — Nová rezervácia
+app.post('/nhc/bookings', authMiddleware, async (req, res) => {
+  try {
+    const { guest_name, guest_email, guest_phone, guests_count, room_id, check_in, check_out, status, notes, total_price } = req.body;
+
+    if (!guest_name || !guest_email || !room_id || !check_in || !check_out) {
+      return res.status(400).json({ error: 'Meno, email, izba a dátumy sú povinné' });
+    }
+
+    // Skontroluj dostupnosť
+    const { data: room } = await supabase
+      .from('nhc_rooms')
+      .select('total_count, name')
+      .eq('id', room_id)
+      .eq('tenant_id', req.clientId)
+      .single();
+
+    if (!room) {
+      return res.status(400).json({ error: 'Izba nenájdená' });
+    }
+
+    // Spočítaj koľko izieb tohto typu je obsadených v danom období
+    const { data: overlapping } = await supabase
+      .from('nhc_bookings')
+      .select('id')
+      .eq('room_id', room_id)
+      .in('status', ['nova', 'potvrdena'])
+      .lt('check_in', check_out)
+      .gt('check_out', check_in);
+
+    if ((overlapping || []).length >= room.total_count) {
+      return res.status(400).json({ error: `Izba "${room.name}" nie je v tomto termíne dostupná` });
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_bookings')
+      .insert({
+        tenant_id: req.clientId,
+        guest_name,
+        guest_email,
+        guest_phone: guest_phone || null,
+        guests_count: guests_count || 2,
+        room_id,
+        check_in,
+        check_out,
+        status: status || 'nova',
+        notes: notes || null,
+        total_price: total_price || null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC booking create error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /nhc/bookings/:id — Upraviť rezerváciu
+app.put('/nhc/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { updated_at: new Date().toISOString() };
+
+    const allowedFields = ['guest_name', 'guest_email', 'guest_phone', 'guests_count', 'room_id', 'check_in', 'check_out', 'status', 'notes', 'total_price'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_bookings')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', req.clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC booking update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /nhc/bookings/:id — Zmazať rezerváciu
+app.delete('/nhc/bookings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('nhc_bookings')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('NHC booking delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================
+// NHC PUBLIC API — pre booking.html landing page
+// ============================================
+
+// GET /public/nhc/rooms — Verejný zoznam izieb s cenami (bez auth)
+app.get('/public/nhc/rooms', async (req, res) => {
+  try {
+    const { tenant_id } = req.query;
+
+    if (!tenant_id) {
+      return res.status(400).json({ error: 'tenant_id required' });
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_rooms')
+      .select('id, name, description, category, type, max_guests, has_balcony, price_per_night, amenities, image_url')
+      .eq('tenant_id', tenant_id)
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC public rooms error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /public/nhc/availability — Dostupnosť izieb pre dátumy
+app.get('/public/nhc/availability', async (req, res) => {
+  try {
+    const { tenant_id, room_id, check_in, check_out } = req.query;
+
+    if (!tenant_id || !room_id || !check_in || !check_out) {
+      return res.status(400).json({ error: 'tenant_id, room_id, check_in, check_out required' });
+    }
+
+    const { data: room } = await supabase
+      .from('nhc_rooms')
+      .select('total_count, name')
+      .eq('id', room_id)
+      .eq('tenant_id', tenant_id)
+      .single();
+
+    if (!room) {
+      return res.status(400).json({ error: 'Room not found' });
+    }
+
+    const { data: overlapping } = await supabase
+      .from('nhc_bookings')
+      .select('id')
+      .eq('room_id', room_id)
+      .in('status', ['nova', 'potvrdena'])
+      .lt('check_in', check_out)
+      .gt('check_out', check_in);
+
+    const booked = (overlapping || []).length;
+    const available = room.total_count - booked;
+
+    res.json({ 
+      room_name: room.name,
+      total: room.total_count, 
+      booked, 
+      available,
+      is_available: available > 0 
+    });
+  } catch (error) {
+    console.error('NHC availability error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /public/nhc/booking — Verejná rezervácia z landing page
+app.post('/public/nhc/booking', async (req, res) => {
+  try {
+    const { tenant_id, guest_name, guest_email, guest_phone, guests_count, room_id, check_in, check_out, notes } = req.body;
+
+    if (!tenant_id || !guest_name || !guest_email || !room_id || !check_in || !check_out) {
+      return res.status(400).json({ error: 'Vyplňte všetky povinné polia' });
+    }
+
+    // Získaj izbu a cenu
+    const { data: room } = await supabase
+      .from('nhc_rooms')
+      .select('id, name, total_count, price_per_night')
+      .eq('id', room_id)
+      .eq('tenant_id', tenant_id)
+      .eq('is_active', true)
+      .single();
+
+    if (!room) {
+      return res.status(400).json({ error: 'Izba nie je dostupná' });
+    }
+
+    // Skontroluj dostupnosť
+    const { data: overlapping } = await supabase
+      .from('nhc_bookings')
+      .select('id')
+      .eq('room_id', room_id)
+      .in('status', ['nova', 'potvrdena'])
+      .lt('check_in', check_out)
+      .gt('check_out', check_in);
+
+    if ((overlapping || []).length >= room.total_count) {
+      return res.status(400).json({ error: 'Izba nie je v tomto termíne dostupná. Skúste iný termín alebo typ izby.' });
+    }
+
+    // Vypočítaj cenu
+    const nights = Math.ceil((new Date(check_out) - new Date(check_in)) / (1000 * 60 * 60 * 24));
+    const totalPrice = nights * room.price_per_night;
+
+    // Vytvor rezerváciu
+    const { data: booking, error } = await supabase
+      .from('nhc_bookings')
+      .insert({
+        tenant_id,
+        guest_name,
+        guest_email,
+        guest_phone: guest_phone || null,
+        guests_count: guests_count || 2,
+        room_id,
+        check_in,
+        check_out,
+        status: 'nova',
+        notes: notes || null,
+        total_price: totalPrice
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Pošli potvrdzujúci email
+    try {
+      const checkInDate = new Date(check_in).toLocaleDateString('sk-SK');
+      const checkOutDate = new Date(check_out).toLocaleDateString('sk-SK');
+
+      await resend.emails.send({
+        from: 'National Health Clinic <noreply@replai.sk>',
+        to: guest_email,
+        subject: `Rezervácia prijatá — National Health Clinic`,
+        html: `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FDFAF6;">
+            <div style="background: #0D1F30; padding: 30px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 300; color: #F5EFE4; font-family: Georgia, serif;">National Health Clinic</h1>
+              <p style="margin: 8px 0 0; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #C9A84C;">Sanatórium liečebného pôstu</p>
+            </div>
+            
+            <div style="padding: 40px 30px;">
+              <h2 style="margin: 0 0 8px; font-size: 20px; color: #0D1F30; font-family: Georgia, serif; font-weight: 400;">Rezervácia prijatá</h2>
+              <p style="color: #6A8FAD; font-size: 14px; margin: 0 0 30px;">Ďakujeme za vašu rezerváciu. Potvrdenie vám pošleme do 24 hodín.</p>
+              
+              <div style="background: #F5F0E8; border-radius: 8px; padding: 24px; margin: 0 0 24px; border-left: 3px solid #C9A84C;">
+                <table style="width: 100%; font-size: 14px; color: #0D1F30;">
+                  <tr><td style="padding: 6px 0; color: #6A8FAD; width: 120px;">Izba:</td><td style="padding: 6px 0; font-weight: 600;">${room.name}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Príchod:</td><td style="padding: 6px 0;">${checkInDate}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Odchod:</td><td style="padding: 6px 0;">${checkOutDate}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Noci:</td><td style="padding: 6px 0;">${nights}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Hostia:</td><td style="padding: 6px 0;">${guests_count || 2}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Cena:</td><td style="padding: 6px 0; font-weight: 600; font-size: 18px; color: #C9A84C;">${totalPrice}€</td></tr>
+                </table>
+              </div>
+              
+              ${notes ? `<div style="background: #F5F0E8; border-radius: 8px; padding: 16px; margin: 0 0 24px;"><p style="margin: 0; font-size: 13px; color: #2A4A6B;"><strong>Poznámka:</strong> ${notes}</p></div>` : ''}
+              
+              <p style="font-size: 13px; color: #6A8FAD; line-height: 1.7;">Ak máte otázky, kontaktujte nás na info@nationalhealthclinic.sk alebo telefonicky.</p>
+              
+              <p style="font-size: 14px; color: #0D1F30; margin-top: 30px;">S pozdravom,<br><strong style="color: #C9A84C;">National Health Clinic</strong><br><span style="font-size: 12px; color: #6A8FAD;">Pieniny, Slovensko</span></p>
+            </div>
+            
+            <div style="background: #0D1F30; padding: 20px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #5B80A3;">© 2025 National Health Clinic · Pieniny, Slovensko</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`📧 NHC booking email sent to ${guest_email}`);
+    } catch (emailErr) {
+      console.error('NHC email error:', emailErr);
+    }
+
+    res.json({ 
+      success: true, 
+      booking: {
+        id: booking.id,
+        room_name: room.name,
+        check_in,
+        check_out,
+        nights,
+        total_price: totalPrice,
+        status: 'nova'
+      }
+    });
+  } catch (error) {
+    console.error('NHC public booking error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
