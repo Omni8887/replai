@@ -6079,6 +6079,151 @@ app.post('/public/nhc/booking', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+// ============================================
+// NHC LEADS — Kontakty z webového popup formulára
+// ============================================
+
+// GET /nhc/leads — Zoznam leadov (admin)
+app.get('/nhc/leads', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_leads')
+      .select('*')
+      .eq('tenant_id', req.clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC leads error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /nhc/leads/:id — Aktualizovať status leadu
+app.put('/nhc/leads/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, note } = req.body;
+
+    const updates = { updated_at: new Date().toISOString() };
+    if (status !== undefined) updates.status = status;
+    if (note !== undefined) updates.note = note;
+
+    const { data, error } = await supabase
+      .from('nhc_leads')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', req.clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC lead update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /nhc/leads/:id — Zmazať lead
+app.delete('/nhc/leads/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('nhc_leads')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('NHC lead delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /public/nhc/lead — Verejný endpoint pre popup formulár (BEZ auth)
+app.post('/public/nhc/lead', async (req, res) => {
+  try {
+    const { tenant_id, name, email, phone, program, apartment, total_price, preferred_date_from, preferred_date_to, note } = req.body;
+
+    if (!tenant_id || !name || !email || !program) {
+      return res.status(400).json({ error: 'Meno, email a program sú povinné' });
+    }
+
+    // Ulož lead
+    const { data: lead, error } = await supabase
+      .from('nhc_leads')
+      .insert({
+        tenant_id,
+        name,
+        email,
+        phone: phone || null,
+        program,
+        apartment: apartment || null,
+        total_price: total_price || null,
+        preferred_date_from: preferred_date_from || null,
+        preferred_date_to: preferred_date_to || null,
+        note: note || null,
+        source: 'web-popup'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Pošli notifikačný email na NHC
+    try {
+      const fromDate = preferred_date_from ? new Date(preferred_date_from).toLocaleDateString('sk-SK') : '—';
+      const toDate = preferred_date_to ? new Date(preferred_date_to).toLocaleDateString('sk-SK') : '—';
+
+      await resend.emails.send({
+        from: 'National Health Clinic <noreply@replai.sk>',
+        to: 'nhc.pieniny@gmail.com',
+        subject: `🎯 Nový záujem o rezerváciu — ${program}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FDFAF6;">
+            <div style="background: #0D1F30; padding: 30px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 300; color: #F5EFE4; font-family: Georgia, serif;">National Health Clinic</h1>
+              <p style="margin: 8px 0 0; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #C9A84C;">Nový záujem o rezerváciu</p>
+            </div>
+            <div style="padding: 40px 30px;">
+              <div style="background: #F5F0E8; border-radius: 8px; padding: 24px; border-left: 3px solid #C9A84C;">
+                <table style="width: 100%; font-size: 14px; color: #0D1F30;">
+                  <tr><td style="padding: 6px 0; color: #6A8FAD; width: 140px;">Meno:</td><td style="padding: 6px 0; font-weight: 600;">${name}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Email:</td><td style="padding: 6px 0;"><a href="mailto:${email}" style="color: #0D1F30;">${email}</a></td></tr>
+                  ${phone ? `<tr><td style="padding: 6px 0; color: #6A8FAD;">Telefón:</td><td style="padding: 6px 0;"><a href="tel:${phone}" style="color: #0D1F30;">${phone}</a></td></tr>` : ''}
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Program:</td><td style="padding: 6px 0; font-weight: 600;">${program}</td></tr>
+                  ${apartment ? `<tr><td style="padding: 6px 0; color: #6A8FAD;">Apartmán:</td><td style="padding: 6px 0;">${apartment}</td></tr>` : ''}
+                  ${total_price ? `<tr><td style="padding: 6px 0; color: #6A8FAD;">Celková cena:</td><td style="padding: 6px 0; font-weight: 600; color: #C9A84C; font-size: 18px;">${total_price}€</td></tr>` : ''}
+                  <tr><td style="padding: 6px 0; color: #6A8FAD;">Termín:</td><td style="padding: 6px 0;">${fromDate} — ${toDate}</td></tr>
+                </table>
+                ${note ? `<p style="margin: 16px 0 0; padding-top: 16px; border-top: 1px solid #ddd; font-size: 13px; color: #2A4A6B;"><strong>Poznámka:</strong> ${note}</p>` : ''}
+              </div>
+              <p style="font-size: 13px; color: #6A8FAD; margin-top: 24px;">Kontaktujte klienta do 24 hodín.</p>
+            </div>
+            <div style="background: #0D1F30; padding: 16px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #5B80A3;">Replai · Rezervačný systém</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`📧 NHC lead notification sent for ${email}`);
+    } catch (emailErr) {
+      console.error('NHC lead email error:', emailErr);
+    }
+
+    res.json({ success: true, lead_id: lead.id });
+  } catch (error) {
+    console.error('NHC public lead error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================

@@ -4,7 +4,7 @@ import axios from 'axios'
 import { 
   CalendarDays, BedDouble, Users, Plus, X, Check, 
   XCircle, Eye, Edit3, Trash2, ChevronDown, Search,
-  Home, DoorOpen, ArrowUpDown, Euro
+  Home, DoorOpen, ArrowUpDown, Euro, UserPlus, Mail, Phone, MapPin
 } from 'lucide-react'
 
 // ============================================================
@@ -15,6 +15,13 @@ const STATUS_MAP = {
   potvrdena: { label: 'Potvrdená',  color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
   zrusena:   { label: 'Zrušená',    color: 'bg-red-100 text-red-700',     dot: 'bg-red-500' },
   dokoncena: { label: 'Dokončená',  color: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
+}
+
+const LEAD_STATUS_MAP = {
+  nova:        { label: 'Nový',        color: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500' },
+  kontaktovany:{ label: 'Kontaktovaný',color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+  potvrdeny:   { label: 'Potvrdený',   color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+  zamietnuty:  { label: 'Zamietnutý',  color: 'bg-red-100 text-red-700',     dot: 'bg-red-500' },
 }
 
 const ROOM_TYPE_ICONS = {
@@ -31,14 +38,18 @@ export default function Pieniny() {
   const [activeTab, setActiveTab] = useState('bookings')
   const [bookings, setBookings] = useState([])
   const [rooms, setRooms] = useState([])
+  const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [leadSearchQuery, setLeadSearchQuery] = useState('')
+  const [leadStatusFilter, setLeadStatusFilter] = useState('all')
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [editingBooking, setEditingBooking] = useState(null)
   const [editingRoom, setEditingRoom] = useState(null)
   const [stats, setStats] = useState({ total: 0, nova: 0, potvrdena: 0, thisMonth: 0 })
+  const [leadStats, setLeadStats] = useState({ total: 0, nova: 0, kontaktovany: 0, thisMonth: 0 })
 
   const token = localStorage.getItem('token')
   const headers = { Authorization: `Bearer ${token}` }
@@ -51,13 +62,16 @@ export default function Pieniny() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const [bookingsRes, roomsRes] = await Promise.all([
+      const [bookingsRes, roomsRes, leadsRes] = await Promise.all([
         axios.get(`${API_URL}/nhc/bookings`, { headers }),
         axios.get(`${API_URL}/nhc/rooms`, { headers }),
+        axios.get(`${API_URL}/nhc/leads`, { headers }),
       ])
       setBookings(bookingsRes.data || [])
       setRooms(roomsRes.data || [])
+      setLeads(leadsRes.data || [])
       calculateStats(bookingsRes.data || [])
+      calculateLeadStats(leadsRes.data || [])
     } catch (err) {
       console.error('Fetch error:', err)
     } finally {
@@ -73,6 +87,17 @@ export default function Pieniny() {
       nova: data.filter(b => b.status === 'nova').length,
       potvrdena: data.filter(b => b.status === 'potvrdena').length,
       thisMonth: data.filter(b => new Date(b.created_at) >= monthStart).length,
+    })
+  }
+
+  const calculateLeadStats = (data) => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    setLeadStats({
+      total: data.length,
+      nova: data.filter(l => l.status === 'nova').length,
+      kontaktovany: data.filter(l => l.status === 'kontaktovany').length,
+      thisMonth: data.filter(l => new Date(l.created_at) >= monthStart).length,
     })
   }
 
@@ -129,6 +154,26 @@ export default function Pieniny() {
     }
   }
 
+  // ── Lead actions ─────────────────────────────────────────
+  const updateLeadStatus = async (id, status) => {
+    try {
+      await axios.put(`${API_URL}/nhc/leads/${id}`, { status }, { headers })
+      fetchAll()
+    } catch (err) {
+      console.error('Lead status update error:', err)
+    }
+  }
+
+  const deleteLead = async (id) => {
+    if (!confirm('Naozaj chcete zmazať tento kontakt?')) return
+    try {
+      await axios.delete(`${API_URL}/nhc/leads/${id}`, { headers })
+      fetchAll()
+    } catch (err) {
+      console.error('Delete lead error:', err)
+    }
+  }
+
   // ── Filtered bookings ────────────────────────────────────
   const filteredBookings = bookings.filter(b => {
     const matchesSearch = searchQuery === '' || 
@@ -138,8 +183,18 @@ export default function Pieniny() {
     return matchesSearch && matchesStatus
   })
 
+  // ── Filtered leads ───────────────────────────────────────
+  const filteredLeads = leads.filter(l => {
+    const matchesSearch = leadSearchQuery === '' ||
+      l.name?.toLowerCase().includes(leadSearchQuery.toLowerCase()) ||
+      l.email?.toLowerCase().includes(leadSearchQuery.toLowerCase()) ||
+      l.phone?.includes(leadSearchQuery)
+    const matchesStatus = leadStatusFilter === 'all' || l.status === leadStatusFilter
+    return matchesSearch && matchesStatus
+  })
+
   // ── Format helpers ───────────────────────────────────────
-  const formatDate = (d) => new Date(d).toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
   const formatPrice = (p) => p ? `${Number(p).toFixed(0)}€` : '—'
   const getRoomName = (roomId) => rooms.find(r => r.id === roomId)?.name || '—'
 
@@ -169,7 +224,7 @@ export default function Pieniny() {
         <StatCard icon={CalendarDays} label="Celkom rezervácií" value={stats.total} color="violet" />
         <StatCard icon={Plus} label="Nové (čakajú)" value={stats.nova} color="blue" />
         <StatCard icon={Check} label="Potvrdené" value={stats.potvrdena} color="green" />
-        <StatCard icon={CalendarDays} label="Tento mesiac" value={stats.thisMonth} color="amber" />
+        <StatCard icon={UserPlus} label="Nové leady" value={leadStats.nova} color="amber" />
       </div>
 
       {/* Tabs */}
@@ -196,6 +251,20 @@ export default function Pieniny() {
           <BedDouble size={16} className="inline mr-2" />
           Izby & Ceny
         </button>
+        <button
+          onClick={() => setActiveTab('leads')}
+          className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeTab === 'leads' 
+              ? 'bg-white text-slate-900 shadow-sm' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <UserPlus size={16} className="inline mr-2" />
+          Leady
+          {leadStats.nova > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded-full">{leadStats.nova}</span>
+          )}
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -215,10 +284,22 @@ export default function Pieniny() {
           formatPrice={formatPrice}
           getRoomName={getRoomName}
         />
-      ) : (
+      ) : activeTab === 'rooms' ? (
         <RoomsTab
           rooms={rooms}
           onEdit={(r) => { setEditingRoom(r); setShowRoomModal(true) }}
+          formatPrice={formatPrice}
+        />
+      ) : (
+        <LeadsTab
+          leads={filteredLeads}
+          searchQuery={leadSearchQuery}
+          setSearchQuery={setLeadSearchQuery}
+          statusFilter={leadStatusFilter}
+          setStatusFilter={setLeadStatusFilter}
+          onStatusChange={updateLeadStatus}
+          onDelete={deleteLead}
+          formatDate={formatDate}
           formatPrice={formatPrice}
         />
       )}
@@ -376,6 +457,143 @@ function BookingsTab({ bookings, rooms, searchQuery, setSearchQuery, statusFilte
                         </button>
                         <button
                           onClick={() => onDelete(b.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                          title="Zmazať"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// LEADS TAB
+// ============================================================
+function LeadsTab({ leads, searchQuery, setSearchQuery, statusFilter, setStatusFilter, onStatusChange, onDelete, formatDate, formatPrice }) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200">
+      {/* Toolbar */}
+      <div className="p-5 border-b border-slate-100 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Hľadať meno, email, telefón..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-violet-500 outline-none"
+          >
+            <option value="all">Všetky statusy</option>
+            <option value="nova">Nové</option>
+            <option value="kontaktovany">Kontaktované</option>
+            <option value="potvrdeny">Potvrdené</option>
+            <option value="zamietnuty">Zamietnuté</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      {leads.length === 0 ? (
+        <div className="p-12 text-center text-slate-400">
+          <UserPlus size={40} className="mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Žiadne leady</p>
+          <p className="text-sm mt-1">Kontakty z webového formulára sa zobrazia tu</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kontakt</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Program</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Apartmán</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cena</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Termín</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Dátum</th>
+                <th className="text-right px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Akcie</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map(l => {
+                const st = LEAD_STATUS_MAP[l.status] || LEAD_STATUS_MAP.nova
+                return (
+                  <tr key={l.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="font-medium text-slate-900 text-sm">{l.name}</div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <Mail size={12} /> {l.email}
+                        </span>
+                        {l.phone && (
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <Phone size={12} /> {l.phone}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-600">{l.program}</td>
+                    <td className="px-5 py-4 text-sm text-slate-600">{l.apartment || '—'}</td>
+                    <td className="px-5 py-4 text-sm font-medium text-slate-900">{formatPrice(l.total_price)}</td>
+                    <td className="px-5 py-4 text-sm text-slate-600">
+                      {l.preferred_date_from ? (
+                        <span>{formatDate(l.preferred_date_from)} — {formatDate(l.preferred_date_to)}</span>
+                      ) : '—'}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${st.color}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`}></span>
+                        {st.label}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-400">{formatDate(l.created_at)}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-1">
+                        {l.status === 'nova' && (
+                          <button
+                            onClick={() => onStatusChange(l.id, 'kontaktovany')}
+                            className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                            title="Označiť ako kontaktovaný"
+                          >
+                            <Phone size={16} />
+                          </button>
+                        )}
+                        {(l.status === 'nova' || l.status === 'kontaktovany') && (
+                          <button
+                            onClick={() => onStatusChange(l.id, 'potvrdeny')}
+                            className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
+                            title="Potvrdiť"
+                          >
+                            <Check size={16} />
+                          </button>
+                        )}
+                        {l.status !== 'zamietnuty' && (
+                          <button
+                            onClick={() => onStatusChange(l.id, 'zamietnuty')}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                            title="Zamietnuť"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onDelete(l.id)}
                           className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                           title="Zmazať"
                         >

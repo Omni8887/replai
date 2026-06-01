@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <!-- Start cookieyes banner --> <script id="cookieyes" type="text/javascript" defer src="https://cdn-cookieyes.com/client_data/e1d939b7a9d6be8a6300eb55582f28eb/script.js"></script> <!-- End cookieyes banner -->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D1P1Y7EL08"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D1P1Y7EL08');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+  <link rel="apple-touch-icon" href="/images/favicon.svg">
+
+  <title>Blog – Replai | AI Chatbot, rezervácie a zákaznícka podpora pre slovenské firmy</title>
+  <meta name="description" content="Praktické články o AI chatbotoch, automatickej zákazníckej podpore a rezervačných systémoch pre slovenské firmy. Zistite, ako AI mení biznis na Slovensku.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://replai.sk/blog.html">
+
+  <meta property="og:title" content="Blog – Replai | AI pre slovenské firmy">
+  <meta property="og:description" content="Praktické články o AI chatbotoch, automatickej zákazníckej podpore a rezervačných systémoch pre slovenské firmy.">
+  <meta property="og:image" content="https://replai.sk/images/og-image.png">
+  <meta property="og:url" content="https://replai.sk/blog.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sk_SK">
+  <meta property="og:site_name" content="Replai">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Blog – Replai | AI pre slovenské firmy">
+  <meta name="twitter:description" content="Praktické články o AI chatbotoch, rezerváciách a zákazníckej podpore.">
+  <meta name="twitter:image" content="https://replai.sk/images/og-image.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Replai Blog",
+    "url": "https://replai.sk/blog.html",
+    "description": "Praktické články o AI chatbotoch a automatizácii pre slovenské firmy",
+    "inLanguage": "sk",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Replai",
+      "url": "https://replai.sk",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://replai.sk/images/og-image.png"
+      }
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400&display=swap"></noscript>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    :root {
+      --font: 'DM Sans', -apple-system, sans-serif;
+      --display: 'Onest', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --bg: #F3F4FA;
+      --bg-2: #0F1035;
+      --bg-surface: rgba(255,255,255,0.72);
+      --bg-light: #EAEDF6;
+      --bg-white: #FFFFFF;
+      --border: rgba(0,0,0,0.09);
+      --border-h: rgba(0,0,0,0.18);
+      --a: #0BB878;
+      --a-dim: rgba(11,184,120,0.12);
+      --a-glow: rgba(11,184,120,0.32);
+      --a-2: #6B5FED;
+      --a-2-dim: rgba(107,95,237,0.12);
+      --t: #0C0C22;
+      --t-2: #5A5A80;
+      --t-3: #9898B8;
+      --r: 14px;
+      --r-sm: 9px;
+      --r-lg: 22px;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--t);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--a-dim); color: var(--a); }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+    .r { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+    .r.v { opacity: 1; transform: none; }
+    .rd1{transition-delay:.08s} .rd2{transition-delay:.16s} .rd3{transition-delay:.24s}
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px; display: flex; align-items: center;
+      padding: 0 28px; transition: all 0.4s ease;
+      background: rgba(243,244,250,0.90);
+      backdrop-filter: blur(20px) saturate(1.8);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--t);
+      font-family: var(--display); font-weight: 800; font-size: 18px;
+      letter-spacing: -0.6px;
+    }
+    .logo-icon { display: block; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: var(--t-2);
+      text-decoration: none; transition: color 0.2s; position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+      height: 1px; background: var(--a);
+      transform: scaleX(0); transition: transform 0.25s cubic-bezier(0.16,1,0.3,1);
+    }
+    .nav-links a:hover { color: var(--t); }
+    .nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+    .nav-links a.active { color: var(--t); }
+    .btn-nav {
+      font-family: var(--font); font-size: 13.5px; font-weight: 600;
+      color: #FFFFFF; background: var(--a); border: none;
+      border-radius: var(--r-sm); padding: 8px 18px; cursor: pointer; transition: all 0.25s;
+    }
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--a-glow); }
+    .mobile-btn { display: none; background: none; border: none; cursor: pointer; padding: 6px; }
+    .mobile-btn span { display: block; width: 22px; height: 1.5px; background: var(--t); margin: 5px 0; transition: 0.3s; border-radius: 2px; }
+    .mobile-btn.on span:nth-child(1) { transform: rotate(45deg) translate(4.5px,4.5px); }
+    .mobile-btn.on span:nth-child(2) { opacity: 0; }
+    .mobile-btn.on span:nth-child(3) { transform: rotate(-45deg) translate(4.5px,-4.5px); }
+
+    /* HERO */
+    .blog-hero {
+      background: var(--bg-2);
+      padding: 120px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .blog-hero::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(11,184,120,0.18) 0%, transparent 60%);
+      top: -200px; right: -100px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .blog-hero::after {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(107,95,237,0.16) 0%, transparent 60%);
+      bottom: -150px; left: -80px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .blog-hero .container { position: relative; z-index: 1; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 5px 15px 5px 9px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(11,184,120,0.10);
+      font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.7);
+      margin-bottom: 20px;
+    }
+    .hero-tag-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--a); box-shadow: 0 0 10px var(--a);
+      animation: tagPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes tagPulse { 0%,100%{box-shadow:0 0 6px var(--a)} 50%{box-shadow:0 0 20px var(--a)} }
+    .blog-hero h1 {
+      font-family: var(--display);
+      font-size: clamp(36px, 5vw, 58px);
+      font-weight: 900; line-height: 1.06;
+      letter-spacing: -2.5px;
+      color: rgba(255,255,255,0.95);
+      margin-bottom: 18px;
+    }
+    .blog-hero h1 span {
+      background: linear-gradient(125deg, var(--a) 0%, var(--a-2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .blog-hero p {
+      font-size: 17px; color: rgba(255,255,255,0.55);
+      max-width: 520px; line-height: 1.7;
+    }
+
+    /* FILTER CHIPS */
+    .filter-bar {
+      padding: 36px 0 0;
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .chip {
+      font-size: 13px; font-weight: 500;
+      padding: 7px 16px; border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg-white); color: var(--t-2);
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .chip:hover, .chip.active {
+      background: var(--a); color: #fff; border-color: var(--a);
+    }
+
+    /* GRID */
+    .blog-section { padding: 64px 0 100px; }
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .post-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex; flex-direction: column;
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s, border-color 0.25s;
+    }
+    .post-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 56px rgba(0,0,0,0.10);
+      border-color: var(--border-h);
+    }
+    .post-thumb {
+      height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .post-thumb-1 { background: linear-gradient(135deg, #0d1a14 0%, #0a1628 100%); }
+    .post-thumb-2 { background: linear-gradient(135deg, #1a0d28 0%, #0d1428 100%); }
+    .post-thumb-3 { background: linear-gradient(135deg, #0a1628 0%, #0f1035 100%); }
+    .post-thumb-icon {
+      width: 72px; height: 72px; border-radius: 20px;
+      display: grid; place-items: center;
+    }
+    .post-thumb-icon svg { width: 34px; height: 34px; }
+    .post-thumb-orb {
+      position: absolute; border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .post-body { padding: 28px 26px 26px; flex: 1; display: flex; flex-direction: column; }
+    .post-meta {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px; color: var(--t-3); margin-bottom: 14px;
+    }
+    .post-cat {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase; padding: 3px 10px;
+      border-radius: 100px;
+    }
+    .cat-green { background: var(--a-dim); color: var(--a); }
+    .cat-purple { background: var(--a-2-dim); color: var(--a-2); }
+    .post-body h2 {
+      font-family: var(--display);
+      font-size: 19px; font-weight: 800;
+      letter-spacing: -0.5px; line-height: 1.3;
+      color: var(--t); margin-bottom: 10px;
+    }
+    .post-body p {
+      font-size: 14.5px; color: var(--t-2); line-height: 1.65;
+      flex: 1;
+    }
+    .post-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 20px; padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .post-author {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 13px; font-weight: 500; color: var(--t-2);
+    }
+    .author-av {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--a), var(--a-2));
+      display: grid; place-items: center;
+      font-family: var(--display); font-size: 11px; font-weight: 800; color: #fff;
+    }
+    .read-more {
+      font-size: 13px; font-weight: 600; color: var(--a);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .read-more svg { transition: transform 0.2s; }
+    .post-card:hover .read-more svg { transform: translateX(4px); }
+
+    /* CTA BANNER */
+    .blog-cta {
+      background: var(--bg-2);
+      border-radius: var(--r-lg);
+      padding: 56px 48px;
+      text-align: center;
+      position: relative; overflow: hidden;
+      margin: 0 0 100px;
+    }
+    .blog-cta::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(11,184,120,0.15) 0%, transparent 60%);
+      top: -200px; left: 50%; transform: translateX(-50%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .blog-cta h2 {
+      font-family: var(--display); font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 900; letter-spacing: -1.5px;
+      color: #fff; margin-bottom: 14px; position: relative;
+    }
+    .blog-cta p { font-size: 16px; color: rgba(255,255,255,0.55); margin-bottom: 32px; position: relative; }
+    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+    .btn {
+      font-family: var(--font); font-weight: 600; font-size: 14px;
+      padding: 13px 26px; border-radius: var(--r-sm); border: none;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 7px;
+      transition: transform 0.25s, box-shadow 0.25s, background 0.2s;
+    }
+    .btn-primary { background: var(--a); color: #FFFFFF; }
+    .btn-primary:hover { box-shadow: 0 8px 32px var(--a-glow); transform: translateY(-2px); }
+    .btn-ghost-dark {
+      background: transparent; color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .btn-ghost-dark:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.07); }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-white);
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+    }
+    footer .container { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13.5px; color: var(--t-2); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--t); }
+    .fcopy { font-size: 13px; color: var(--t-3); }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      .blog-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .blog-grid { grid-template-columns: 1fr; }
+      .blog-cta { padding: 40px 24px; }
+      .nav-links { display: none; flex-direction: column; position: fixed; top: 64px; left: 0; right: 0; bottom: 0; background: var(--bg); padding: 32px 28px; gap: 24px; overflow-y: auto; }
+      .nav-links.active { display: flex; }
+      .mobile-btn { display: block; }
+      footer .container { flex-direction: column; gap: 20px; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="container">
+    <a href="index.html" class="logo">
+      <svg class="logo-icon" width="30" height="30" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgN" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgN)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#why">Prečo AI agent</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="o-nas.html">O nás</a>
+      <a href="cennik.html">Cenník</a>
+      <a href="blog.html" class="active">Blog</a>
+      <a href="kontakt.html">Kontakt</a>
+      <button class="btn-nav" onclick="openLogin()">Prihlásiť sa</button>
+    </div>
+    <button class="mobile-btn" id="mobileBtn"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<section class="blog-hero">
+  <div class="container">
+    <div class="hero-tag r">
+      <div class="hero-tag-dot"></div>
+      Poznatky a návody
+    </div>
+    <h1 class="r rd1">AI pre váš biznis.<br><span>Prakticky a po slovensky.</span></h1>
+    <p class="r rd2">Čítajte o rezervačných systémoch, zákazníckej podpore a chatbotoch, ktoré skutočne fungujú v slovenskom prostredí.</p>
+    <div class="filter-bar r rd3">
+      <a class="chip active" href="blog.html">Všetko</a>
+      <a class="chip" href="blog.html">Rezervácie</a>
+      <a class="chip" href="blog.html">Zákaznícka podpora</a>
+      <a class="chip" href="blog.html">Chatboty</a>
+      <a class="chip" href="blog.html">AI pre firmy</a>
+    </div>
+  </div>
+</section>
+
+<section class="blog-section">
+  <div class="container">
+    <div class="blog-grid">
+
+      <!-- ARTICLE 1 -->
+      <a href="blog/rezervacny-system-replai.html" class="post-card r">
+        <div class="post-thumb post-thumb-1">
+          <div class="post-thumb-orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(11,184,120,0.25),transparent 60%);top:-80px;right:-60px;"></div>
+          <div class="post-thumb-icon" style="background:rgba(11,184,120,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0BB878" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+            </svg>
+          </div>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-cat cat-green">Rezervácie</span>
+            <span>22. mája 2026</span>
+            <span>·</span>
+            <span>7 min čítania</span>
+          </div>
+          <h2>Rezervačný systém Replai: Ako AI preberá správu termínov za vás</h2>
+          <p>Ako inteligentný AI agent automaticky spravuje rezervácie, kontroluje dostupnosť a posiela potvrdenia — bez toho, aby ste zdvíhali telefón.</p>
+          <div class="post-footer">
+            <div class="post-author">
+              <div class="author-av">JU</div>
+              Ján Urbánek
+            </div>
+            <span class="read-more">Čítať
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ARTICLE 2 -->
+      <a href="blog/zakaznicka-podpora-replai.html" class="post-card r rd1">
+        <div class="post-thumb post-thumb-2">
+          <div class="post-thumb-orb" style="width:280px;height:280px;background:radial-gradient(circle,rgba(107,95,237,0.28),transparent 60%);top:-60px;left:-40px;"></div>
+          <div class="post-thumb-icon" style="background:rgba(107,95,237,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6B5FED" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <line x1="9" y1="10" x2="15" y2="10"/>
+              <line x1="9" y1="14" x2="13" y2="14"/>
+            </svg>
+          </div>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-cat cat-purple">Zákaznícka podpora</span>
+            <span>20. mája 2026</span>
+            <span>·</span>
+            <span>8 min čítania</span>
+          </div>
+          <h2>Zákaznícka podpora Replai: 24/7 odpovede bez ďalšieho zamestnanca</h2>
+          <p>Ako AI agent Replai vybavuje zákaznícke otázky, sťažnosti a požiadavky nepretržite — a naučí sa to, čo vaša firma vie najlepšie.</p>
+          <div class="post-footer">
+            <div class="post-author">
+              <div class="author-av">JU</div>
+              Ján Urbánek
+            </div>
+            <span class="read-more">Čítať
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </a>
+
+      <!-- ARTICLE 3 -->
+      <a href="blog/slovensky-chatbot-pre-firmy.html" class="post-card r rd2">
+        <div class="post-thumb post-thumb-3">
+          <div class="post-thumb-orb" style="width:320px;height:320px;background:radial-gradient(circle,rgba(11,184,120,0.20),transparent 60%);bottom:-100px;right:-80px;"></div>
+          <div class="post-thumb-icon" style="background:rgba(255,255,255,0.08);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="post-cat cat-green">AI pre firmy</span>
+            <span>18. mája 2026</span>
+            <span>·</span>
+            <span>9 min čítania</span>
+          </div>
+          <h2>Slovenský chatbot pre firmy: Prečo na jazyku záleží viac, ako si myslíte</h2>
+          <p>Prečo slovensky hovoriaci AI agent konvertuje lepšie ako anglický chatbot a čo hľadať pri výbere riešenia pre firmy na Slovensku.</p>
+          <div class="post-footer">
+            <div class="post-author">
+              <div class="author-av">JU</div>
+              Ján Urbánek
+            </div>
+            <span class="read-more">Čítať
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="blog-cta r">
+    <h2>Chcete vyskúšať AI agenta pre váš biznis?</h2>
+    <p>Nastavíme vám agenta na mieru — bez záväzkov, konzultácia zdarma.</p>
+    <div class="cta-btns">
+      <a href="https://replai-chi.vercel.app/register" class="btn btn-primary">Vyskúšať zadarmo →</a>
+      <a href="../kontakt.html" class="btn btn-ghost-dark">Dohodnúť konzultáciu</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <a href="index.html" class="logo" style="font-size:15px">
+      <svg class="logo-icon" width="24" height="24" viewBox="0 0 34 34" fill="none">
+        <defs>
+          <linearGradient id="lgF" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#0BB878"/>
+            <stop offset="1" stop-color="#6B5FED"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="32" height="32" rx="10" fill="url(#lgF)"/>
+        <path d="M10 10h8.5c1.9 0 3.5 1.6 3.5 3.5S20.4 17 18.5 17H14" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M14 17l5 7" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="9" r="3.5" fill="#0BB878"/>
+        <circle cx="26" cy="9" r="2" fill="white"/>
+      </svg>
+      replai
+    </a>
+    <div class="footer-links">
+      <a href="index.html#why">Prečo AI agent</a>
+      <a href="index.html#solutions">Riešenia</a>
+      <a href="blog.html">Blog</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="privacy-policy.html">Ochrana údajov</a>
+    </div>
+    <p class="fcopy">© 2026 Replai</p>
+  </div>
+</footer>
+
+<!-- LOGIN PANEL -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;" onclick="closeLogin()"></div>
+<div id="loginPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:var(--r-lg);padding:40px;z-index:301;width:340px;max-width:90vw;">
+  <h2 style="font-family:var(--display);font-size:22px;font-weight:800;margin-bottom:24px;">Prihlásiť sa</h2>
+  <a href="https://replai-chi.vercel.app/register" style="display:block;text-align:center;background:var(--a);color:#fff;padding:12px;border-radius:var(--r-sm);text-decoration:none;font-weight:600;">Pokračovať →</a>
+</div>
+
+<script>
+const ro = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('v'); ro.unobserve(e.target); } });
+}, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
+document.querySelectorAll('.r').forEach(el => ro.observe(el));
+
+const mb = document.getElementById('mobileBtn'), nl = document.getElementById('navLinks');
+mb.addEventListener('click', () => { mb.classList.toggle('on'); nl.classList.toggle('active'); });
+
+function openLogin() { document.getElementById('loginOverlay').style.display='block'; document.getElementById('loginPanel').style.display='block'; }
+function closeLogin() { document.getElementById('loginOverlay').style.display='none'; document.getElementById('loginPanel').style.display='none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLogin(); });
+</script>
+</body>
+</html>
