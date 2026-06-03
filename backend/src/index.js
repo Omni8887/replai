@@ -6483,6 +6483,153 @@ app.get('/public/nhc/blog/:slug', async (req, res) => {
   }
 });
 
+
+// ============================================
+// NHC STAFF — Personál spravovaný cez dashboard
+// ============================================
+
+// GET /nhc/staff — Zoznam personálu (admin)
+app.get('/nhc/staff', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_staff')
+      .select('*')
+      .eq('tenant_id', req.clientId)
+      .order('department')
+      .order('sort_order');
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC staff list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /nhc/staff — Nový zamestnanec
+app.post('/nhc/staff', authMiddleware, async (req, res) => {
+  try {
+    const { name, title, department, badge, description, photo_url, tags, sort_order } = req.body;
+
+    if (!name || !title) {
+      return res.status(400).json({ error: 'Meno a pozícia sú povinné' });
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_staff')
+      .insert({
+        tenant_id: req.clientId,
+        name,
+        title,
+        department: department || 'Lekársky tím',
+        badge: badge || null,
+        description: description || null,
+        photo_url: photo_url || null,
+        tags: tags || [],
+        sort_order: sort_order || 0
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC staff create error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /nhc/staff/:id — Upraviť zamestnanca
+app.put('/nhc/staff/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { updated_at: new Date().toISOString() };
+
+    const allowedFields = ['name', 'title', 'department', 'badge', 'description', 'photo_url', 'tags', 'sort_order', 'is_active'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_staff')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', req.clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC staff update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /nhc/staff/:id — Zmazať zamestnanca
+app.delete('/nhc/staff/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('nhc_staff')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('NHC staff delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /nhc/staff/upload-photo — Upload fotky zamestnanca
+app.post('/nhc/staff/upload-photo', authMiddleware, express.raw({ type: 'image/*', limit: '10mb' }), async (req, res) => {
+  try {
+    const contentType = req.headers['content-type'];
+    const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const fileName = `staff/${req.clientId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from('nhc-blog-images')
+      .upload(fileName, req.body, { contentType, upsert: false });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('nhc-blog-images')
+      .getPublicUrl(fileName);
+
+    res.json({ url: urlData.publicUrl });
+  } catch (error) {
+    console.error('Staff photo upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// ── PUBLIC STAFF ENDPOINT (bez auth, pre web) ──
+
+// GET /public/nhc/staff — Verejný zoznam personálu
+app.get('/public/nhc/staff', async (req, res) => {
+  try {
+    const { tenant_id } = req.query;
+    if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
+
+    const { data, error } = await supabase
+      .from('nhc_staff')
+      .select('id, name, title, department, badge, description, photo_url, tags')
+      .eq('tenant_id', tenant_id)
+      .eq('is_active', true)
+      .order('department')
+      .order('sort_order');
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('Public staff list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
