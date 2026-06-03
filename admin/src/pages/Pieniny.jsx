@@ -7,7 +7,7 @@ import {
   CalendarDays, BedDouble, Users, Plus, X, Check, 
   XCircle, Eye, Edit3, Trash2, ChevronDown, Search,
   Home, DoorOpen, ArrowUpDown, Euro, UserPlus, Mail, Phone, MapPin,
-  FileText, Image, Globe, EyeOff, Star, StarOff, Upload
+  FileText, Image, Globe, EyeOff, Star, StarOff, Upload, UserCheck
 } from 'lucide-react'
 
 // ============================================================
@@ -28,6 +28,7 @@ const LEAD_STATUS_MAP = {
 }
 
 const BLOG_CATEGORIES = ['Pôst', 'Detoxikácia', 'Chudnutie', 'Zdravý životný štýl', 'Výživa', 'Klinika']
+const STAFF_DEPARTMENTS = ['Lekársky tím', 'Terapeutický tím', 'Ošetrovateľský personál']
 
 const ROOM_TYPE_ICONS = {
   izba: BedDouble,
@@ -65,6 +66,9 @@ export default function Pieniny() {
   const [leadStatusFilter, setLeadStatusFilter] = useState('all')
   const [blogSearchQuery, setBlogSearchQuery] = useState('')
   const [blogCategoryFilter, setBlogCategoryFilter] = useState('all')
+  const [staff, setStaff] = useState([])
+  const [showStaffModal, setShowStaffModal] = useState(false)
+  const [editingStaff, setEditingStaff] = useState(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [showBlogModal, setShowBlogModal] = useState(false)
@@ -82,16 +86,18 @@ export default function Pieniny() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const [bookingsRes, roomsRes, leadsRes, blogRes] = await Promise.all([
+      const [bookingsRes, roomsRes, leadsRes, blogRes, staffRes] = await Promise.all([
         axios.get(`${API_URL}/nhc/bookings`, { headers }),
         axios.get(`${API_URL}/nhc/rooms`, { headers }),
         axios.get(`${API_URL}/nhc/leads`, { headers }),
         axios.get(`${API_URL}/nhc/blog`, { headers }),
+        axios.get(`${API_URL}/nhc/staff`, { headers }),
       ])
       setBookings(bookingsRes.data || [])
       setRooms(roomsRes.data || [])
       setLeads(leadsRes.data || [])
       setBlogPosts(blogRes.data || [])
+      setStaff(staffRes.data || [])
       calculateStats(bookingsRes.data || [])
       calculateLeadStats(leadsRes.data || [])
     } catch (err) {
@@ -235,6 +241,30 @@ export default function Pieniny() {
     } catch (err) { console.error('Fetch post error:', err) }
   }
 
+  // ── Staff CRUD ───────────────────────────────────────────
+  const saveStaff = async (formData) => {
+    try {
+      if (editingStaff) {
+        await axios.put(`${API_URL}/nhc/staff/${editingStaff.id}`, formData, { headers })
+      } else {
+        await axios.post(`${API_URL}/nhc/staff`, formData, { headers })
+      }
+      setShowStaffModal(false)
+      setEditingStaff(null)
+      fetchAll()
+    } catch (err) {
+      console.error('Save staff error:', err)
+      alert('Chyba pri ukladaní zamestnanca')
+    }
+  }
+
+  const deleteStaffMember = async (id) => {
+    if (!confirm('Naozaj chcete zmazať tohto zamestnanca?')) return
+    try {
+      await axios.delete(`${API_URL}/nhc/staff/${id}`, { headers })
+      fetchAll()
+    } catch (err) { console.error('Delete staff error:', err) }
+  }
   // ── Filters ──────────────────────────────────────────────
   const filteredBookings = bookings.filter(b => {
     const matchesSearch = searchQuery === '' || b.guest_name?.toLowerCase().includes(searchQuery.toLowerCase()) || b.guest_email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -292,6 +322,7 @@ export default function Pieniny() {
           { key: 'rooms', icon: BedDouble, label: 'Izby & Ceny' },
           { key: 'leads', icon: UserPlus, label: 'Leady', badge: leadStats.nova },
           { key: 'blog', icon: FileText, label: 'Blog' },
+          { key: 'staff', icon: UserCheck, label: 'Personál' },
         ].map(tab => (
           <button
             key={tab.key}
@@ -334,11 +365,18 @@ export default function Pieniny() {
           onTogglePublish={togglePublish} onToggleFeatured={toggleFeatured}
           formatDate={formatDate} />
       )}
+      {activeTab === 'staff' && (
+        <StaffTab staff={staff}
+          onAdd={() => { setEditingStaff(null); setShowStaffModal(true) }}
+          onEdit={(s) => { setEditingStaff(s); setShowStaffModal(true) }}
+          onDelete={deleteStaffMember} />
+      )}
 
       {/* Modals */}
       {showBookingModal && <BookingModal booking={editingBooking} rooms={rooms} onSave={saveBooking} onClose={() => { setShowBookingModal(false); setEditingBooking(null) }} />}
       {showRoomModal && <RoomModal room={editingRoom} onSave={saveRoom} onClose={() => { setShowRoomModal(false); setEditingRoom(null) }} />}
       {showBlogModal && <BlogModal post={editingPost} API_URL={API_URL} headers={headers} onSave={saveBlogPost} onClose={() => { setShowBlogModal(false); setEditingPost(null) }} />}
+      {showStaffModal && <StaffModal staff={editingStaff} API_URL={API_URL} headers={headers} onSave={saveStaff} onClose={() => { setShowStaffModal(false); setEditingStaff(null) }} />}
     </div>
   )
 }
@@ -928,6 +966,236 @@ function FormField({ label, required, children }) {
         .ql-container { min-height: 200px; font-family: system-ui, sans-serif; font-size: 0.9rem; }
         .ql-editor { min-height: 200px; }
       `}</style>
+    </div>
+  )
+}
+// ============================================================
+// STAFF TAB
+// ============================================================
+function StaffTab({ staff, onAdd, onEdit, onDelete }) {
+  const grouped = STAFF_DEPARTMENTS.map(dep => ({
+    department: dep,
+    members: staff.filter(s => s.department === dep)
+  }))
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Personál kliniky</h2>
+          <p className="text-sm text-slate-400">{staff.length} zamestnancov</p>
+        </div>
+        <button onClick={onAdd}
+          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 transition-colors">
+          <Plus size={16} /> Pridať zamestnanca
+        </button>
+      </div>
+
+      {staff.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
+          <UserCheck size={40} className="mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Žiadni zamestnanci</p>
+          <p className="text-sm mt-1">Pridajte prvého zamestnanca tlačidlom vyššie</p>
+        </div>
+      ) : (
+        grouped.map(group => (
+          group.members.length > 0 && (
+            <div key={group.department}>
+              <div className="flex items-center gap-3 mb-3">
+                <h3 className="text-sm font-semibold text-slate-700">{group.department}</h3>
+                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{group.members.length}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.members.map(s => (
+                  <div key={s.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="h-48 relative overflow-hidden">
+                      {s.photo_url ? (
+                        <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-500 flex items-center justify-center">
+                          <span className="text-4xl text-white/20 font-serif italic">{s.name.split(' ').map(n => n[0]).join('')}</span>
+                        </div>
+                      )}
+                      {s.badge && (
+                        <span className="absolute bottom-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded">{s.badge}</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold text-slate-900 text-sm">{s.name}</h4>
+                      <p className="text-xs text-amber-600 uppercase tracking-wider mt-0.5 mb-2">{s.title}</p>
+                      {s.description && (
+                        <p className="text-xs text-slate-500 line-clamp-3 mb-3">{s.description}</p>
+                      )}
+                      {s.tags && s.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {s.tags.map((t, i) => (
+                            <span key={i} className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{t}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-end gap-1 pt-2 border-t border-slate-100">
+                        <button onClick={() => onEdit(s)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100" title="Upraviť"><Edit3 size={16} /></button>
+                        <button onClick={() => onDelete(s.id)} className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500" title="Zmazať"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        ))
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// STAFF MODAL
+// ============================================================
+function StaffModal({ staff, API_URL, headers, onSave, onClose }) {
+  const [form, setForm] = useState({
+    name: staff?.name || '',
+    title: staff?.title || '',
+    department: staff?.department || 'Lekársky tím',
+    badge: staff?.badge || '',
+    description: staff?.description || '',
+    photo_url: staff?.photo_url || '',
+    tags: staff?.tags || [],
+    sort_order: staff?.sort_order || 0,
+    is_active: staff?.is_active ?? true,
+  })
+  const [uploading, setUploading] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+
+  const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await fetch(`${API_URL}/nhc/staff/upload-photo`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': file.type },
+        body: file,
+      })
+      const data = await res.json()
+      if (data.url) set('photo_url', data.url)
+    } catch (err) {
+      console.error('Upload error:', err)
+      alert('Nepodarilo sa nahrať fotku')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const addTag = () => {
+    if (tagInput.trim() && !form.tags.includes(tagInput.trim())) {
+      set('tags', [...form.tags, tagInput.trim()])
+      setTagInput('')
+    }
+  }
+
+  const removeTag = (tag) => {
+    set('tags', form.tags.filter(t => t !== tag))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.name || !form.title) { alert('Meno a pozícia sú povinné'); return }
+    onSave(form)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">{staff ? 'Upraviť zamestnanca' : 'Nový zamestnanec'}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100"><X size={20} className="text-slate-400" /></button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Photo */}
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+              {form.photo_url ? (
+                <img src={form.photo_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-300"><UserCheck size={28} /></div>
+              )}
+            </div>
+            <label className={`flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm cursor-pointer hover:bg-slate-50 ${uploading ? 'opacity-50' : ''}`}>
+              <Upload size={14} /> {uploading ? 'Nahrávam...' : 'Nahrať fotku'}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Meno a priezvisko" required>
+              <input type="text" value={form.name} onChange={e => set('name', e.target.value)} className="form-input" placeholder="MUDr. Ján Novák" required />
+            </FormField>
+            <FormField label="Pozícia / Špecializácia" required>
+              <input type="text" value={form.title} onChange={e => set('title', e.target.value)} className="form-input" placeholder="Interná medicína · Vedúci lekár" required />
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Oddelenie">
+              <select value={form.department} onChange={e => set('department', e.target.value)} className="form-input">
+                {STAFF_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </FormField>
+            <FormField label="Badge (napr. Hlavný lekár)">
+              <input type="text" value={form.badge} onChange={e => set('badge', e.target.value)} className="form-input" placeholder="Hlavný lekár" />
+            </FormField>
+          </div>
+
+          <FormField label="Popis">
+            <textarea value={form.description} onChange={e => set('description', e.target.value)}
+              className="form-input" rows={3} placeholder="Špecialista na terapeutické hladovanie..." />
+          </FormField>
+
+          <FormField label="Tagy (špecializácie)">
+            <div className="flex gap-2 mb-2">
+              <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                className="form-input flex-1" placeholder="Napr. Interná medicína" />
+              <button type="button" onClick={addTag}
+                className="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200">+</button>
+            </div>
+            {form.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {form.tags.map((t, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-violet-50 text-violet-600 px-2 py-1 rounded-lg">
+                    {t}
+                    <button type="button" onClick={() => removeTag(t)} className="hover:text-red-500">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Poradie zobrazenia">
+              <input type="number" min="0" value={form.sort_order} onChange={e => set('sort_order', Number(e.target.value))} className="form-input" />
+            </FormField>
+            <div className="flex items-center justify-between py-6">
+              <span className="text-xs font-semibold text-slate-500 uppercase">Aktívny</span>
+              <button type="button" onClick={() => set('is_active', !form.is_active)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.is_active ? 'bg-violet-600' : 'bg-slate-200'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50">Zrušiť</button>
+            <button type="submit" className="flex-1 px-4 py-3 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700">
+              {staff ? 'Uložiť zmeny' : 'Pridať zamestnanca'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }
