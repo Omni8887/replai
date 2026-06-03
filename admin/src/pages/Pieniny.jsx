@@ -36,14 +36,16 @@ const ROOM_TYPE_ICONS = {
 }
 
 const QUILL_MODULES = {
-  toolbar: [
-    [{ 'header': [2, 3, false] }],
-    ['bold', 'italic', 'underline'],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    ['blockquote'],
-    ['link', 'image'],
-    ['clean']
-  ]
+  toolbar: {
+    container: [
+      [{ 'header': [2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['blockquote'],
+      ['link', 'image'],
+      ['clean']
+    ]
+  }
 }
 
 // ============================================================
@@ -457,6 +459,50 @@ function BlogModal({ post, API_URL, headers, onSave, onClose }) {
   })
   const [uploading, setUploading] = useState(false)
   const [activeSection, setActiveSection] = useState('content')
+  const quillRef = useRef(null)
+
+  // Custom image handler - upload namiesto URL
+  const imageHandler = () => {
+    const input = document.createElement('input')
+    input.setAttribute('type', 'file')
+    input.setAttribute('accept', 'image/*')
+    input.click()
+    input.onchange = async () => {
+      const file = input.files[0]
+      if (!file) return
+      try {
+        const res = await fetch(`${API_URL}/nhc/blog/upload-image`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': file.type },
+          body: file,
+        })
+        const data = await res.json()
+        if (data.url && quillRef.current) {
+          const editor = quillRef.current.getEditor()
+          const range = editor.getSelection(true)
+          editor.insertEmbed(range.index, 'image', data.url)
+          editor.setSelection(range.index + 1)
+        }
+      } catch (err) {
+        console.error('Image upload error:', err)
+        alert('Nepodarilo sa nahrať obrázok')
+      }
+    }
+  }
+
+  const modules = {
+    toolbar: {
+      container: [
+        [{ 'header': [2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['blockquote'],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: { image: imageHandler }
+    }
+  }
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -542,8 +588,8 @@ function BlogModal({ post, API_URL, headers, onSave, onClose }) {
 
               <FormField label="Obsah článku" required>
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <ReactQuill theme="snow" value={form.content} onChange={val => set('content', val)}
-                    modules={QUILL_MODULES} placeholder="Začnite písať článok..." style={{ minHeight: '280px' }} />
+                <ReactQuill ref={quillRef} theme="snow" value={form.content} onChange={val => set('content', val)}
+  modules={modules} placeholder="Začnite písať článok..." style={{ minHeight: '280px' }} />
                 </div>
               </FormField>
 
