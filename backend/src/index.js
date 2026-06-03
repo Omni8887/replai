@@ -6224,6 +6224,265 @@ app.post('/public/nhc/lead', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ============================================
+// NHC BLOG — Články spravované cez dashboard
+// ============================================
+
+// Helper: generuj slug z nadpisu
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 80);
+}
+
+// GET /nhc/blog — Zoznam článkov (admin)
+app.get('/nhc/blog', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_blog_posts')
+      .select('id, title, slug, excerpt, category, featured_image, is_featured, is_published, reading_time, author, published_at, created_at')
+      .eq('tenant_id', req.clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('NHC blog list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /nhc/blog/:id — Detail článku (admin)
+app.get('/nhc/blog/:id', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('nhc_blog_posts')
+      .select('*')
+      .eq('id', req.params.id)
+      .eq('tenant_id', req.clientId)
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC blog detail error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /nhc/blog — Nový článok
+app.post('/nhc/blog', authMiddleware, async (req, res) => {
+  try {
+    const { title, content, excerpt, category, featured_image, seo_title, seo_description, is_featured, is_published, reading_time, author } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Nadpis a obsah sú povinné' });
+    }
+
+    let slug = generateSlug(title);
+
+    // Skontroluj unikátnosť slugu
+    const { data: existing } = await supabase
+      .from('nhc_blog_posts')
+      .select('id')
+      .eq('tenant_id', req.clientId)
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (existing) {
+      slug = slug + '-' + Date.now().toString(36);
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_blog_posts')
+      .insert({
+        tenant_id: req.clientId,
+        title,
+        slug,
+        content,
+        excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+        category: category || 'Pôst',
+        featured_image: featured_image || null,
+        seo_title: seo_title || title,
+        seo_description: seo_description || (excerpt || content.replace(/<[^>]*>/g, '').substring(0, 160)),
+        is_featured: is_featured || false,
+        is_published: is_published || false,
+        reading_time: reading_time || Math.max(1, Math.ceil(content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)),
+        author: author || 'NHC Redakcia',
+        published_at: is_published ? new Date().toISOString() : null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC blog create error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /nhc/blog/:id — Upraviť článok
+app.put('/nhc/blog/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { updated_at: new Date().toISOString() };
+
+    const allowedFields = ['title', 'content', 'excerpt', 'category', 'featured_image', 'seo_title', 'seo_description', 'is_featured', 'is_published', 'reading_time', 'author'];
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+
+    // Ak sa mení title, aktualizuj slug
+    if (req.body.title) {
+      let slug = generateSlug(req.body.title);
+      const { data: existing } = await supabase
+        .from('nhc_blog_posts')
+        .select('id')
+        .eq('tenant_id', req.clientId)
+        .eq('slug', slug)
+        .neq('id', id)
+        .maybeSingle();
+      if (existing) slug = slug + '-' + Date.now().toString(36);
+      updates.slug = slug;
+    }
+
+    // Ak sa publikuje prvýkrát, nastav published_at
+    if (req.body.is_published === true) {
+      const { data: current } = await supabase
+        .from('nhc_blog_posts')
+        .select('published_at')
+        .eq('id', id)
+        .single();
+      if (!current?.published_at) {
+        updates.published_at = new Date().toISOString();
+      }
+    }
+
+    // Auto-generate excerpt ak sa mení content a excerpt nie je zadaný
+    if (req.body.content && !req.body.excerpt) {
+      updates.excerpt = req.body.content.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+    }
+
+    // Auto-calculate reading time
+    if (req.body.content && !req.body.reading_time) {
+      updates.reading_time = Math.max(1, Math.ceil(req.body.content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200));
+    }
+
+    const { data, error } = await supabase
+      .from('nhc_blog_posts')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', req.clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    console.error('NHC blog update error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /nhc/blog/:id — Zmazať článok
+app.delete('/nhc/blog/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('nhc_blog_posts')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('NHC blog delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /nhc/blog/upload-image — Upload obrázku pre blog
+app.post('/nhc/blog/upload-image', authMiddleware, express.raw({ type: 'image/*', limit: '10mb' }), async (req, res) => {
+  try {
+    const contentType = req.headers['content-type'];
+    const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const fileName = `${req.clientId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from('nhc-blog-images')
+      .upload(fileName, req.body, { contentType, upsert: false });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('nhc-blog-images')
+      .getPublicUrl(fileName);
+
+    res.json({ url: urlData.publicUrl });
+  } catch (error) {
+    console.error('Blog image upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// ── PUBLIC BLOG ENDPOINTS (bez auth, pre web) ──
+
+// GET /public/nhc/blog — Verejný zoznam publikovaných článkov
+app.get('/public/nhc/blog', async (req, res) => {
+  try {
+    const { tenant_id, category, limit } = req.query;
+    if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
+
+    let query = supabase
+      .from('nhc_blog_posts')
+      .select('id, title, slug, excerpt, category, featured_image, is_featured, reading_time, author, published_at')
+      .eq('tenant_id', tenant_id)
+      .eq('is_published', true)
+      .order('published_at', { ascending: false });
+
+    if (category && category !== 'Všetky') {
+      query = query.eq('category', category);
+    }
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('Public blog list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /public/nhc/blog/:slug — Verejný detail článku
+app.get('/public/nhc/blog/:slug', async (req, res) => {
+  try {
+    const { tenant_id } = req.query;
+    if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
+
+    const { data, error } = await supabase
+      .from('nhc_blog_posts')
+      .select('*')
+      .eq('tenant_id', tenant_id)
+      .eq('slug', req.params.slug)
+      .eq('is_published', true)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: 'Článok nenájdený' });
+    res.json(data);
+  } catch (error) {
+    console.error('Public blog detail error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ============================================
 // START SERVER
 // ============================================
