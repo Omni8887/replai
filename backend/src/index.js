@@ -6630,6 +6630,147 @@ app.get('/public/nhc/staff', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ============================================
+// DOTAZNÍK SPOKOJNOSTI — Psych-Harmony modul
+// ============================================
+
+// POST /public/dotaznik/:tenantId — Anonymné odoslanie dotazníka (BEZ auth)
+app.post('/public/dotaznik/:tenantId', async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+    const { q1, q2, q3, q4, q5, q6, q7, q8, q9, q8_doba } = req.body;
+
+    // Validácia tenant_id
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('id', tenantId)
+      .eq('is_active', true)
+      .single();
+
+    if (!client) {
+      return res.status(404).json({ error: 'Neplatný poskytovateľ' });
+    }
+
+    // Validácia odpovedí
+    const validAnswers = ['ano', 'nie', 'neviem'];
+    const questions = { q1, q2, q3, q4, q5, q6, q7, q8, q9 };
+
+    for (const [key, value] of Object.entries(questions)) {
+      if (!value || !validAnswers.includes(value)) {
+        return res.status(400).json({ error: `Neplatná odpoveď pre ${key}` });
+      }
+    }
+
+    // Ulož do databázy
+    const { data, error } = await supabase
+      .from('dotaznik_responses')
+      .insert({
+        tenant_id: tenantId,
+        q1, q2, q3, q4, q5, q6, q7, q8, q9,
+        q8_doba: q8_doba || ''
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+
+    console.log(`📋 Dotazník uložený pre tenant ${tenantId}`);
+    res.json({ success: true, id: data.id });
+  } catch (error) {
+    console.error('Dotazník submit error:', error);
+    res.status(500).json({ error: 'Nepodarilo sa uložiť dotazník' });
+  }
+});
+
+// GET /admin/dotaznik — Zoznam vyplnených dotazníkov (admin)
+app.get('/admin/dotaznik', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('dotaznik_responses')
+      .select('*')
+      .eq('tenant_id', req.clientId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    console.error('Dotazník list error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /admin/dotaznik/stats — Súhrnné štatistiky dotazníkov (admin)
+app.get('/admin/dotaznik/stats', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('dotaznik_responses')
+      .select('q1, q2, q3, q4, q5, q6, q7, q8, q9')
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+
+    const responses = data || [];
+    const total = responses.length;
+
+    if (total === 0) {
+      return res.json({ total: 0, questions: {} });
+    }
+
+    // Spočítaj áno/nie/neviem pre každú otázku
+    const questionLabels = {
+      q1: 'Overenie totožnosti',
+      q2: 'Zrozumiteľnosť komunikácie',
+      q3: 'Ochota odpovedať na otázky',
+      q4: 'Informácie o zdravotnom stave',
+      q5: 'Informácie o liečbe',
+      q6: 'Správanie lekára',
+      q7: 'Správanie sestry',
+      q8: 'Prijateľnosť čakania',
+      q9: 'Vyhovujúce ordinačné hodiny'
+    };
+
+    const questions = {};
+    for (const [key, label] of Object.entries(questionLabels)) {
+      const counts = { ano: 0, nie: 0, neviem: 0 };
+      responses.forEach(r => {
+        if (r[key]) counts[r[key]]++;
+      });
+      questions[key] = {
+        label,
+        counts,
+        percentages: {
+          ano: Math.round((counts.ano / total) * 100),
+          nie: Math.round((counts.nie / total) * 100),
+          neviem: Math.round((counts.neviem / total) * 100)
+        }
+      };
+    }
+
+    res.json({ total, questions });
+  } catch (error) {
+    console.error('Dotazník stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /admin/dotaznik/:id — Zmazať konkrétny dotazník (admin)
+app.delete('/admin/dotaznik/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('dotaznik_responses')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('tenant_id', req.clientId);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Dotazník delete error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
