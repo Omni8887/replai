@@ -19,6 +19,7 @@ import Bookings from './pages/Bookings.jsx'
 import RentalBookings from './pages/RentalBookings.jsx'
 import Services from './pages/Services.jsx'
 import Pieniny from './pages/Pieniny.jsx'
+import Dotaznik from './pages/Dotaznik.jsx'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -55,6 +56,7 @@ function App() {
           <Route path="rental" element={<RentalBookings />} />
           <Route path="services" element={<Services />} />
           <Route path="pieniny" element={<Pieniny />} />
+          <Route path="dotaznik" element={<Dotaznik />} />
         </Route>
       </Routes>
     </AuthProvider>

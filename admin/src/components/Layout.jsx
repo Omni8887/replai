@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench, Lock, Mountain } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Settings, Code, LogOut, Coins, Package, BarChart3, Shield, Calendar, Bike, Wrench, Lock, Mountain, ClipboardList } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Logo from './Logo.jsx'
@@ -48,6 +48,7 @@ export default function Layout() {
     { to: '/integration', label: 'Integrácia', icon: Code },
     { to: '/services', label: 'Cenník', icon: Wrench, requiresBooking: true },
     { to: '/pieniny', label: 'Pieniny', icon: Mountain, showForTenants: ['e8f3937e-d56f-401b-b7c0-a90fb7654503'] },
+    { to: '/dotaznik', label: 'Dotazníky', icon: ClipboardList, showForTenants: ['58718bb0-84dd-4024-b9af-2815b2505afc'] },
   ]
 
   const handleLockedClick = (e) => {
