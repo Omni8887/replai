@@ -2137,7 +2137,7 @@ KRITICKÉ PRAVIDLÁ:
       console.log(`🔄 Tool iteration ${iterations}`);
       
       const claudeResponse = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: [
           {
@@ -2222,7 +2222,7 @@ KRITICKÉ PRAVIDLÁ:
   } else {
     // === ŠTANDARDNÝ FLOW (produkty) ===
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: [
         {
@@ -2276,7 +2276,7 @@ KRITICKÉ PRAVIDLÁ:
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     cost_eur: costEur,
-    model: 'claude-sonnet-4-20250514'
+    model: 'claude-sonnet-4-6'
   });
 
   // Aktualizuj conversation
