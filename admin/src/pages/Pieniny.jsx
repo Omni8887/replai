@@ -1008,7 +1008,7 @@ function StaffTab({ staff, onAdd, onEdit, onDelete }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {group.members.map(s => (
                   <div key={s.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="h-48 relative overflow-hidden">
+                    <div className="h-56 relative overflow-hidden">
                       {s.photo_url ? (
                         <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
                       ) : (
