@@ -6811,9 +6811,9 @@ app.get('/api/reviews/public/:tenantId', async (req, res) => {
 });
 
 // ADMIN — Získanie všetkých recenzií (vrátane neaktívnych)
-app.get('/api/reviews', authenticateToken, async (req, res) => {
+app.get('/api/reviews', authMiddleware, async (req, res) => {
   try {
-    const clientId = req.client.id;
+    const clientId = req.clientId;
 
     const { data, error } = await supabase
       .from('reviews')
@@ -6832,9 +6832,9 @@ app.get('/api/reviews', authenticateToken, async (req, res) => {
 });
 
 // ADMIN — Pridanie novej recenzie
-app.post('/api/reviews', authenticateToken, async (req, res) => {
+app.post('/api/reviews', authMiddleware, async (req, res) => {
   try {
-    const clientId = req.client.id;
+    const clientId = req.clientId;
     const { rating, text, source } = req.body;
 
     if (!rating || !text) {
@@ -6874,9 +6874,9 @@ app.post('/api/reviews', authenticateToken, async (req, res) => {
 });
 
 // ADMIN — Úprava recenzie
-app.put('/api/reviews/:id', authenticateToken, async (req, res) => {
+app.put('/api/reviews/:id', authMiddleware, async (req, res) => {
   try {
-    const clientId = req.client.id;
+    const clientId = req.clientId;
     const { id } = req.params;
     const { rating, text, source, is_active, sort_order } = req.body;
 
@@ -6905,9 +6905,9 @@ app.put('/api/reviews/:id', authenticateToken, async (req, res) => {
 });
 
 // ADMIN — Zmazanie recenzie
-app.delete('/api/reviews/:id', authenticateToken, async (req, res) => {
+app.delete('/api/reviews/:id', authMiddleware, async (req, res) => {
   try {
-    const clientId = req.client.id;
+    const clientId = req.clientId;
     const { id } = req.params;
 
     const { error } = await supabase
@@ -6926,9 +6926,9 @@ app.delete('/api/reviews/:id', authenticateToken, async (req, res) => {
 });
 
 // ADMIN — Zmena poradia recenzií (drag & drop)
-app.put('/api/reviews/reorder', authenticateToken, async (req, res) => {
+app.put('/api/reviews/reorder', authMiddleware, async (req, res) => {
   try {
-    const clientId = req.client.id;
+    const clientId = req.clientId;
     const { order } = req.body; // [{ id: 'uuid', sort_order: 0 }, ...]
 
     if (!order || !Array.isArray(order)) {
