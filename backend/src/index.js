@@ -6771,6 +6771,184 @@ app.delete('/admin/dotaznik/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
+// ================================================================
+// REVIEWS API ROUTES
+// Vlož do backend/src/index.js PRED komentár "// START SERVER"
+// ================================================================
+
+// PUBLIC — Získanie aktívnych recenzií pre web (bez autentifikácie)
+app.get('/api/reviews/public/:tenantId', async (req, res) => {
+  try {
+    const { tenantId } = req.params;
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('id, rating, text, source, created_at')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Priemerne hodnotenie
+    const totalRating = data.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = data.length > 0 ? (totalRating / data.length).toFixed(1) : '0';
+
+    res.json({
+      reviews: data,
+      summary: {
+        average_rating: parseFloat(avgRating),
+        total_count: data.length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+// ADMIN — Získanie všetkých recenzií (vrátane neaktívnych)
+app.get('/api/reviews', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.client.id;
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('tenant_id', clientId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+// ADMIN — Pridanie novej recenzie
+app.post('/api/reviews', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.client.id;
+    const { rating, text, source } = req.body;
+
+    if (!rating || !text) {
+      return res.status(400).json({ error: 'Rating and text are required' });
+    }
+
+    // Najvyšší sort_order pre tento tenant
+    const { data: maxOrder } = await supabase
+      .from('reviews')
+      .select('sort_order')
+      .eq('tenant_id', clientId)
+      .order('sort_order', { ascending: false })
+      .limit(1);
+
+    const nextOrder = (maxOrder && maxOrder.length > 0) ? maxOrder[0].sort_order + 1 : 0;
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        tenant_id: clientId,
+        rating: parseInt(rating),
+        text,
+        source: source || 'Google',
+        sort_order: nextOrder,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error creating review:', error);
+    res.status(500).json({ error: 'Failed to create review' });
+  }
+});
+
+// ADMIN — Úprava recenzie
+app.put('/api/reviews/:id', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.client.id;
+    const { id } = req.params;
+    const { rating, text, source, is_active, sort_order } = req.body;
+
+    const updateData = {};
+    if (rating !== undefined) updateData.rating = parseInt(rating);
+    if (text !== undefined) updateData.text = text;
+    if (source !== undefined) updateData.source = source;
+    if (is_active !== undefined) updateData.is_active = is_active;
+    if (sort_order !== undefined) updateData.sort_order = sort_order;
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .update(updateData)
+      .eq('id', id)
+      .eq('tenant_id', clientId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating review:', error);
+    res.status(500).json({ error: 'Failed to update review' });
+  }
+});
+
+// ADMIN — Zmazanie recenzie
+app.delete('/api/reviews/:id', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.client.id;
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', clientId);
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
+// ADMIN — Zmena poradia recenzií (drag & drop)
+app.put('/api/reviews/reorder', authenticateToken, async (req, res) => {
+  try {
+    const clientId = req.client.id;
+    const { order } = req.body; // [{ id: 'uuid', sort_order: 0 }, ...]
+
+    if (!order || !Array.isArray(order)) {
+      return res.status(400).json({ error: 'Order array is required' });
+    }
+
+    for (const item of order) {
+      await supabase
+        .from('reviews')
+        .update({ sort_order: item.sort_order })
+        .eq('id', item.id)
+        .eq('tenant_id', clientId);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error reordering reviews:', error);
+    res.status(500).json({ error: 'Failed to reorder reviews' });
+  }
+});
 // ============================================
 // START SERVER
 // ============================================
