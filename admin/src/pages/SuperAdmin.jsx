@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Users, CreditCard, MessageSquare, TrendingUp, Trash2, Shield, Plus, Tag, X, Eye, Copy, Check, Calendar } from 'lucide-react'
+import { Users, CreditCard, MessageSquare, TrendingUp, Trash2, Shield, Plus, Tag, X, Eye, Copy, Check, Calendar, UserPlus } from 'lucide-react'
 
 export default function SuperAdmin() {
   const { API_URL } = useAuth()
@@ -22,6 +22,14 @@ export default function SuperAdmin() {
     reward_plan: 'business',
     max_uses: '',
     valid_until: ''
+  })
+  const [showClientForm, setShowClientForm] = useState(false)
+  const [creatingClient, setCreatingClient] = useState(false)
+  const [newClient, setNewClient] = useState({
+    name: '',
+    email: '',
+    websiteUrl: '',
+    subscriptionTier: 'free'
   })
 
   useEffect(() => {
@@ -69,6 +77,21 @@ export default function SuperAdmin() {
     } catch (error) {
       console.error('Failed to delete client:', error)
       alert('Nepodarilo sa zmazať klienta')
+    }
+  }
+
+  const createClient = async (e) => {
+    e.preventDefault()
+    setCreatingClient(true)
+    try {
+      await axios.post(`${API_URL}/superadmin/clients`, newClient)
+      setShowClientForm(false)
+      setNewClient({ name: '', email: '', websiteUrl: '', subscriptionTier: 'free' })
+      await loadData()
+    } catch (error) {
+      alert(error.response?.data?.error || 'Nepodarilo sa vytvoriť klienta')
+    } finally {
+      setCreatingClient(false)
     }
   }
 
@@ -355,8 +378,15 @@ export default function SuperAdmin() {
 
       {/* Clients Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-slate-900">Všetci klienti ({clients.length})</h2>
+          <button
+            onClick={() => setShowClientForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:opacity-90 transition"
+          >
+            <UserPlus size={20} />
+            Nový klient
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -459,90 +489,71 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      {/* Create Promo Code Modal */}
-      {showPromoForm && (
+      {/* Create Client Modal */}
+      {showClientForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
             <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-slate-900">Nový promo kód</h3>
-              <button onClick={() => setShowPromoForm(false)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="text-lg font-semibold text-slate-900">Nový klient</h3>
+              <button onClick={() => setShowClientForm(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={24} />
               </button>
             </div>
-            <form onSubmit={createPromoCode} className="p-6 space-y-4">
+            <form onSubmit={createClient} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Kód *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Názov firmy *</label>
                 <input
                   type="text"
-                  value={newPromo.code}
-                  onChange={(e) => setNewPromo({ ...newPromo, code: e.target.value.toUpperCase() })}
-                  placeholder="LAUNCH2026"
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                  placeholder="Napr. Fyzio Care s.r.o."
                   className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Popis</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={newClient.email}
+                  onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                  placeholder="klient@firma.sk"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Web (voliteľné)</label>
                 <input
                   type="text"
-                  value={newPromo.description}
-                  onChange={(e) => setNewPromo({ ...newPromo, description: e.target.value })}
-                  placeholder="Pre prvých zákazníkov"
+                  value={newClient.websiteUrl}
+                  onChange={(e) => setNewClient({ ...newClient, websiteUrl: e.target.value })}
+                  placeholder="https://firma.sk"
                   className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Počet dní *</label>
-                  <input
-                    type="number"
-                    value={newPromo.reward_value}
-                    onChange={(e) => setNewPromo({ ...newPromo, reward_value: parseInt(e.target.value) })}
-                    min="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Plán *</label>
-                  <select
-                    value={newPromo.reward_plan}
-                    onChange={(e) => setNewPromo({ ...newPromo, reward_plan: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  >
-                    <option value="starter">STARTER</option>
-                    <option value="business">BUSINESS</option>
-                    <option value="enterprise">ENTERPRISE</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Plán</label>
+                <select
+                  value={newClient.subscriptionTier}
+                  onChange={(e) => setNewClient({ ...newClient, subscriptionTier: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                >
+                  <option value="free">FREE</option>
+                  <option value="starter">STARTER — 30€/mes</option>
+                  <option value="business">BUSINESS — 99€/mes</option>
+                  <option value="enterprise">ENTERPRISE — na mieru</option>
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Max použití</label>
-                  <input
-                    type="number"
-                    value={newPromo.max_uses}
-                    onChange={(e) => setNewPromo({ ...newPromo, max_uses: e.target.value })}
-                    placeholder="Neobmedzené"
-                    min="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Platnosť do</label>
-                  <input
-                    type="date"
-                    value={newPromo.valid_until}
-                    onChange={(e) => setNewPromo({ ...newPromo, valid_until: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
+              <p className="text-sm text-slate-500">
+                Klientovi automaticky príde email s linkom na nastavenie hesla.
+              </p>
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition"
+                disabled={creatingClient}
+                className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
-                Vytvoriť kód
+                {creatingClient ? 'Vytváram...' : 'Vytvoriť klienta'}
               </button>
             </form>
           </div>

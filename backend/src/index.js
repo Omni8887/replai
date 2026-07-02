@@ -3840,6 +3840,73 @@ app.delete('/superadmin/clients/:id', authMiddleware, adminMiddleware, async (re
   }
 });
 
+// POST /superadmin/clients - Vytvoriť nového klienta (admin)
+app.post('/superadmin/clients', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, email, websiteUrl, subscriptionTier } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email required' });
+    }
+
+    // Náhodné dočasné heslo - klient si ho aj tak hneď zmení cez link
+    const tempPassword = crypto.randomBytes(16).toString('hex');
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    const { data: client, error } = await supabase
+      .from('clients')
+      .insert({
+        name,
+        email,
+        password_hash: passwordHash,
+        website_url: websiteUrl || null,
+        subscription_tier: subscriptionTier || 'free',
+        email_verified: true // admin ho zakladá ručne, netreba email verifikáciu
+      })
+      .select('id, name, email, website_url, subscription_tier, created_at')
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      throw error;
+    }
+
+    // Vytvor "nastav si heslo" token (rovnaký princíp ako reset-password)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dní na nastavenie hesla
+
+    await supabase.from('password_resets').insert({
+      client_id: client.id,
+      token: token,
+      expires_at: expiresAt.toISOString()
+    });
+
+    const setPasswordUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    await resend.emails.send({
+      from: 'Replai <noreply@replai.sk>',
+      to: email,
+      subject: '👋 Váš Replai účet je pripravený',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #7c3aed;">👋 Váš Replai účet je pripravený</h2>
+          <p>Ahoj ${name},</p>
+          <p>Váš účet v Replai bol vytvorený. Pre prihlásenie si najprv nastavte heslo:</p>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;"><tr><td align="center" bgcolor="#7c3aed" style="border-radius:8px;padding:12px 24px;"><a href="${setPasswordUrl}" style="color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;display:inline-block;">Nastaviť heslo</a></td></tr></table>
+          <p style="color: #64748b; font-size: 14px;">Link je platný 7 dní.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, client });
+  } catch (error) {
+    console.error('Admin create client error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ============================================
 // PROMO CODES ENDPOINTS
 // ============================================
