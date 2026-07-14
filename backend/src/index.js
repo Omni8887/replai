@@ -1364,7 +1364,18 @@ console.log('🎯 Kategórie z aktuálnej správy:', targetCategories.length > 0
     let searchModel = null;
     let searchedModel = null; // Model z kontextu pre vylúčenie pri alternatívach
     let modelInCurrentMsg = false;
-    
+
+    // === FIX: Ak zákazník hľadá príslušenstvo/oblečenie K bicyklu (napr. "prilba k Agree"),
+    // model bicykla slúži LEN ako kontext pre kompatibilitu.
+    // searchModel zostáva nastavený (potrebuje ho sekcia KOMPATIBILITA PRÍSLUŠENSTVA),
+    // ale vyhľadávanie produktov podľa modelu sa preskočí — hľadá sa podľa kategórie.
+    const skipModelProductSearch = targetCategories.some(c =>
+      c.startsWith('Oblečenie') || c.startsWith('Doplnky') || c.startsWith('Komponenty')
+    );
+    if (skipModelProductSearch) {
+      console.log('🎽 Príslušenstvo/oblečenie — model bicykla sa nepoužije na vyhľadávanie produktov');
+    }
+
     // Najprv skontroluj či je model v AKTUÁLNEJ správe
     for (const model of CUBE_MODELS) {
       if (msgNorm.includes(model)) {
@@ -1508,7 +1519,7 @@ if (!skipProductSearch) {
   if (!skipProductSearch) {
 
     // 1. Ak hľadá konkrétny model - hľadaj v názve
-    if (searchModel && products.length === 0) {
+    if (searchModel && products.length === 0 && !skipModelProductSearch) {
       // Ak je v správe aj číslo (napr. "ACID 240"), hľadaj model + číslo
       const numberMatch = msgNorm.match(new RegExp(searchModel + '\\s*(\\d{2,4})'));
       const searchTerm = numberMatch ? `${searchModel} ${numberMatch[1]}` : searchModel;
