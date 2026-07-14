@@ -3066,7 +3066,14 @@ app.get('/admin/products', authMiddleware, async (req, res) => {
       from += batchSize;
     }
     
-    res.json(allProducts);
+    // Získaj timestamp poslednej XML synchronizácie
+    const { data: syncInfo } = await supabase
+      .from('clients')
+      .select('last_xml_sync')
+      .eq('id', req.clientId)
+      .single();
+
+    res.json({ products: allProducts, lastXmlSync: syncInfo?.last_xml_sync || null });
   } catch (error) {
     console.error('Products error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -3286,7 +3293,13 @@ const products = items.map(item => {
    }
    
    console.log(`📦 XML upsert: ${totalProcessed} produktov spracovaných`);
-   
+
+   // Ulož timestamp poslednej synchronizácie XML feedu
+   await supabase
+     .from('clients')
+     .update({ last_xml_sync: new Date().toISOString() })
+     .eq('id', req.clientId);
+
    res.json({ success: true, count: totalProcessed });
   } catch (error) {
     console.error('XML Upload error:', error);

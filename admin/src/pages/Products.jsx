@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Package, Upload, Trash2, ExternalLink, Search, X, FileText, Link, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { Package, Upload, Trash2, ExternalLink, Search, X, FileText, Link, ChevronLeft, ChevronRight, Filter, RefreshCw } from 'lucide-react'
 
 export default function Products() {
   const { API_URL } = useAuth()
@@ -13,7 +13,10 @@ export default function Products() {
   const [xmlUrl, setXmlUrl] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [uploadType, setUploadType] = useState('csv')
-  
+
+  // Posledná synchronizácia XML feedu
+  const [lastXmlSync, setLastXmlSync] = useState(null)
+
   // Filtre a stránkovanie
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -34,12 +37,32 @@ export default function Products() {
   const loadProducts = async () => {
     try {
       const response = await axios.get(`${API_URL}/admin/products`)
-      setProducts(response.data)
+
+      // Podpora starého (array) aj nového (object) formátu odpovede
+      if (Array.isArray(response.data)) {
+        setProducts(response.data)
+      } else {
+        setProducts(response.data.products || [])
+        setLastXmlSync(response.data.lastXmlSync || null)
+      }
     } catch (error) {
       console.error('Failed to load products:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Formátovanie dátumu poslednej synchronizácie
+  const formatSyncDate = (isoString) => {
+    if (!isoString) return null
+    const date = new Date(isoString)
+    return date.toLocaleString('sk-SK', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   // Získaj unikátne kategórie
@@ -52,14 +75,14 @@ export default function Products() {
   const filteredProducts = useMemo(() => {
     let result = products.filter(p => {
       // Textové vyhľadávanie
-      const matchesSearch = !search || 
+      const matchesSearch = !search ||
         p.name?.toLowerCase().includes(search.toLowerCase()) ||
         p.category?.toLowerCase().includes(search.toLowerCase()) ||
         p.description?.toLowerCase().includes(search.toLowerCase())
-      
+
       // Filter kategórie
       const matchesCategory = !selectedCategory || p.category === selectedCategory
-      
+
       return matchesSearch && matchesCategory
     })
 
@@ -102,12 +125,12 @@ export default function Products() {
 
   const handleUploadCSV = async () => {
     if (!csvText.trim()) return
-    
+
     setUploading(true)
     try {
       const lines = csvText.trim().split('\n')
       const headers = lines[0].split(';').map(h => h.trim().toLowerCase())
-      
+
       const products = lines.slice(1).map(line => {
         const values = line.split(';')
         const product = {}
@@ -120,9 +143,9 @@ export default function Products() {
         })
         return product
       }).filter(p => p.name)
-      
+
       const response = await axios.post(`${API_URL}/admin/products/upload`, { products })
-      
+
       if (response.data.success) {
         alert(`Úspešne nahraných ${response.data.count} produktov!`)
         setCsvText('')
@@ -139,14 +162,14 @@ export default function Products() {
 
   const handleUploadXML = async () => {
     if (!xmlText.trim() && !xmlUrl.trim()) return
-    
+
     setUploading(true)
     try {
-      const response = await axios.post(`${API_URL}/admin/products/upload-xml`, { 
+      const response = await axios.post(`${API_URL}/admin/products/upload-xml`, {
         xmlContent: xmlText || null,
         xmlUrl: xmlUrl || null
       })
-      
+
       if (response.data.success) {
         alert(`Úspešne nahraných ${response.data.count} produktov!`)
         setXmlText('')
@@ -164,7 +187,7 @@ export default function Products() {
 
   const handleDelete = async (id) => {
     if (!confirm('Vymazať tento produkt?')) return
-    
+
     try {
       await axios.delete(`${API_URL}/admin/products/${id}`)
       setProducts(products.filter(p => p.id !== id))
@@ -175,7 +198,7 @@ export default function Products() {
 
   const handleDeleteAll = async () => {
     if (!confirm('Vymazať VŠETKY produkty? Táto akcia sa nedá vrátiť!')) return
-    
+
     try {
       await axios.delete(`${API_URL}/admin/products`)
       setProducts([])
@@ -191,7 +214,7 @@ export default function Products() {
           <h1 className="text-3xl font-bold text-slate-900">Produkty</h1>
           <p className="text-slate-500 mt-1">Databáza produktov pre AI odporúčania</p>
         </div>
-        
+
         <div className="flex gap-3">
           {products.length > 0 && (
             <button
@@ -220,13 +243,13 @@ export default function Products() {
               <X size={20} />
             </button>
           </div>
-          
+
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setUploadType('csv')}
               className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition ${
-                uploadType === 'csv' 
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white' 
+                uploadType === 'csv'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -236,8 +259,8 @@ export default function Products() {
             <button
               onClick={() => setUploadType('xml')}
               className={`px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition ${
-                uploadType === 'xml' 
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white' 
+                uploadType === 'xml'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -245,7 +268,7 @@ export default function Products() {
               XML Feed
             </button>
           </div>
-          
+
           {uploadType === 'csv' && (
             <>
               <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm text-slate-600">
@@ -255,14 +278,14 @@ export default function Products() {
                   iPhone 15;Najnovší iPhone;999;telefóny;https://eshop.sk/iphone15
                 </code>
               </div>
-              
+
               <textarea
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}
                 placeholder="Vlož CSV dáta sem..."
                 className="w-full h-48 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none resize-none font-mono text-sm"
               />
-              
+
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleUploadCSV}
@@ -274,14 +297,14 @@ export default function Products() {
               </div>
             </>
           )}
-          
+
           {uploadType === 'xml' && (
             <>
               <div className="bg-slate-50 rounded-xl p-4 mb-4 text-sm text-slate-600">
                 <p className="font-medium mb-2">Podporované formáty:</p>
                 <p>Heureka XML, Google Shopping, vlastný XML feed</p>
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   <Link size={16} className="inline mr-2" />
@@ -295,16 +318,16 @@ export default function Products() {
                   className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none"
                 />
               </div>
-              
+
               <div className="text-center text-slate-400 my-4">alebo</div>
-              
+
               <textarea
                 value={xmlText}
                 onChange={(e) => setXmlText(e.target.value)}
                 placeholder="Vlož XML obsah sem..."
                 className="w-full h-48 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-600 focus:border-transparent outline-none resize-none font-mono text-sm"
               />
-              
+
               <div className="flex justify-end mt-4">
                 <button
                   onClick={handleUploadXML}
@@ -329,14 +352,25 @@ export default function Products() {
               <div>
                 <h2 className="font-semibold text-slate-900">Zoznam produktov</h2>
                 <p className="text-sm text-slate-500">
-                  {filteredProducts.length === products.length 
-                    ? `${products.length} produktov` 
+                  {filteredProducts.length === products.length
+                    ? `${products.length} produktov`
                     : `${filteredProducts.length} z ${products.length} produktov`
                   }
                 </p>
               </div>
             </div>
-            
+
+            {/* Posledné nahratie XML feedu */}
+            {lastXmlSync && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                <RefreshCw size={16} className="text-slate-400" />
+                <div className="leading-tight">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-400 font-medium">Posledné nahratie</p>
+                  <p className="text-sm font-medium text-slate-700">{formatSyncDate(lastXmlSync)}</p>
+                </div>
+              </div>
+            )}
+
             {products.length > 0 && (
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -353,7 +387,7 @@ export default function Products() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={`p-2 rounded-xl transition flex items-center gap-2 ${
                     showFilters || hasActiveFilters
-                      ? 'bg-violet-100 text-violet-700' 
+                      ? 'bg-violet-100 text-violet-700'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -383,7 +417,7 @@ export default function Products() {
                   <option value="name_desc">Názov: Z-A</option>
                 </select>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <label className="text-sm text-slate-600">Kategória:</label>
                 <select
@@ -410,7 +444,7 @@ export default function Products() {
                   <option value={500}>500</option>
                 </select>
               </div>
-              
+
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
@@ -477,9 +511,9 @@ export default function Products() {
                       </td>
                       <td className="py-3 px-5">
                         {product.url && (
-                          <a 
-                            href={product.url} 
-                            target="_blank" 
+                          <a
+                            href={product.url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-violet-600 hover:text-violet-700 flex items-center gap-1"
                           >
@@ -516,7 +550,7 @@ export default function Products() {
                   >
                     <ChevronLeft size={20} />
                   </button>
-                  
+
                   <div className="flex gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
@@ -529,7 +563,7 @@ export default function Products() {
                       } else {
                         pageNum = currentPage - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
@@ -545,7 +579,7 @@ export default function Products() {
                       );
                     })}
                   </div>
-                  
+
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
